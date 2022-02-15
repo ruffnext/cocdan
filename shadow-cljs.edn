@@ -1,0 +1,15 @@
+{:nrepl {:port 7002}
+ :builds
+ {:app
+  {:target     :browser
+   :compiler-options {:output-feature-set :es-next}
+   :output-dir "target/cljsbuild/public/js"
+   :asset-path "/js"
+   :modules    {:app {:entries [cocdan.app]}}
+   :devtools   {:watch-dir "resources/public"
+                :preloads  [re-frisk.preload]}
+   :dev        {:closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}}
+   :release    {}}
+  :test {:target  :node-test, :output-to "target/test/test.js"
+         :autorun true}}
+ :lein  {:profile "+dev"}}

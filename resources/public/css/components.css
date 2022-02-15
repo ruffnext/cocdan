@@ -1,0 +1,35 @@
+.component-stage-simple{
+    width : 380px;
+}
+
+.component-stage-simple-header {
+    height: 230px;
+}
+
+.component-stage-simple-text {
+    height: 100px;
+    overflow-y: hidden;
+}
+
+.modal-stage-banner-img {
+    height: 330px;
+}
+
+.modal-stage-input{
+    width: 13em;
+}
+
+.component-avatar-simple {
+    min-width: 17em;
+    max-width: 17em;
+}
+
+.sketch  {
+    border: 2px solid #F00;
+}
+
+.img-fitsize {
+    object-fit:contain;
+    width: 100%;
+    height: 100%;
+}

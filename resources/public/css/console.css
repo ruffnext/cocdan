@@ -1,0 +1,20 @@
+.console-input {
+    font-size: medium;
+    padding: 0;
+}
+
+.console-log {
+    font-size: medium;
+}
+
+#console-container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    width: 100%;
+    max-height: 70vh;
+    border: 2px solid #F00;
+    outline: medium;
+    overflow: auto;
+}
