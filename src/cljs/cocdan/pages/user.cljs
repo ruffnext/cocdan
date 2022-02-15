@@ -73,7 +73,7 @@
   :event/avatar-refresh-done refresh-avatar-list-done})
 
 (defn component-user-info-detail
-  []
+  [user]
   [:div
    [:h1.title "My Info"]
    [:div {:class "card-content"}
@@ -82,8 +82,7 @@
       [:figure {:class "image is-128x128"}
        [:img {:src "/img/header.png"}]]]
      [:div.media-content
-      [:h2.title "SWZ"]
-      [:h3.title {:class "is-5"} "5 avatars in 1 stage"]]]]])
+      [:h2.title (:name user)]]]]])
 
 (defn user-page
   [user]
@@ -92,7 +91,7 @@
      [:section.section
       [:div.columns {:class "is-horizontal"}
        [:div.column {:class "is-two-third"}
-        (component-user-info-detail)]
+        (component-user-info-detail user)]
        [:div.column {:class "is-one-third" :style {:margin-right "3em"}}
         [:h3.title {:class "is-4"} "Legendary Investigator"]
         (component-avatar-simple {})]]]

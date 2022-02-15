@@ -19,3 +19,5 @@ profiles.clj
 .clj-kondo
 *.db
 output.calva-repl
+.lsp
+img-uploaded
