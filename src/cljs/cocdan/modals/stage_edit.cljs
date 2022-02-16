@@ -70,7 +70,7 @@
        [:input (merge (if @title-editable
                         {:class "input"}
                         {:class "input is-static" :readOnly true})
-                      {:place-holder "Edit title here"
+                      {:placeholder "Edit title here"
                        :onBlur #(reset! title-editable false)
                        :onFocus #(reset! title-editable true)
                        :on-change #(swap! stage (fn [s] (assoc s :title (-> % .-target .-value))))
@@ -78,7 +78,7 @@
                       {:value (:title @stage)})]
        [:button.delete {:on-click edit-cancel}]]
       [:div.modal-card-image
-       [click-upload-img (:banner @stage)
+       [click-upload-img {} (:banner @stage)
         {:on-uploaded #(swap! stage (fn [s] (assoc s :banner %)))}]]
       [:section.modal-card-body
        [:div.field

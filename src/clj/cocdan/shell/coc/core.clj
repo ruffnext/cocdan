@@ -49,6 +49,7 @@
     "幸运" "luck"
     "体力" "hp"
     "运气" "luck"
+    "侦查" "investigate"
     attr-name))
 
 (defn- dice-command
@@ -73,6 +74,7 @@
                                       rest-formula)))
       (= formula "d") (dice-command "1d100")
       (= formula "a") (dice-command "1d100")
+      (= formula "c") (dice-command "1d100")
       (.matches matcher-int) (either/right (Integer/parseInt formula))
       :else (either/left "parsed failed"))))
 
@@ -95,6 +97,9 @@
    (cond
      (.matches (re-matcher #"^(?<dice>[1-9][0-9]*)d(?<side>[1-9][0-9]*).*" (subs cmd 1))) (either/right rolled-value)
      (= "rd" cmd) (either/right rolled-value)
+     (= "rc" cmd) (m/mlet
+                   [attr-val (get-coc-attr avatar [:attrs (keyword (chinese-english-attr-map cmd-rest))])]
+                   (either/right (ra avatar cmd-rest rolled-value attr-val)))
      (= "ra" cmd) (m/mlet
                    [attr-val (get-coc-attr avatar [:attrs (keyword (chinese-english-attr-map cmd-rest))])]
                    (either/right (ra avatar cmd-rest rolled-value attr-val)))
@@ -175,6 +180,64 @@
           (m/return new-avatar))
   (either/right "set attr"))
 
+(defn- handle-item-loc
+  [loc item-list skill-investigate]
+  (let [shown (vec (filter #(= "显露" (:hidden? %)) item-list))
+        shade (vec (filter #(and (= "遮蔽" (:hidden? %)) (<= (+ (rand-int 100) 1) skill-investigate)) item-list))
+        hidden (vec (filter #(= "隐藏" (:hidden? %)) item-list))
+        can-see (apply conj shown shade)]
+    (if (empty? can-see)
+      ""
+      (format "%s有%s" loc (str/join ", " (map #(:name %) can-see))))))
+
+(defn- watch
+  [avatar _cmd cmd-rest channel]
+  (m/mlet [avatars (ws-db/pull-avatars-by-channel @ws-db/db channel)
+           avatar-investigate-skill (let [res (-> avatar :attributes :coc :attrs :investigate)]
+                                     (if (pos-int? res)
+                                       (either/right res)
+                                       (either/left "你的角色没有侦查技能！")))
+           target-avatar (let [res (take 1 (filter #(= (-> % :name) cmd-rest) avatars))]
+                           (if (not (empty? res))
+                             (either/right (first res))
+                             (either/left (format "avatar %s is not on this stage" cmd-rest))))
+           _check (m/do-let
+                   (if (not= (-> avatar :attributes :substage) (-> target-avatar :attributes :substage))
+                     (either/left (format "avatar %s is not on this substage" cmd-rest))
+                     (either/right "")))]
+          (let [items (-> target-avatar :attributes :coc :items)]
+            (either/right (->> (for [[k vs] items]
+                                 (handle-item-loc (name k) vs avatar-investigate-skill))
+                               (filter #(not (str/blank? %)))
+                               (str/join "; "))))))
+
+(comment
+  (rand-int 100)
+  (let [list-1 [{:name "头盔" :hidden? "显露"}]
+        list-2 [{:name "格洛克18" :hidden? "遮挡"} {:name "弹夹" :hidden? "隐蔽"}]]
+    (apply conj list-1 list-2))
+  (let [items {:头部 [{:name "头盔" :hidden? "显露"}] :背后 [{:name "重型弹药箱" :hidden? "显露"}] :裤兜 [{:name "格洛克18" :hidden? "遮挡"} {:name "弹夹" :hidden? "隐蔽"}]}
+        handle-loc (fn [loc item-list]
+                     (let [shown (filter #(= "显露" (:hidden? %)) item-list)
+                           shade (filter #(= "遮蔽" (:hidden? %)) item-list)
+                           hidden (filter #(= "隐藏" (:hidden? %)) item-list)
+                           can-see shown]
+                       (if (empty? can-see)
+                         ""
+                         (format "%s有%s" loc (str/join ", " (map #(:name %) can-see))))))]
+    (->> (for [[k vs] items]
+           (handle-item-loc (name k) vs 100))
+         (filter #(not (str/blank? %)))
+         (str/join "\n"))))
+
+(defn- show-attr
+  [{name :name :as avatar} _cmd cmd-rest channel]
+  (m/mlet [attr-val (let [res' (-> avatar :attributes :coc :attrs)
+                          res ((keyword (chinese-english-attr-map cmd-rest)) res')]
+                      (if (pos-int? res)
+                        (either/right res)
+                        (either/left (format "你的角色没有 %s 属性" cmd-rest))))]
+          (either/right (format "%s的%s是%s" name cmd-rest (str attr-val)))))
 
 (defn coc
   [{msg :msg
@@ -182,7 +245,7 @@
     avatar-id :avatar
     substage :substage  :as msg-raw}  channel]
   (when (= msg-type "msg")
-    (let [match-res (re-matcher #"^[.。](?<cmd>(sc|st|aa|r[b]+|r[p]+|rd|ra|rc|r\d{1,}d\d{1,}[^ ]*))[ ]*(?<rest>.*)" msg)]
+    (let [match-res (re-matcher #"^[.。](?<cmd>(show|watch|sc|st|aa|r[b]+|r[p]+|rd|ra|rc|r\d{1,}d\d{1,}[^ ]*))[ ]*(?<rest>.*)" msg)]
       (when (.matches match-res)
         (let [res (m/mlet [[cmd cmd-rest] (either/right [(.group match-res "cmd") (.group match-res "rest")])
                            avatar (ws-db/pull-avatar-by-id @ws-db/db avatar-id)
@@ -190,6 +253,8 @@
                                  (= cmd "sc") (sc avatar cmd cmd-rest channel)
                                  (= cmd "st") (set-attr avatar cmd cmd-rest channel)
                                  (str/starts-with? cmd "r") (r avatar cmd cmd-rest channel)
+                                 (= cmd "watch") (watch avatar cmd cmd-rest channel)
+                                 (= cmd "show") (show-attr avatar cmd cmd-rest channel)
                                  :else (either/left "command not supported"))]
                           (either/right res))]
           (either/branch res

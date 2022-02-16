@@ -4,7 +4,7 @@
    [cocdan.db :as gdb]))
 
 (defn- avatar-item
-  [avatar stage]
+  [{id :id :as avatar} stage]
   (let [avatar-edit #(rf/dispatch [:event/modal-general-attr-editor-active
                                    :avatar [:attributes] avatar
                                    {:substage (sort (for [[k _v] (-> stage
@@ -13,24 +13,28 @@
                                                       (name k)))}])
         on-detail-edit (fn []
                          (let [all-avatars (gdb/posh-avatar-by-stage-id gdb/conn (:id stage))]
-                           (rf/dispatch [:event/modal-coc-avatar-edit-active all-avatars (:id avatar)])))]
-    [:p {:style {:padding-left "6px"
-               :padding-bottom "3px"}} (:name avatar)
-   [:span.is-pulled-right ""]
-   [:span.is-pulled-right
-    {:style {:padding-right "12px" :padding-left "12px"}
-     :on-click on-detail-edit}
-    "EDIT"]
-   [:span.is-pulled-right
-    {:style {:padding-right "12px" :padding-left "12px"}
-     :on-click avatar-edit}
-    (if (nil? (-> avatar :attributes :substage))
-      "not yet on stage"
-      (-> stage
-          :attributes
-          :substages
-          (#((keyword (-> avatar :attributes :substage str)) %))
-          :name))]]))
+                           (rf/dispatch [:event/modal-coc-avatar-edit-active all-avatars (:id avatar)])))
+        unread-count (count (gdb/posh-unread-message-count gdb/conn id))]
+    [:div {:style {:padding-left "6px"
+                   :padding-bottom "3px"}} (:name avatar)
+     [:span.is-pulled-right ""]
+     [:p.is-pulled-right
+      {:style {:padding-right "12px" :padding-left "12px"}
+       :on-click on-detail-edit}
+      "EDIT"]
+     [:span.is-pulled-right
+      {:style {:padding-right "12px" :padding-left "12px"}
+       :on-click avatar-edit}
+      (if (nil? (-> avatar :attributes :substage))
+        "not yet on stage"
+        (-> stage
+            :attributes
+            :substages
+            (#((keyword (-> avatar :attributes :substage str)) %))
+            :name))]
+     (when (pos-int? unread-count)
+       [:span.is-pulled-right.has-text-danger
+        unread-count])]))
 
 (defn stage-avatars
   [stage avatars]

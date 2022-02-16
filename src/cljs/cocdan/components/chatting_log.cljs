@@ -2,6 +2,7 @@
   (:require
    [cocdan.db :refer [conn]]
    [posh.reagent :as p]
+   [re-posh.core :as rp]
    [reagent.core :as r]
    [reagent.dom :as d]))
 
@@ -76,19 +77,27 @@
 
       :component-did-mount
       (fn [this]
-        (let [p-node (.-parentNode (d/dom-node this))]
-          (set! (.-scrollTop p-node) (.-scrollHeight p-node))))
+        (let [this-node (d/dom-node this)
+              p-node (.-parentNode this-node)]
+          (set! (.-scrollTop p-node) (.-scrollHeight p-node))
+          (.addEventListener
+           p-node
+           "scroll"
+           #(if (> (+ (.-scrollTop p-node) (.-clientHeight p-node)) (- (.-clientHeight this-node) 200))
+              (reset! always-bottom true)
+              (reset! always-bottom false)))))
 
       :component-did-update
       (fn [this _old-argv]
-        (let [_new-argv (rest (r/argv this))
+        (let [[logs _my-avatars] (rest (r/argv this))
               this-node (d/dom-node this)
-              p-node (.-parentNode this-node)]
-          (if (> (+ (.-scrollTop p-node) (.-clientHeight p-node)) (- (.-clientHeight this-node) 100))
-            (reset! always-bottom true)
-            (reset! always-bottom false))
+              p-node (.-parentNode this-node)
+              {last-time :time
+               receiver :receiver} (last logs)]
+          (when (not (nil? last-time))
+            (rp/dispatch [:rpevent/upsert :avatar {:id receiver :latest-read-message-time last-time}]))
           (when @always-bottom
-           (set! (.-scrollTop p-node) (.-scrollHeight p-node)))))
+            (set! (.-scrollTop p-node) (.-scrollHeight p-node)))))
 
       :reagent-render
       (fn [msgs my-avatars]

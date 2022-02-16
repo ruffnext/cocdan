@@ -27,6 +27,7 @@
 
 (defn- make-stage-ws
   [{stage-id :stage-id}]
+  (js/console.log "make new ws")
   (let [url (str "ws://localhost:3000/ws/" stage-id)]
     (m/mlet [channel (either/try-either (js/WebSocket. url))]
             (do
@@ -51,24 +52,30 @@
       (idb/append-message @idb/idb msg'))))
 
 (defn- parse-message
-  [msg' _stage-id]
+  [msg' stage-id]
   (let [my-avatars (gdb/posh-my-avatars gdb/conn)
         res (m/mlet [{_avatar-id :avatar-id
                       msg :msg
                       msg-type :type
-                      msg-time :time 
+                      msg-time :time
                       substage :substage :as raw-msg} (either/try-either (gaux/<-json (.-data msg')))
                      _ (m/foldm (fn [_ x] (if (not (nil? (x raw-msg)))
                                             (either/right "")
-                                            (either/left (str "invalid message received! missing field " x)))) (either/right "") [:avatar :msg :type :time])]
+                                            (either/left (str "invalid message received! missing field " x)))) (either/right "") [:avatar :msg :type :time])
+                     i-have-control? (either/right (:id (gdb/posh-i-have-control? gdb/conn stage-id)))]
+                    (js/console.log i-have-control?)
+                    (js/console.log stage-id)
                     (m/return (case msg-type
                                 "sync" (let [{target :target value :value} msg]
                                          (rp/dispatch [:rpevent/upsert (keyword target) value])
                                          (assoc (make-msg 0 "debug-info" (str "Sync called for " target) msg-time)
                                                 :value value))
                                 "msg" (-> (for [{{avatar-substage :substage} :attributes avatar-id :id} my-avatars]
-                                            (when (= avatar-substage substage)
-                                              (assoc raw-msg :receiver avatar-id)))
+                                            (cond
+                                              (= avatar-id i-have-control?) (assoc raw-msg
+                                                                                   :receiver avatar-id
+                                                                                   :msg (str msg "@" substage))
+                                              (= avatar-substage substage) (assoc raw-msg :receiver avatar-id)))
                                           vec)
                                 "system-msg" (-> (for [{{avatar-substage :substage} :attributes avatar-id :id} my-avatars]
                                                    (when (= avatar-substage substage)
@@ -79,7 +86,7 @@
     (either/branch res
                    (fn [x]
                      (either/left (make-msg 0 alert x)))
-                   (fn [x] 
+                   (fn [x]
                      (either/right x)))))
 
 (defn- on-message
@@ -121,7 +128,7 @@
        :history-msg))
 
 (doseq [[event f] {:event/chat-on-close on-close
-                 :event/chat-on-message on-message}]
+                   :event/chat-on-message on-message}]
   (rf/reg-event-db event f))
 
 (doseq [[event f] {:event/chat-send-message send-message}]

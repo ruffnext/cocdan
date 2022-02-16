@@ -40,6 +40,7 @@
   [{session :session  {{id :id} :path
                        {controlled_by :controlled_by :as newAvatar} :body} :parameters}]
   {:per [(int? id)]}
+  (log/debug newAvatar)
   (m/mlet [user (users/login? session)
            avatar (aux/get-avatar-by-id? id)
            _ (cond
@@ -59,6 +60,7 @@
 (s/def ::name string?)
 (s/def ::controlled_by int?)
 (s/def ::attributes map?)
+(s/def ::header string?)
 
 (def service-routes
   ["/avatar"
@@ -88,7 +90,7 @@
                          schema/middleware-either-api)}
      :patch {:summary "transfer control permission to another user"
              :parameters {:path {:id int?}
-                          :body (s/keys :opt-un [::controlled_by ::name ::attributes])}
+                          :body (s/keys :opt-un [::controlled_by ::name ::attributes ::header])}
              :responses {200 {:schema schema/SchemaAvatar}
                          401 {:schema schema/SchemaError}}
              :handler #(-> %

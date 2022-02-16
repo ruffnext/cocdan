@@ -3,6 +3,8 @@
    [reagent.core :as r]
    [cocdan.auxiliary :as gaux]
    ["react-select/creatable" :refer (default) :rename {default react-select}]
+   [cocdan.components.coc.equipment-editor :refer [coc-equipment-editor]]
+   [cocdan.components.click-upload-img :refer [click-upload-img]]
    [re-frame.core :as rf]))
 
 (defonce active? (r/atom false))
@@ -14,7 +16,7 @@
  {:event/modal-coc-avatar-edit-active
   (fn [_db _driven-by avatars' current-edit-avatar-id']
     (reset! active? true)
-    (reset! avatars (sort-by :name avatars'))
+    (reset! avatars (vec (sort-by :name avatars')))
     (if (nil? current-edit-avatar-id')
       (reset! current-edit-avatar-index 0)
       (reset! current-edit-avatar-index (let [index-list (vec (for [a avatars']
@@ -23,6 +25,7 @@
                                             (.indexOf index-list current-edit-avatar-id')
                                             0))))
     {})})
+
 
 (defn- edit-cancel
   []
@@ -67,14 +70,27 @@
            [:input.input
             {:value (:name avatar)
              :on-change #(swap! avatars (fn [x] (assoc-in x [@current-edit-avatar-index :name] (-> % .-target .-value))))}]]]
+         [:div.field.is-horizontal
+          [:div.field-label.is-normal
+           [:label "头像"]]
+          [:div.field-body>div.field
+           [click-upload-img {:style {:width "10em"
+                                      :height "10em"}} (:header avatar)
+            {:on-uploaded #(swap! avatars (fn [x] (assoc-in x [@current-edit-avatar-index :header] %)))}]]]
          [:hr]
-         [:p.subtitle.is-6 "背包物品"]]
+         [:p.subtitle.is-6 "物品与服装"]
+         [coc-equipment-editor {:on-change (fn [loc-key items]
+                                             (swap! avatars (fn [x]  (assoc-in x [@current-edit-avatar-index :attributes :coc :items loc-key]
+                                                                               items))))} avatar]
+         [:hr]]
         [:footer.modal-card-foot
          [:button.button {:class "is-primary"
                           :on-click #(do
-                                       (let [stage' @avatars
-                                             to-submit {:id (:id stage')
-                                                        :attributes (:attributes stage')}]
-                                         (rf/dispatch [:event/patch-to-server :stage to-submit]))
+                                       (let [avatar (nth @avatars @current-edit-avatar-index)
+                                             to-submit {:id (:id avatar)
+                                                        :attributes (:attributes avatar)
+                                                        :header (:header avatar)}]
+                                         (js/console.log to-submit)
+                                         (rf/dispatch [:event/patch-to-server :avatar to-submit]))
                                        (edit-cancel))} "Submit"]
          [:button.button {:on-click edit-cancel} "Cancel"]]]])))

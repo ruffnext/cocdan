@@ -131,6 +131,23 @@
        (reduce into [])
        first))
 
+(defn posh-unread-message-count
+  [ds avatar-id]
+  (->> @(p/q '[:find ?mids
+               :in $ ?avatar-id
+               :where
+               [?avatareid :avatar/id ?avatar-id]
+               [?avatareid :avatar/latest-read-message-time ?latest]
+               [?mids :message/receiver ?avatar-id]
+               [?mids :message/time ?midstime]
+               [(> ?midstime ?latest)]]
+             ds
+             avatar-id)))
+
+(comment
+  (posh-unread-message-count conn 2)
+  )
+
 (defn posh-current-use-avatar
   [ds stage-id]
   (let [avatar-id (posh-current-use-avatar-id ds stage-id)
@@ -198,6 +215,16 @@
         my-avatars (->>
                     @(p/pull-many ds '[*] my-avatars-id))]
     (vec (map remove-db-perfix my-avatars))))
+
+(defn posh-i-have-control?
+  [ds stage-id]
+  (let [{owned_by :owned_by} (posh-stage-by-id ds stage-id)
+        controller (->> (posh-my-avatars ds)
+                        (map remove-db-perfix)
+                        (filter #(= (:id %) owned_by)))]
+    (if (seq controller)
+      (first controller)
+      nil)))
 
 (defn query-avatars-by-stage-id ; not use posh, be careful!
   [ds stage-id]
@@ -272,12 +299,18 @@
   (d/pull @conn '[*] 8)
   @(rp/subscribe [:rpsub/stage-avatars 1])
   @(rp/subscribe [:rpsub/stage-substages 1])
-  @(rp/subscribe [:rpsub/stage 1])
+  @(rp/subscribe [:rpsub/stage 2])
+  (posh-stage-by-id conn 2)
+  @(p/q '[:find ?sid
+          :in $ ?stage-id
+          :where [?sid :stage/id ?stage-id]]
+        conn
+        2)
   @(rp/subscribe [:rpsub/my-info])
   @(rp/subscribe [:rpsub/my-avatars])
   @(rp/subscribe [:rpsub/stage-substage-messages 1 0])
   @(rp/subscribe [:rpsub/messages])
-  @(rp/subscribe [:rpsub/avatar 1])
+  @(rp/subscribe [:rpsub/avatar 2])
   (rp/dispatch [:rpevent/upsert :message {:message/time 9}])
   (rp/dispatch [:rpevent/upsert :someother {:foo "bar"}])
   (d/q '[:find ?id

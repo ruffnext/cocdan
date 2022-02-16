@@ -24,7 +24,7 @@
  {:event/click-upload-img-changed upload-img-changed})
 
 (defn click-upload-img
-  [_ {on-uploaded :on-uploaded}]
+  [_ _ {on-uploaded :on-uploaded}]
   (let [handle-changed (fn [new-file]
                          (go (let [res  (<! (http/post upload-url
                                                        {:multipart-params
@@ -53,17 +53,20 @@
         (let [_new-argv (rest (r/argv this))]))
 
       :reagent-render
-      (fn [img _]
+      (fn
+        [styles img _]
+        (js/console.log (merge {:class "modal-stage-banner-img has-text-centered"} styles))
         [:div
          [:input {:type "file"
                   :style {:display "none"}
                   :on-change handle-changed}]
          (if (nil? img)
-           [:div.has-background-grey-lighter {:class "modal-stage-banner-img has-text-centered"}
+           [:div.has-background-grey-lighter
+            {:class "modal-stage-banner-img has-text-centered"}
             [:div {:class "columns is-vcentered has-text-centered " :style {:height "100%" :margin "0px"}}
              [:div {:style {:width "100%"}}
               [:i {:class "fas fa-image fa-7x" :style {:width "100%"}}]
               [:p {:class "subtitle is-3"} "设置标题图片"]]]]
-           [:figure {:class "has-background-grey-lighter image modal-stage-banner-img"}
+           [:figure (merge {:class "has-background-grey-lighter image modal-stage-banner-img"} styles)
             [:img {:src img :style {:height "100%" :object-fit "cover"}}]])])})))
 

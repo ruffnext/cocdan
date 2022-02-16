@@ -2,7 +2,7 @@
   (:require [re-frame.core :as rf]))
 
 (defn component-avatar-simple
-  [{id :id name :name on_stage :on_stage}]
+  [{id :id name :name on_stage :on_stage header :header :as avatar}]
   (let [{stage-title :title
          stage-admin :owned_by} (when (not (nil? on_stage)) @(rf/subscribe [:subs/general-get-stage-by-id on_stage]))]
     [:div.card
@@ -10,14 +10,14 @@
       [:div.media
        [:div.media-left
         [:figure {:class "image is-48x48"}
-         [:a {:href (str "#/avatar/ " id)}
-          [:img {:src "/img/avatar.png"}]]]]
+         [:a {:on-click #(rf/dispatch [:event/modal-coc-avatar-edit-active [avatar] id])}
+          [:img {:src header :style {:object-fit "cover"}}]]]]
        [:div.media-content
-        [:p {:class "title is-4"} [:a {:href "#/avatar/1"} name] (when (= stage-admin id)
+        [:p {:class "title is-4"} [:a {:on-click #(rf/dispatch [:event/modal-coc-avatar-edit-active [avatar] id])} name] (when (= stage-admin id)
                                                                    [:span {:class "subtitle is-7"} " 管理员"])]
         [:p {:class "subtitle is-6"} (if (nil? on_stage)
                                        "无所属"
-                                       [:a {:href "#/stage/1"} (str "@" stage-title)])]]]
+                                       [:a {:href (str "#/stage/" on_stage)} (str "@" stage-title)])]]]
       [:div.content
        [:div {:class "columns is-multiline has-text-centered"}
         [:div {:class "column is-one-quarter"}

@@ -9,7 +9,8 @@
 
 (defn- refresh-stage-avatars
   [{stage-id :stage-id}]
-  (go (let [my-avatars (first (filter #(= (:on_stage %) stage-id) @(rf/subscribe [:subs/general-get-my-avatars])))
+  (js/console.log stage-id)
+  (go (let [my-avatars (first (filter #(= (:on_stage %) stage-id) (gdb/posh-my-avatars gdb/conn)))
             res (<! (http/get (str "/api/stage/s" stage-id "/list/avatar") {:query-params {:id stage-id
                                                                                            :avatar-id (:id my-avatars)}}))]
         (cond

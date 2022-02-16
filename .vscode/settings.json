@@ -44,5 +44,6 @@
                 "cljsDefaultBuild": "app"
             }
         }
-    ]
+    ],
+    "calva.clojureLspPath": "/usr/bin/clojure-lsp"
 }
