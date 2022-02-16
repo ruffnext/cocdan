@@ -3,46 +3,6 @@
    [reagent.core :as r]
    ["react-select/creatable" :refer (default) :rename {default react-select}]))
 
-(defn- display
-  [items {avatar-id :id}]
-  [:div
-   [:p "你有如下的装备"]
-   (for [[loc items'] items]
-     (let [options (for [{name :name} items']
-                     {:value name :label name})]
-       (with-meta [:div.field.is-horizontal
-                   [:div.field-label.is-normal
-                    [:label (name loc)]]
-                   [:div.field-body>div.field
-                    [:> react-select
-                     {:placeholder "Select a avatar"
-                      :value options
-                      :isMulti true
-                      :on-change #(js/console.log %)
-                      :options options}]]]
-         {:key (str avatar-id "ee" loc)})))])
-
-(defn- edit
-  []
-  [:div.field.has-addons
-   [:p.control
-    [:span.select>select
-     [:option "头部"]
-     [:option "颈部"]]
-    [:span.select>select
-     [:option "显露"]
-     [:option "遮蔽"]
-     [:option "隐藏"]]]
-   [:p.control
-    [:input.input]]
-   [:p.control
-    [:a.button
-     "增加"]]])
-
-(defn jsx->clj
-  [x]
-  (into {} (for [k (.keys js/Object x)] [k (aget x k)])))
-
 (defn coc-equipment-editor
   [{on-change :on-change} {avatar-id :id :as avatar}]
   (let [items (-> avatar :attributes :coc :items)]

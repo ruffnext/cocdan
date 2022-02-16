@@ -1,0 +1,9 @@
+{:lint-as {reagent.core/with-let clojure.core/let
+           cats.core/mlet clojure.core/let}
+ :linters {:unused-namespace {:exclude [clojure.tools.logging]}
+           :unresolved-var {:exclude [cocdan.db.core
+                                      posh.reagent/pull-many
+                                      markdown.core/md->html
+                                      ring.util.http-response/content-type
+                                      ring.util.http-response/header]}}
+ }

@@ -11,7 +11,6 @@
    [cocdan.events]
    [reitit.core :as reitit]
    [reitit.frontend.easy :as rfe]
-   [clojure.string :as string]
    [cocdan.components.console :as c-console]
    [cocdan.pages.login :as login-page]
    [cocdan.pages.user :as user-page]

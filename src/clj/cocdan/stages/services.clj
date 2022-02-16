@@ -10,8 +10,7 @@
             [cocdan.ws.db :as ws-db]
             [clojure.tools.logging :as log]
             [clojure.data.json :as json]
-            [clojure.spec.alpha :as s]
-            [clojure.string :as str]))
+            [clojure.spec.alpha :as s]))
 
 (defn- create!
   [{{{_ :title

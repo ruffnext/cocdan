@@ -184,7 +184,7 @@
   [loc item-list skill-investigate]
   (let [shown (vec (filter #(= "显露" (:hidden? %)) item-list))
         shade (vec (filter #(and (= "遮蔽" (:hidden? %)) (<= (+ (rand-int 100) 1) skill-investigate)) item-list))
-        hidden (vec (filter #(= "隐藏" (:hidden? %)) item-list))
+        _hidden (vec (filter #(= "隐藏" (:hidden? %)) item-list))
         can-see (apply conj shown shade)]
     (if (empty? can-see)
       ""
@@ -198,7 +198,7 @@
                                        (either/right res)
                                        (either/left "你的角色没有侦查技能！")))
            target-avatar (let [res (take 1 (filter #(= (-> % :name) cmd-rest) avatars))]
-                           (if (not (empty? res))
+                           (if (seq res)
                              (either/right (first res))
                              (either/left (format "avatar %s is not on this stage" cmd-rest))))
            _check (m/do-let
@@ -211,27 +211,8 @@
                                (filter #(not (str/blank? %)))
                                (str/join "; "))))))
 
-(comment
-  (rand-int 100)
-  (let [list-1 [{:name "头盔" :hidden? "显露"}]
-        list-2 [{:name "格洛克18" :hidden? "遮挡"} {:name "弹夹" :hidden? "隐蔽"}]]
-    (apply conj list-1 list-2))
-  (let [items {:头部 [{:name "头盔" :hidden? "显露"}] :背后 [{:name "重型弹药箱" :hidden? "显露"}] :裤兜 [{:name "格洛克18" :hidden? "遮挡"} {:name "弹夹" :hidden? "隐蔽"}]}
-        handle-loc (fn [loc item-list]
-                     (let [shown (filter #(= "显露" (:hidden? %)) item-list)
-                           shade (filter #(= "遮蔽" (:hidden? %)) item-list)
-                           hidden (filter #(= "隐藏" (:hidden? %)) item-list)
-                           can-see shown]
-                       (if (empty? can-see)
-                         ""
-                         (format "%s有%s" loc (str/join ", " (map #(:name %) can-see))))))]
-    (->> (for [[k vs] items]
-           (handle-item-loc (name k) vs 100))
-         (filter #(not (str/blank? %)))
-         (str/join "\n"))))
-
 (defn- show-attr
-  [{name :name :as avatar} _cmd cmd-rest channel]
+  [{name :name :as avatar} _cmd cmd-rest _channel]
   (m/mlet [attr-val (let [res' (-> avatar :attributes :coc :attrs)
                           res ((keyword (chinese-english-attr-map cmd-rest)) res')]
                       (if (pos-int? res)
