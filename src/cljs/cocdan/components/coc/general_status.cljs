@@ -21,7 +21,7 @@
           connected :连通区域} :coc} (if (nil? substage-id)
                                    nil
                                    ((keyword substage-id) substages))
-        can-edit (= (:owned_by stage) (:id avatar))]
+        _can-edit (= (:owned_by stage) (:id avatar))]
     
     [:div
      [:p.has-text-centered {:on-click #(when (gdb/posh-i-have-control? gdb/conn (:id stage))
@@ -52,9 +52,9 @@
                           :else "难以忍受"))]]
         [:div.column {:style {:margin "6px"}}
          [:p (str "视线：" (cond
-                          (< vision 10) "清晰"
-                          (< vision 40) "受阻"
-                          (< vision 60) "遮蔽"
+                          (< vision 30) "清晰"
+                          (< vision 60) "受阻"
+                          (< vision 90) "遮蔽"
                           :else "难以视物"))]]])
      [:div
       {:style {:margin-left "0.5em"}}

@@ -143,4 +143,7 @@
           [:p.control
            [:a.button
             {:style {:height "100%"}
-             :on-click #(send-msg avatar-id-use)} "行动"]]]]))))
+             :on-click #(send-msg avatar-id-use)} (case @action
+                                                    "说话" "发言"
+                                                    "使用" "行动"
+                                                    "")]]]]))))
