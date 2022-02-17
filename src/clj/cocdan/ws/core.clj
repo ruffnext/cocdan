@@ -51,6 +51,7 @@
                                         :forward false)))
                        (fn [x] x))
         responseMsg (gaux/->json (dissoc msg :forward))]
+    (log/debug msg)
     (if forward
       (doseq [channel (ws-db/query-channels-by-channel @ws-db/db channel)]
         (async/send! channel responseMsg))

@@ -5,5 +5,4 @@
                                       posh.reagent/pull-many
                                       markdown.core/md->html
                                       ring.util.http-response/content-type
-                                      ring.util.http-response/header]}}
- }
+                                      ring.util.http-response/header]}}}

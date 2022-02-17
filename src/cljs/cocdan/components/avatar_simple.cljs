@@ -17,7 +17,8 @@
                                                                    [:span {:class "subtitle is-7"} " 管理员"])]
         [:p {:class "subtitle is-6"} (if (nil? on_stage)
                                        "无所属"
-                                       [:a {:href (str "#/stage/" on_stage)} (str "@" stage-title)])]]]
+                                       [:a {:on-click #(rf/dispatch [:event/page-goto-stage on_stage])}
+                                        (str "@" stage-title)])]]]
       [:div.content
        [:div {:class "columns is-multiline has-text-centered"}
         [:div {:class "column is-one-quarter"}

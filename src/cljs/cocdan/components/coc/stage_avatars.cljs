@@ -4,27 +4,36 @@
    [cocdan.db :as gdb]))
 
 (defn- avatar-item
-  [{id :id :as avatar} stage]
+  [{id :id :as avatar} my-avatars stage]
   (let [avatar-edit #(rf/dispatch [:event/modal-general-attr-editor-active
                                    :avatar [:attributes] avatar
                                    {:substage (sort (for [[k _v] (-> stage
                                                                      :attributes
                                                                      :substages)]
                                                       (name k)))}])
+        i-have-control? (gdb/posh-i-have-control? gdb/conn id)
+        can-edit? (or i-have-control? (contains? (set (map :id my-avatars)) (:id avatar)))
         on-detail-edit (fn []
-                         (let [all-avatars (gdb/posh-avatar-by-stage-id gdb/conn (:id stage))]
-                           (rf/dispatch [:event/modal-coc-avatar-edit-active all-avatars (:id avatar)])))
+                         (cond
+                           i-have-control?
+                           (let [all-avatars (gdb/posh-avatar-by-stage-id gdb/conn (:id stage))]
+                             (rf/dispatch [:event/modal-coc-avatar-edit-active all-avatars (:id avatar)]))
+
+                           (contains? (set (map :id my-avatars)) (:id avatar))
+                           (rf/dispatch [:event/modal-coc-avatar-edit-active my-avatars (:id avatar)])))
         unread-count (count (gdb/posh-unread-message-count gdb/conn id))]
     [:div {:style {:padding-left "6px"
                    :padding-bottom "3px"}} (:name avatar)
      [:span.is-pulled-right ""]
-     [:p.is-pulled-right
-      {:style {:padding-right "12px" :padding-left "12px"}
-       :on-click on-detail-edit}
-      "EDIT"]
+     (when can-edit?
+       [:p.is-pulled-right
+        {:style {:padding-right "12px" :padding-left "12px"}
+         :on-click on-detail-edit}
+        "EDIT"])
      [:span.is-pulled-right
-      {:style {:padding-right "12px" :padding-left "12px"}
-       :on-click avatar-edit}
+      {:style (merge {:padding-right "12px" :padding-left "12px"} (when (not can-edit?)
+                                                                    {:padding-right "4.6em"}))
+       :on-click #(when i-have-control? (avatar-edit))}
       (if (nil? (-> avatar :attributes :substage))
         "not yet on stage"
         (-> stage
@@ -37,8 +46,8 @@
         unread-count])]))
 
 (defn stage-avatars
-  [stage avatars]
+  [stage avatars my-avatars]
   [:div {:style {:margin "6px"}}
    [:p "舞台上的角色"]
    (doall (for [avatar avatars]
-            (with-meta (avatar-item avatar stage) {:key (str "sa-" (:id avatar))})))])
+            (with-meta (avatar-item avatar my-avatars stage) {:key (str "sa-" (:id avatar))})))])

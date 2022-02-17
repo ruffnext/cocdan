@@ -69,7 +69,8 @@
           [:option "隐藏"]]]
         [:p.control.is-expanded
          [:input.input
-          {:on-change #(reset! current-input (-> % .-target .-value))
+          {:placeholder "edit to add item"
+           :on-change #(reset! current-input (-> % .-target .-value))
            :value @current-input}]]
         [:p.control
          [:a.button

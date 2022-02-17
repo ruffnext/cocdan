@@ -124,14 +124,12 @@
    ^{:key "mjs"} [:section.section
                   [:h1.title "我主持的舞台"]
                   [:div.columns {:class "is-multiline" :style {:margin-left 12}}
-                   (apply list  (map-indexed (fn [i v]
-                                               (with-meta (component-stage-simple v "controlled") {:key i}))
-                                             @(rf/subscribe [:subs/stages-owned])))
+                   (doall (for [v @(rf/subscribe [:subs/stages-owned])]
+                            (with-meta (component-stage-simple v "controlled") {:key (str (:id v))})))
                    (with-meta (component-edit #(rf/dispatch [:event/modal-stage-edit-active nil])) {:key "cssp1"})]]
    ^{:key "mms"} [:section.section
                   [:h1.title "我参加的舞台"]
                   [:div.columns {:class "is-multiline" :style {:margin-left 12}}
-                   (list (map-indexed (fn [i v]
-                                        (with-meta (component-stage-simple v "joined") {:key i}))
-                                      @(rf/subscribe [:subs/stages-joined]))
-                         (with-meta (component-search #(rf/dispatch [:event/modal-find-stage-active true])) {:key "cssp"}))]]))
+                   (doall (for [v @(rf/subscribe [:subs/stages-joined])]
+                            (with-meta (component-stage-simple v "joined") {:key (str (:id v))})))
+                   (with-meta (component-search #(rf/dispatch [:event/modal-find-stage-active true])) {:key "cssp"})]]))

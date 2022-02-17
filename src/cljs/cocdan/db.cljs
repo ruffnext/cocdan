@@ -8,6 +8,7 @@
 (def schema
   {:stage/id {:db/unique :db.unique/identity}
    :avatar/id {:db/unique :db.unique/identity}
+   :avatar/messages {:db/cardinality :db.cardinality/many}
    ;:message/time {:db/unique :db.unique/identity}
    })
 
@@ -237,6 +238,18 @@
     (-> (d/pull-many ds '[*] avatars)
         remove-db-perfix)))
 
+(defn query-avatar-by-id
+  [ds avatar-id]
+  (let [aid (->> (d/q '[:find ?e
+                        :in $ ?avatar-id
+                        :where [?e :avatar/id ?avatar-id]]
+                      ds
+                      avatar-id)
+                 (reduce into [])
+                 first)]
+    (-> (d/pull ds '[*] aid)
+        remove-db-perfix)))
+
 (rp/reg-sub
  :rpsub/stage-avatars
  (fn [ds [_dirven-by stage-id]]
@@ -321,7 +334,24 @@
         conn)
   (d/q '[:find ?e
          :where [?e :avatar/id]] @conn)
-  (d/pull @conn '[*]  (d/entid @conn [:avatar/id 1])))
+  (d/pull @conn '[*]  (d/entid @conn [:avatar/id 1]))
+  (->> (d/q '[:find ?eid
+              :where
+              [?eid :message/receiver 2]]
+            @conn)
+       (take 10))
+  (d/transact conn [{:avatar/id 2
+                     :avatar/messages [{:db/id -1 :message/msg "Hello" :message/time 23}]}])
+  (d/pull @conn '[*] 2)
+
+  (d/q '[:find ?ms
+         :where
+         [?a :avatar/id 2]
+         [?a :avatar/messages ?ms]]
+       @conn)
+  (d/entity @conn 18)
+  (d/pull @conn '[*] 18)
+  )
 
 
 

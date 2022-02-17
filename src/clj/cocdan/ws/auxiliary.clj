@@ -34,7 +34,7 @@
                      _ (m/foldm (fn [_ x] (if (not (nil? (x msg-parsed)))
                                             (either/right "")
                                             (either/left (str "invalid message received! missing field " x)))) (either/right "") msg-fields)]
-                    (m/return msg-parsed))]
+                    (m/return (assoc msg-parsed :forward true)))]
     (either/branch res
                    (fn [x]
                      (either/left (make-msg 0 "alert" x)))
