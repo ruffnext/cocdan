@@ -1,6 +1,5 @@
 (ns user
   "Userspace functions you can run by default in your local REPL."
-  #_{:clj-kondo/ignore [:unused-referred-var]}
   (:require
    [cocdan.config :refer [env]]
     [clojure.pprint]

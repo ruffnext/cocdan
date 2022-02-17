@@ -41,7 +41,6 @@
   (-> ((:middleware defaults) handler)
       wrap-flash
       (wrap-session {:cookie-attrs {:http-only true
-                                    :secure true
                                     :max-age -1}
                      :timeout 0})
       (wrap-defaults
