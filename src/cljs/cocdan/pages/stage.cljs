@@ -88,7 +88,8 @@
          [:div {:class "sketch"}
           (general-status (gdb/posh-stage-by-id gdb/conn stage-id) current-use-avatar)]
          [:div {:class "sketch"
-                :style {:margin-top "1em"}}
+                :style {:background-color "white"
+                        :margin-top "1em"}}
           (stage-avatars stage (-> (filter #(= (-> %
                                                    :attributes
                                                    :substage)
@@ -96,7 +97,6 @@
                                                    :attributes
                                                    :substage))
                                            avatars-on-stage)
-                                   (conj my-avatars)
                                    flatten
                                    set
                                    vec)
