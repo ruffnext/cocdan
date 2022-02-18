@@ -222,11 +222,6 @@
 
 (defn- on-close
   [db [_query-id stage-id _event]]
-  (assoc db :stages (gaux/swap-filter-list-map!
-                     (:stages db)
-                     #(= (:id %) stage-id)
-                     (fn [stage]
-                       (assoc stage :channel nil))))
   (let [my-avatars (gdb/query-my-avatars @gdb/conn)
         on-stage-avatars (filter #(= (:on_stage %) stage-id) my-avatars)]
     (go
@@ -243,7 +238,12 @@
            #(append-msg stage-id (-> (for [avatar on-stage-avatars]
                                        (assoc (make-system-msg "Reconnection failed after 3 retry") :receiver (:id avatar)))
                                      vec))
-           #())))))
+           #())))
+    (assoc db :stages (gaux/swap-filter-list-map!
+                       (:stages db)
+                       #(= (:id %) stage-id)
+                       (fn [stage]
+                         (assoc stage :channel nil))))))
 
 (defn- send-message
   [_app-data [_driven-by stage-id msg]]
