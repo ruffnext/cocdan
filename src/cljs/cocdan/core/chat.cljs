@@ -64,9 +64,11 @@
    :type "system-msg"
    :msg msg})
 
+(goog-define ws-host "localhost")
+
 (defn- make-stage-ws
   [{stage-id :stage-id}]
-  (let [url (str "ws://localhost:3000/ws/" stage-id)]
+  (let [url (str "ws://"  ws-host ":3000/ws/" stage-id)]
     (m/mlet [channel (either/try-either (js/WebSocket. url))]
             (do
               (set! (.-onmessage channel) #(rf/dispatch [:event/chat-on-message stage-id %]))
@@ -201,7 +203,6 @@
                                             (either/left (str "invalid message received! missing field " x)))) (either/right "") [:avatar :msg :type :time])
                      stage (either/try-either (gdb/posh-stage-by-id gdb/conn stage-id))]
                     (m/return (dispatch-messages raw-msg my-avatars (:id (gdb/posh-i-have-control? gdb/conn stage-id)) stage)))]
-    (js/console.log res)
     (either/branch res
                    (fn [x]
                      (either/left (make-msg 0 alert x)))

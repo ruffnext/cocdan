@@ -8,8 +8,9 @@
    :modules    {:app {:entries [cocdan.app]}}
    :devtools   {:watch-dir "resources/public"
                 :preloads  [re-frisk.preload]}
-   :dev        {:closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}}
-   :release    {}}
+   :dev        {:closure-defines {"re_frame.trace.trace_enabled_QMARK_" true
+                                  cocdan.core.chat/ws-host "localhost"}}
+   :release    {:closure-defines {cocdan.core.chat/ws-host "localhost"}}}
   :test {:target  :node-test, :output-to "target/test/test.js"
          :autorun true}}
  :lein  {:profile "+dev"}}
