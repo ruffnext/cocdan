@@ -32,7 +32,6 @@
           connected-substage (sort (disj (set (for [[k _v] (-> @stage :attributes :substages)]
                                                 (subs (str k) 1)))
                                          @current-edit-substage-id))
-          _ (js/console.log connected-substage)
           on-create (fn [id']
                       (js/console.log id')
                       (swap! stage #(assoc-in %
@@ -81,8 +80,8 @@
                                   (let [value (-> e .-target .-value)
                                         ori-value (-> substage :coc :连通区域)]
                                     (if (contains? ori-value value)
-                                      (swap! stage (fn [a] (assoc-in a [:attributes :substages (keyword @current-edit-substage-id) :coc :连通区域] (disj ori-value value))))
-                                      (swap! stage (fn [a] (assoc-in a [:attributes :substages (keyword @current-edit-substage-id) :coc :连通区域] (conj ori-value value)))))))}
+                                      (swap! stage (fn [a] (assoc-in a [:attributes :substages (keyword @current-edit-substage-id) :coc :连通区域] (set (disj ori-value value)))))
+                                      (swap! stage (fn [a] (assoc-in a [:attributes :substages (keyword @current-edit-substage-id) :coc :连通区域] (set (conj ori-value value))))))))}
              (doall (map
                      (fn [v] (with-meta [:option
                                          (str v)] {:key (str "se-s-" v)}))

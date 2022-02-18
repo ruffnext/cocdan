@@ -11,7 +11,7 @@
                                                                      :attributes
                                                                      :substages)]
                                                       (name k)))}])
-        i-have-control? (gdb/posh-i-have-control? gdb/conn id)
+        i-have-control? (gdb/posh-i-have-control? gdb/conn (:id stage))
         can-edit? (or i-have-control? (contains? (set (map :id my-avatars)) (:id avatar)))
         on-detail-edit (fn []
                          (cond
