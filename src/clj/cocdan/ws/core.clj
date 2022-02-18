@@ -63,7 +63,7 @@
                {stage-id :stage-id user :user} (ws-db/pull-channel @ws-db/db channel)
                _check (-> (m/do-let
                            (ws-aux/check-avatar-access stage-id avatar-id (:id user))))
-               response (router/handle-msg msg-json channel)]
+               response (router/handle-msg (assoc msg-json :time (.getTime (java.util.Date.))) channel)]
               (m/return response))
       (handle-msg-response channel)))
 
