@@ -225,9 +225,10 @@
     msg-type :type
     avatar-id :avatar
     substage :substage  :as msg-raw}  channel]
-  (when (= msg-type "msg")
-    (let [match-res (re-matcher #"^[.。](?<cmd>(show|watch|sc|st|aa|r[b]+|r[p]+|rd|ra|rc|r\d{1,}d\d{1,}[^ ]*))[ ]*(?<rest>.*)" msg)]
+  (when (= msg-type "speak-normal")
+    (let [match-res (re-matcher #"^[.。](?<cmd>(close|show|watch|sc|st|aa|r[b]+|r[p]+|rd|ra|rc|r\d{1,}d\d{1,}[^ ]*))[ ]*(?<rest>.*)" msg)]
       (when (.matches match-res)
+        (log/debug "ENTER")
         (let [res (m/mlet [[cmd cmd-rest] (either/right [(.group match-res "cmd") (.group match-res "rest")])
                            avatar (ws-db/pull-avatar-by-id @ws-db/db avatar-id)
                            res (cond
@@ -236,6 +237,9 @@
                                  (str/starts-with? cmd "r") (r avatar cmd cmd-rest channel)
                                  (= cmd "watch") (watch avatar cmd cmd-rest channel)
                                  (= cmd "show") (show-attr avatar cmd cmd-rest channel)
+                                 (= cmd "close") (do
+                                                   (log/debug "CLOSE")
+                                                   (either/try-either (async/close channel)))
                                  :else (either/left "command not supported"))]
                           (either/right res))]
           (either/branch res

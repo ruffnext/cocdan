@@ -7,7 +7,8 @@
    [re-posh.core :as rp]
    [cocdan.core.indexeddb :as idb]
    [cocdan.db :as gdb]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [clojure.core.async :refer [go <! timeout]]))
 
 (def alert "alert")
 (def sync "sync")
@@ -71,7 +72,8 @@
               (set! (.-onmessage channel) #(rf/dispatch [:event/chat-on-message stage-id %]))
               (set! (.-onclose channel) #(rf/dispatch [:event/chat-on-close stage-id %]))
               (rp/dispatch [:rpevent/upsert :stage {:id stage-id
-                                                    :channel channel}])))))
+                                                    :channel channel}]))
+            (either/right "success"))))
 
 (defn- append-msg
   [stage-id msg]
@@ -224,7 +226,29 @@
                      #(= (:id %) stage-id)
                      (fn [stage]
                        (assoc stage :channel nil))))
-  (append-msg stage-id (make-msg 0 "alert" "Connection Closed"))
+  (let [my-avatars (gdb/query-my-avatars @gdb/conn)
+        on-stage-avatars (filter #(= (:on_stage %) stage-id) my-avatars)
+        msg (make-system-msg (str "Connection closed"))]
+    (go
+      (-> (make-stage-ws {:stage-id stage-id})
+          (either/branch-left ; second retry
+           #(do
+              (<! (timeout 1000))
+              (make-stage-ws {:stage-id stage-id})))
+          (either/branch-left ; third retry
+           #(do
+              (<! (timeout 1000))
+              (make-stage-ws {:stage-id stage-id})))
+          (either/branch
+           #(append-msg stage-id (-> (for [avatar on-stage-avatars]
+                                       (assoc (make-system-msg "Reconnection failed after 3 retry") :receiver (:id avatar)))
+                                     vec))
+           #(append-msg stage-id (-> (for [avatar on-stage-avatars]
+                                       (assoc (make-system-msg "Reconnection success") :receiver (:id avatar)))
+                                     vec)))))
+    (append-msg stage-id (-> (for [avatar on-stage-avatars]
+                               (assoc msg :receiver (:id avatar)))
+                             vec)))
   (js/console.log _event))
 
 (defn- send-message
@@ -257,3 +281,7 @@
 
 (doseq [[sub f] {:subs/chat-substage-msgs sub-substage-msgs}]
   (rf/reg-sub sub f))
+
+(comment
+  (either/branch-left (either/right "hello")
+                      (fn [x] x)))
