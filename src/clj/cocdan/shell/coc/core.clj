@@ -157,10 +157,7 @@
                                     (either/right (conj a res))))
                           []
                           (take 2 res))
-                 (either/left "sc [success]/[failed]"))))
-  (let [res (re-seq #"(?<attr>[^0-9]+)(?<val>[0-9]+)" "力量35 敏捷50 意志65 体质45 外貌75 教育75 体型40 智力75 理智65 幸运55 速记50 魅惑70 信用评级90 历史60 法语51 拉丁语41 导航60 说服70 骑乘50 ")]
-    (first res))
-  )
+                 (either/left "sc [success]/[failed]")))))
 
 (defn- set-attr
   [avatar _cmd cmd-rest channel]
@@ -223,19 +220,13 @@
                         (either/left (format "你的角色没有 %s 属性" cmd-rest))))]
           (either/right (format "%s的%s是%s" name cmd-rest (str attr-val)))))
 
-(comment
-  (let [match-res (re-matcher #"^[.。](sc|st)[ ]+.*" (str/replace ".st 123\n" "\n" ""))]
-    (.matches match-res))
-  )
-
-
 (defn coc
   [{msg :msg
     msg-type :type
     avatar-id :avatar
     substage :substage  :as msg-raw}  channel]
   (when (= msg-type "speak-normal")
-    (let [match-res (re-matcher #"^[.。](?<cmd>(close|show|watch|sc|st|aa|r[b]+|r[p]+|rd|ra|rc|r\d{1,}d\d{1,}[^ ]*))[ ]*(?<rest>[.]*)" (str/replace msg "\n" ""))]
+    (let [match-res (re-matcher #"^[.。](?<cmd>(close|show|watch|sc|st|aa|r[b]+|r[p]+|rd|ra|rc|r\d{1,}d\d{1,}[^ ]*))[ ]*(?<rest>.*)" (str/replace msg #"[\r\n]" ""))]
       (when (.matches match-res)
         (log/debug "ENTER")
         (let [res (m/mlet [[cmd cmd-rest] (either/right [(.group match-res "cmd") (.group match-res "rest")])
