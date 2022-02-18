@@ -208,7 +208,6 @@
                    (fn [x]
                      (either/left (make-msg 0 alert x)))
                    (fn [x]
-                     (js/console.log x)
                      (either/right x)))))
 
 (defn- on-message

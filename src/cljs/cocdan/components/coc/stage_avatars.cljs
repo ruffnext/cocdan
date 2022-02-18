@@ -1,11 +1,11 @@
 (ns cocdan.components.coc.stage-avatars 
   (:require 
    [re-frame.core :as rf]
-   [cocdan.db :as gdb]))
+   [cocdan.db :as gdb]
+   [clojure.string :as str]))
 
 (defn- avatar-item
   [{id :id :as avatar} my-avatars stage]
-  (js/console.log my-avatars)
   (let [avatar-edit #(rf/dispatch [:event/modal-general-attr-editor-active
                                    :avatar [:attributes] avatar
                                    {:substage (sort (for [[k _v] (-> stage
@@ -41,7 +41,10 @@
             :attributes
             :substages
             (#((keyword (-> avatar :attributes :substage str)) %))
-            :name))]
+            :name
+            (str/split #">")
+            ((fn [x] (take-last 2 x)))
+            ((fn [x] (str/join ">" x)))))]
      (when (pos-int? unread-count)
        [:span.is-pulled-right.has-text-danger
         unread-count])]))

@@ -41,8 +41,7 @@
   [{session :session  {{id :id} :path
                        {controlled_by :controlled_by :as newAvatar} :body} :parameters}]
   {:per [(int? id)]}
-  (log/debug newAvatar)
-  (m/mlet [{user-id :id :as user} (users/login? session)
+  (m/mlet [{user-id :id :as _user} (users/login? session)
            {on_stage :on_stage controller :controlled_by :as avatar} (aux/get-avatar-by-id? id)
            _ (cond
                (not= (:controlled_by avatar) user-id)

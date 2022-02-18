@@ -103,8 +103,6 @@
                         [:select
                          {:default-value default-value
                           :on-change #(swap! attrs (fn [a]
-                                                     (js/console.log (assoc-in a key-path
-                                                                               (nth v-schema (js/parseInt (-> % .-target .-value)))))
                                                      (assoc-in a key-path
                                                                (nth v-schema (js/parseInt (-> % .-target .-value))))))}
                          (doall (map-indexed
