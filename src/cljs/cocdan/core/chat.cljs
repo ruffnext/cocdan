@@ -65,10 +65,11 @@
    :msg msg})
 
 (goog-define ws-host "localhost")
+(goog-define ws-port 3000)
 
 (defn- make-stage-ws
   [{stage-id :stage-id}]
-  (let [url (str "ws://"  ws-host ":3000/ws/" stage-id)]
+  (let [url (str "ws://"  ws-host ":" ws-port "/ws/" stage-id)]
     (m/mlet [channel (either/try-either (js/WebSocket. url))]
             (do
               (set! (.-onmessage channel) #(rf/dispatch [:event/chat-on-message stage-id %]))

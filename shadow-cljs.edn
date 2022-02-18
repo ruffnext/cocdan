@@ -9,8 +9,10 @@
    :devtools   {:watch-dir "resources/public"
                 :preloads  [re-frisk.preload]}
    :dev        {:closure-defines {"re_frame.trace.trace_enabled_QMARK_" true
-                                  cocdan.core.chat/ws-host "localhost"}}
-   :release    {:closure-defines {cocdan.core.chat/ws-host "localhost"}}}
+                                  cocdan.core.chat/ws-host "localhost"
+                                  cocdan.core.chat/ws-port 3000}}
+   :release    {:closure-defines {cocdan.core.chat/ws-host "localhost"
+                                  cocdan.core.chat/ws-port 80}}}
   :test {:target  :node-test, :output-to "target/test/test.js"
          :autorun true}}
  :lein  {:profile "+dev"}}
