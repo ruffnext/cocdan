@@ -146,7 +146,7 @@
             (set! (.-scrollTop p-node) (.-scrollHeight p-node)))))
 
       :reagent-render
-      (fn [stage current-use-avatar-id my-avatars]
+      (fn [stage current-use-avatar-id _my-avatars]
         (let [msgs (get-msgs gdb/conn current-use-avatar-id @limit)]
           [:div
            {:style {:width "100%"

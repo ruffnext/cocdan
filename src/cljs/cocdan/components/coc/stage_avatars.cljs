@@ -43,8 +43,9 @@
             (#((keyword (-> avatar :attributes :substage str)) %))
             :name
             (str/split #">")
-            ((fn [x] (take-last 2 x)))
-            ((fn [x] (str/join ">" x)))))]
+            ((fn [x] (take-last 1 x)))
+            ; ((fn [x] (str/join ">" x)))
+            ))]
      (when (pos-int? unread-count)
        [:span.is-pulled-right.has-text-danger
         unread-count])]))
