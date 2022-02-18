@@ -3,6 +3,7 @@
             [cocdan.users.core :as users]
             [cocdan.users.auxiliary :as usersaux]
             [cocdan.avatars.auxiliary :as aux]
+            [cocdan.stages.auxiliary :as stages-aux]
             [cats.core :as m]
             [cats.monad.either :as either]
             [clojure.string :as string]
@@ -41,13 +42,18 @@
                        {controlled_by :controlled_by :as newAvatar} :body} :parameters}]
   {:per [(int? id)]}
   (log/debug newAvatar)
-  (m/mlet [user (users/login? session)
-           avatar (aux/get-avatar-by-id? id)
+  (m/mlet [{user-id :id :as user} (users/login? session)
+           {on_stage :on_stage controller :controlled_by :as avatar} (aux/get-avatar-by-id? id)
            _ (cond
-               (not= (:controlled_by avatar) (:id user)) (either/left (format "you don't have permission to modifiy avatar %d" id))
+               (not= (:controlled_by avatar) user-id)
+               (either/branch (stages-aux/get-by-id? on_stage)
+                              (fn [_x] (either/left (format "you don't have permission to modifiy avatar %d" id)))
+                              (fn [stage]
+                                (m/mlet [avatars (aux/list-avatars-by-user? user-id)]
+                                 (stages-aux/check-control-permission avatars stage))))
                :else (either/right ""))
            new-controller (if (nil? controlled_by)
-                            (either/right user)
+                            (either/right {:id controller})
                             (usersaux/get-by-id? controlled_by))
            res (aux/transfer-avatar! (->
                                       (gaux/flatten-map avatar)

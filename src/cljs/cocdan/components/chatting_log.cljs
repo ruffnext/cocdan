@@ -8,7 +8,10 @@
    [cocdan.db :as gdb]))
 
 (defn- log-item
-  [msg my-avatar-ids]
+  [{msg-text' :msg
+    msg-type :type
+    substage :substage
+    avatar-id :avatar :as msg} current-use-avatar-id {stage-admin :owned_by}]
   (let [[avatar-name avatar-header avatar-attrs]
         (if (= 0 (:avatar msg))
           "system"
@@ -21,9 +24,9 @@
                        [?e :avatar/attributes ?attrs]]
                      gdb/conn (:avatar msg))
                (reduce into [])))
-        {msg-text :msg
-         msg-type :type
-         avatar-id :avatar} msg
+        msg-text (cond
+                   (= stage-admin current-use-avatar-id) (str msg-text' "@" substage)
+                   :else msg-text')
         address-info (let [items (->> avatar-attrs :coc :items)
                            hands (->> (reduce (fn [a [k vs]]
                                                 (if (contains? #{:左手持 :右手持 :双手持} k)
@@ -47,7 +50,7 @@
                                              :font-size "14px"}
                                      :class "has-text-centered"} [:i msg-text]]
 
-      (contains? my-avatar-ids avatar-id)
+      (= current-use-avatar-id avatar-id)
       [:div.is-flex.is-justify-content-end
        [:div.media
         {:style {:padding-right "1em"
@@ -108,7 +111,7 @@
   )
 
 (defn chatting-log
-  [_stage-id avatar-id _my-avatars]
+  [_stage avatar-id _my-avatars]
 
   (r/with-let [always-bottom (r/atom true)
                limit (r/atom 40)
@@ -133,7 +136,7 @@
 
       :component-did-update
       (fn [this _old-argv]
-        (let [[_stage-id avatar-id _my-avatars] (rest (r/argv this))
+        (let [[_stage avatar-id _my-avatars] (rest (r/argv this))
               this-node (d/dom-node this)
               p-node (.-parentNode this-node)
               {last-time :time} (last (get-msgs gdb/conn avatar-id 10))]
@@ -143,10 +146,8 @@
             (set! (.-scrollTop p-node) (.-scrollHeight p-node)))))
 
       :reagent-render
-      (fn [_stage-id avatar-id my-avatars]
-        (let [my-avatar-ids (set (for [avatar my-avatars]
-                                   (:id avatar)))
-              msgs (get-msgs gdb/conn avatar-id @limit)]
+      (fn [stage current-use-avatar-id my-avatars]
+        (let [msgs (get-msgs gdb/conn current-use-avatar-id @limit)]
           [:div
            {:style {:width "100%"
                     :padding-bottom "1em"}}
@@ -154,4 +155,4 @@
                 :class "has-text-centered"
                 :on-click #(swap! limit (fn [x] (+ x 40)))} [:i "加载更多消息"]]
            (doall (for [msg msgs]
-                    (with-meta (log-item msg my-avatar-ids) {:key (str "log-" (:time msg) (:receiver msg))})))]))})))
+                    (with-meta (log-item msg current-use-avatar-id stage) {:key (str "log-" (:time msg) (:receiver msg))})))]))})))

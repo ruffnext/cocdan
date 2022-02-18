@@ -5,6 +5,7 @@
 
 (defn- avatar-item
   [{id :id :as avatar} my-avatars stage]
+  (js/console.log my-avatars)
   (let [avatar-edit #(rf/dispatch [:event/modal-general-attr-editor-active
                                    :avatar [:attributes] avatar
                                    {:substage (sort (for [[k _v] (-> stage

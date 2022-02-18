@@ -105,7 +105,7 @@
          [:div
           {:style {:overflow-y "scroll"
                    :height "68%"}}
-          [chatting-log stage-id (:id current-use-avatar) my-avatars]]
+          [chatting-log stage (:id current-use-avatar) my-avatars]]
          [:div {:style {:height "20%"
                         :margin-top "calc(5%)"}}
           (chatting-input stage-id (filter #(and (=
