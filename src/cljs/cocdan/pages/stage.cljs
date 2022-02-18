@@ -82,8 +82,8 @@
                            :margin-top "2em"
                            :margin-bottom "2em"}
                    :class "columns"}
-        [:div.column {:class "sketch" :style {:min-width "19em"
-                                              :max-width "19em"
+        [:div.column {:class "sketch" :style {:min-width "25em"
+                                              :max-width "25em"
                                               :height "100%"}}
          [:div {:class "sketch"}
           (general-status (gdb/posh-stage-by-id gdb/conn stage-id) current-use-avatar)]

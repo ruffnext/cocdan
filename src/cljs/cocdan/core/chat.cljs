@@ -228,8 +228,7 @@
                      (fn [stage]
                        (assoc stage :channel nil))))
   (let [my-avatars (gdb/query-my-avatars @gdb/conn)
-        on-stage-avatars (filter #(= (:on_stage %) stage-id) my-avatars)
-        msg (make-system-msg (str "Connection closed"))]
+        on-stage-avatars (filter #(= (:on_stage %) stage-id) my-avatars)]
     (go
       (-> (make-stage-ws {:stage-id stage-id})
           (either/branch-left ; second retry
@@ -244,13 +243,7 @@
            #(append-msg stage-id (-> (for [avatar on-stage-avatars]
                                        (assoc (make-system-msg "Reconnection failed after 3 retry") :receiver (:id avatar)))
                                      vec))
-           #(append-msg stage-id (-> (for [avatar on-stage-avatars]
-                                       (assoc (make-system-msg "Reconnection success") :receiver (:id avatar)))
-                                     vec)))))
-    (append-msg stage-id (-> (for [avatar on-stage-avatars]
-                               (assoc msg :receiver (:id avatar)))
-                             vec)))
-  (js/console.log _event))
+           #())))))
 
 (defn- send-message
   [_app-data [_driven-by stage-id msg]]

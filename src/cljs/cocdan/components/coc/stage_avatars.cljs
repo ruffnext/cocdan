@@ -24,18 +24,19 @@
                            (rf/dispatch [:event/modal-coc-avatar-edit-active my-avatars (:id avatar)])))
         unread-count (count (gdb/posh-unread-message-count gdb/conn id))]
     [:div {:style {:padding-left "6px"
-                   :padding-bottom "3px"}} (:name avatar)
+                   :padding-bottom "3px"}} [:span.tag (:name avatar)]
      [:span.is-pulled-right ""]
      (when can-edit?
-       [:p.is-pulled-right
+       [:span.tag.is-pulled-right.is-link
         {:style {:padding-right "12px" :padding-left "12px"}
          :on-click on-detail-edit}
         "EDIT"])
      [:span.is-pulled-right
       {:style (merge {:padding-right "12px" :padding-left "12px"} (when (not can-edit?)
-                                                                    {:padding-right "4.6em"}))
-       :on-click #(when i-have-control? (avatar-edit))}
-      (if (nil? (-> avatar :attributes :substage))
+                                                                    {:padding-right "3.9em"}))}
+      [:span.tag
+       {:on-click #(when i-have-control? (avatar-edit))}
+       (if (nil? (-> avatar :attributes :substage))
         "not yet on stage"
         (-> stage
             :attributes
@@ -45,7 +46,7 @@
             (str/split #">")
             ((fn [x] (take-last 1 x)))
             ; ((fn [x] (str/join ">" x)))
-            ))]
+            ))]]
      (when (pos-int? unread-count)
        [:span.is-pulled-right.has-text-danger
         unread-count])]))

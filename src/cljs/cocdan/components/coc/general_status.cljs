@@ -59,10 +59,10 @@
      [:div
       {:style {:margin-left "0.5em"}}
       [:p {:style {:margin-bottom "0.25em"}} "可到达的区域："]
-      [:div {:style {:margin-left "1em"
+      [:div.tags.is-normal {:style {:margin-left "1em"
                      :margin-bottom "1em"}}
        (doall (map (fn [n]
-                     (with-meta [:p
+                     (with-meta [:span.tag
                                  (-> ((keyword n) substages)
                                      :name
                                      (remove-perfix substage-name))] {:key (str "gsc-" n)})) connected))]]]))

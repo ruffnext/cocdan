@@ -19,8 +19,7 @@
     (reset! avatars (vec (sort-by :name avatars')))
     (if (nil? current-edit-avatar-id')
       (reset! current-edit-avatar-index 0)
-      (reset! current-edit-avatar-index (let [index-list (vec (for [a avatars']
-                                                                (:id a)))]
+      (reset! current-edit-avatar-index (let [index-list (-> (map :id @avatars) vec)]
                                           (if (contains? (set index-list) current-edit-avatar-id')
                                             (.indexOf index-list current-edit-avatar-id')
                                             0))))
@@ -89,8 +88,8 @@
                                        (let [avatar (nth @avatars @current-edit-avatar-index)
                                              to-submit {:id (:id avatar)
                                                         :attributes (:attributes avatar)
-                                                        :header (:header avatar)}]
-                                         (js/console.log to-submit)
+                                                        :header (:header avatar)
+                                                        :name (:name avatar)}]
                                          (rf/dispatch [:event/patch-to-server :avatar to-submit]))
                                        (edit-cancel))} "Submit"]
          [:button.button {:on-click edit-cancel} "Cancel"]]]])))
