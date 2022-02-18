@@ -2,7 +2,6 @@
   (:require
    [cocdan.core.chat :as chat]
    [reagent.core :as r]
-   [clojure.string :as str]
    ["react-select/creatable" :refer (default) :rename {default react-select}]
    [re-posh.core :as rp]
    [re-frame.core :as rf]))
@@ -135,9 +134,9 @@
                                                "说话" "说话"
                                                "使用" "描述你的使用方法"
                                                "")
-                                :on-key-press (fn [e]
-                                                (when (and (= 13 (.-charCode e)) (not (str/blank? @text)))
-                                                  (send-msg avatar-id-use)))
+                                ;; :on-key-press (fn [e]
+                                ;;                 (when (and (= 13 (.-charCode e)) (not (str/blank? @text)))
+                                ;;                   (send-msg avatar-id-use)))
                                 :on-change #(reset! text (-> % .-target .-value))
                                 :value @text}]]
           [:p.control

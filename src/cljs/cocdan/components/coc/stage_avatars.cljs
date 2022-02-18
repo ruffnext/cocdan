@@ -9,8 +9,8 @@
   [{id :id :as avatar} my-avatars stage]
   (let [avatar-edit #(rf/dispatch [:event/modal-general-attr-editor-active
                                    :avatar [:attributes] avatar
-                                   {:substage (sort (for [[{avatar-name :name} _v] (-> stage :attributes :substages)]
-                                                      avatar-name))}])
+                                   {:substage (sort (for [[k _v] (-> stage :attributes :substages)]
+                                                      (subs (str k) 1)))}])
         i-have-control? (gdb/posh-i-have-control? gdb/conn (:id stage))
         can-edit? (or i-have-control? (contains? (set (map :id my-avatars)) (:id avatar)))
         on-detail-edit (fn []
