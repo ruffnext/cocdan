@@ -4,7 +4,8 @@
    [reagent.core :as r]
    ["react-select/creatable" :refer (default) :rename {default react-select}]
    [re-posh.core :as rp]
-   [re-frame.core :as rf]))
+   [re-frame.core :as rf]
+   [clojure.string :as str]))
 
 (defn- gen-voice-options
   [substage-avatars avatar-id-use]
@@ -36,35 +37,35 @@
                  voice-to-target (r/atom [])
                  items-to-use (r/atom [])
                  send-msg (fn [id]
-                            (let [msg (case @action
-                                        "说话" (case @voice
-                                               "大声" (chat/make-speak-loudly-msg id @text)
-                                               "正常" (chat/make-speak-normal-msg id @text)
-                                               "小声" (chat/make-speak-whisper-msg id (reduce (fn [a x]
-                                                                                              (conj a (:value x))) [] @voice-to-target) @text))
-                                        "使用" (chat/make-action-use id (reduce (fn [a x]
-                                                                                (conj a (:value x))) [] @items-to-use) @text)
-                                        "msg")]
-                              (rf/dispatch [:event/chat-send-message stage-id msg]))
-                            (reset! text ""))]
-      (when (not= @last-avatar-use avatar-id-use)
-        (reset! voice-to-target [])
-        (reset! last-avatar-use avatar-id-use)
-        (reset! items-to-use []))
+                            (when (not (str/blank? @text))
+                              (let [msg (case @action
+                                          "说话" (case @voice
+                                                 "大声" (chat/make-speak-loudly-msg id @text)
+                                                 "正常" (chat/make-speak-normal-msg id @text)
+                                                 "小声" (chat/make-speak-whisper-msg id (reduce (fn [a x]
+                                                                                                (conj a (:value x))) [] @voice-to-target) @text))
+                                          "使用" (chat/make-action-use id (reduce (fn [a x]
+                                                                                  (conj a (:value x))) [] @items-to-use) @text)
+                                          "msg")]
+                                (rf/dispatch [:event/chat-send-message stage-id msg]))))
+                 reset-input (fn []
+                               (reset! voice-to-target [])
+                               (reset! last-avatar-use avatar-id-use)
+                               (reset! items-to-use []))
+                 on-select-avatar-change #(rp/dispatch [:rpevent/upsert :stage {:id stage-id
+                                                                                :current-use-avatar (js/parseInt (-> % .-target .-value))}])]
+      (when (not= @last-avatar-use avatar-id-use) (reset-input))
       (let [voice-options (gen-voice-options substage-avatars avatar-id-use)
             item-options (gen-item-options items)]
         [:div
          [:div {:class "field has-addons"}
-          [:p.control
-           [:a.button.is-static
-            "角色"]]
+          [:p.control>a.button.is-static "角色"]
           [:p.control
            {:style {:margin-right "1em"}}
            [:span.select
             [:select
              {:title "选择操作的角色"
-              :on-change #(rp/dispatch [:rpevent/upsert :stage {:id stage-id
-                                                                :current-use-avatar (js/parseInt (-> % .-target .-value))}])
+              :on-change on-select-avatar-change
               :value avatar-id-use}
              (for [avatar avatar-avilables]
                ^{:key (str "cias-" (:id avatar))} [:option {:value (:id avatar)} (str (:name avatar))])]]]
@@ -88,9 +89,7 @@
                        ^{:key "ci-voice-2"} [:p.control
                                              [:span.select
                                               [:select
-                                               {:on-change #(do
-                                                              (reset! voice (-> % .-target .-value))
-                                                              (js/console.log @voice))
+                                               {:on-change #(reset! voice (-> % .-target .-value))
                                                 :value @voice}
                                                [:option {:title "同一舞台内的角色 能够 听到你说话"} "正常"]
                                                [:option {:title "相邻舞台的角色 可能会 听到你说话"} "大声"]
@@ -134,15 +133,21 @@
                                                "说话" "说话"
                                                "使用" "描述你的使用方法"
                                                "")
-                                ;; :on-key-press (fn [e]
-                                ;;                 (when (and (= 13 (.-charCode e)) (not (str/blank? @text)))
-                                ;;                   (send-msg avatar-id-use)))
-                                :on-change #(reset! text (-> % .-target .-value))
+                                :onKeyPress (fn [e]
+                                              (when (and (= 13 (.-charCode e)) (not (str/blank? @text)))
+                                                (send-msg avatar-id-use)
+                                                (reset! text "")
+                                                (.preventDefault e)))
+                                :on-change (fn [e]
+                                             (reset! text (-> e .-target .-value)))
                                 :value @text}]]
           [:p.control
            [:a.button
             {:style {:height "100%"}
-             :on-click #(send-msg avatar-id-use)} (case @action
-                                                    "说话" "发言"
-                                                    "使用" "行动"
-                                                    "")]]]]))))
+             :on-click #(do
+                          (send-msg avatar-id-use)
+                          (reset! text ""))}
+            (case @action
+              "说话" "发言"
+              "使用" "行动"
+              "")]]]]))))
