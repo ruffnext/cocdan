@@ -6,6 +6,8 @@ this is a online role-based chatting server/client for trgp (e.g. CoC), Currentl
 
 这是一个基于角色的 TRPG 在线聊天平台，当前正处于高强度开发状态。
 
+Online Preview : [CoC-Dan](http://cocdan.ruffnex.me)
+
 ## Prerequisites
 
 You will need [Leiningen][1] 2.0 or above installed.
@@ -26,13 +28,12 @@ run:
 
 Setup Environment:
 
-    lein run migrate      // to create database for server
     yarn                  // to fetch dependencies for client
-    shadow-cljs watch app // generate app.js
-    lein run              // start http server
+    lein run migrate      // to create database for server
 
 Start Development:
 
+    shadow-cljs watch app // dynamic generate app.js
     lein run              // start server and watch
     
     or just use vscode:
