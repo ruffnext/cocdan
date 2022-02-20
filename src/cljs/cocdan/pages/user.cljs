@@ -11,20 +11,24 @@
 (defn- try-session-login
   [{:keys [db]} _]
   (-> {:db db}
-      (#(assoc % :http-request {:url "/api/user/whoami"
-                                      :method http/get
-                                      :resp-event :event/user-initialize}))))
+      (assoc :http-request {:url "/api/user/whoami"
+                            :method http/get
+                            :resp-event :event/user-initialize})
+      (assoc-in [:db :login :status] "inprogress")))
 
 (defn- user-init
   [{:keys [db]} _ res _]
   (let [user (-> res :body :user)]
     (rp/dispatch [:rpevent/upsert :my-info user])
     (if (nil? user)
-      {:db db}
-      {:db (assoc db :user user)
-       :http-request [{:url "/api/user/avatar/list"
-                             :method http/get
-                             :resp-event :event/avatar-initialize}]})))
+      (-> {:db db}
+          (assoc-in [:db :login :status] "default"))
+      (-> {:db db}
+          (assoc-in [:db :user] user)
+          (assoc-in [:db :login :status] "done")
+          (assoc :http-request [{:url "/api/user/avatar/list"
+                                 :method http/get
+                                 :resp-event :event/avatar-initialize}])))))
 
 (defn- refresh-avatar-list
   [_ & __]

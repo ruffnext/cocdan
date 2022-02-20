@@ -25,9 +25,9 @@
 (defn register
   [{{body :body} :parameters}]
   (m/mlet [_ (schema/invert-left  (aux/get-user-by-email? body)
-                                  (fn [_] (either/left {:error "User already exists!" :status 400})))
+                                  (fn [_] (either/left {:error "This email address is already in use" :status 400})))
            _ (aux/register! body)]
-          (m/return {:status 200 :body {:msg "User created!"}})))
+          (m/return {:status 201 :body {:msg "User created!"}})))
 
 (defn whoami
   [{session :session}]
@@ -59,7 +59,7 @@
    ["/register"
     {:post {:summary "regist a user"
             :parameters {:body {:name string? :email string?}}
-            :responses {200 {:schema schema/SchemaUser
+            :responses {201 {:schema schema/SchemaUser
                              :description "User"}
                         400 {:schema schema/SchemaError}}
             :handler #(-> %

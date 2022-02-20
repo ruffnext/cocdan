@@ -11,7 +11,6 @@
    [cocdan.events]
    [reitit.core :as reitit]
    [reitit.frontend.easy :as rfe]
-   [cocdan.components.console :as c-console]
    [cocdan.pages.login :as login-page]
    [cocdan.pages.user :as user-page]
    [cocdan.pages.bulma :as bulma]
@@ -85,13 +84,15 @@
 
 (def router
   (reitit/router
-   [["/" {:name        :home
+   [
+    ["/" {:name        :home
           :view        #'home-page
-          :controllers [{:start (fn [_] (rf/dispatch [:page/init-home]))}]}]
+          :controllers [{:start (fn [_] (rf/dispatch [:common/navigate! :login]))}]
+          }]
     ["/about" {:name :about
                :view #'about-page}]
-    ["/cmd" {:name :cmd
-             :view (var c-console/cmd-page)}]
+    ;; ["/cmd" {:name :cmd
+    ;;          :view (var c-console/cmd-page)}]
     ["/bulma" {:name :bulma
                :view (var bulma/page)}]
     ["/login" {:name :login

@@ -363,7 +363,8 @@
            :email ""
            :username-error nil
            :email-error nil
-           :status "default"}
+           :status "default"
+           :register-status "default"}
    :avatars []; all avatars
    :stages [] ; all stages
    :user {}   ; you
