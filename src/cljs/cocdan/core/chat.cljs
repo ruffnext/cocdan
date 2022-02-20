@@ -254,7 +254,7 @@
 
 (defn- send-message
   [_app-data [_driven-by stage-id msg]]
-  (let [channel (:channel (->> @(posh-stage-by-id gdb/conn 2)
+  (let [channel (:channel (->> @(posh-stage-by-id gdb/conn stage-id)
                                      (gdb/pull-eid gdb/conn)))]
     (if (nil? channel)
       (js/console.log (str "stage " stage-id "'s channel is nil!"))
