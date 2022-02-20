@@ -34,41 +34,27 @@
   [{stage-id :id}]
 
   (let [stage-id (js/parseInt stage-id)
-        stage (->> @(posh-stage-by-id gdb/conn stage-id)
-                   (gdb/pull-eid gdb/conn))
-        avatars-on-stage (->> @(posh-avatars-by-stage-id gdb/conn stage-id)
-                              (gdb/pull-eids gdb/conn))
-        my-avatars (->> @(posh-my-avatars gdb/conn)
-                        (gdb/pull-eids gdb/conn)
+        stage (->> @(posh-stage-by-id gdb/conn stage-id) (gdb/pull-eid gdb/conn))
+        avatars-on-stage (->> @(posh-avatars-by-stage-id gdb/conn stage-id) (gdb/pull-eids gdb/conn))
+        my-avatars (->> @(posh-my-avatars gdb/conn) (gdb/pull-eids gdb/conn)
                         (filter #(= (-> % :on_stage) stage-id)))
-        current-use-avatar (->> @(posh-current-use-avatar-eid gdb/conn stage-id)
-                                (gdb/pull-eid gdb/conn))]
+        current-use-avatar (->> @(posh-current-use-avatar-eid gdb/conn stage-id) (gdb/pull-eid gdb/conn))]
     (when (not (nil? current-use-avatar))
       [:div.container
-       [:div.card {:style {:height "78vh"
-                           :margin-top "2em"
-                           :margin-bottom "2em"}
-                   :class "columns"}
-        [:div.column {:class "sketch" :style {:min-width "25em"
-                                              :max-width "25em"
-                                              :height "100%"}}
-         [:div {:class "sketch"}
+       [:div.card.columns.stage-container
+        [:div.column.sketch.stage-left-panel
+         [:div.sketch
           (general-status stage current-use-avatar)]
-         [:div {:class "sketch"
-                :style {:background-color "white"
-                        :margin-top "1em"}}
+         [:div.sketch
           (stage-avatars stage (-> (filter #(= (-> % :attributes :substage)
                                                (-> current-use-avatar :attributes :substage))
                                            avatars-on-stage)
                                    flatten set vec)
                          my-avatars)]]
-        [:div.column {:class "sketch" :style {:height "100%"}}
-         [:div
-          {:style {:overflow-y "scroll"
-                   :height "68%"}}
+        [:div.column.sketch.stage-right-panel
+         [:div.stage-log-container
           [chatting-log stage (:id current-use-avatar) my-avatars]]
-         [:div {:style {:height "20%"
-                        :margin-top "calc(5%)"}}
+         [:div.stage-input-container
           (chatting-input stage-id (filter #(and (=
                                                   (-> % :attributes :substage)
                                                   (-> current-use-avatar :attributes :substage))

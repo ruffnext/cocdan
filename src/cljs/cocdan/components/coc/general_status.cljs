@@ -22,27 +22,29 @@
           connected :连通区域} :coc} (if (nil? substage-id)
                                    nil
                                    ((keyword substage-id) substages))
-        _can-edit (= (:owned_by stage) (:id avatar))]
+        _can-edit (= (:owned_by stage) (:id avatar))
+        am-i-stage-admin? @(posh-am-i-stage-admin? gdb/conn (:id stage))
+        on-substage-info-click (if am-i-stage-admin?
+                                 #(rf/dispatch
+                                   [:event/modal-general-attr-editor-active
+                                    :stage
+                                    [:attributes :substages (keyword substage-id) :coc]
+                                    stage
+                                    {:声音 0 :视线 0 :连通区域 (disj (set (for [[i _v] substages]
+                                                                    (name i)))
+                                                             (name substage-id))}])
+                                 #())
+        on-substage-name-click (if am-i-stage-admin?
+                                 #(rf/dispatch [:event/modal-substage-edit-active stage substage-id])
+                                 #())]
     
     [:div
-     [:p.has-text-centered {:on-click #(when @(posh-am-i-stage-admin? gdb/conn (:id stage))
-                                         (rf/dispatch [:event/modal-substage-edit-active stage substage-id]))
+     [:p.has-text-centered {:on-click on-substage-name-click
                             :style {:margin-top "6px"}}
       [:strong  substage-name]]
      (when (not (nil? substage-id))
-       
        [:div.columns {:style {:margin-bottom "0px"}
-                      :on-click #(when @(posh-am-i-stage-admin? gdb/conn (:id stage))
-                                   (rf/dispatch
-                                    [:event/modal-general-attr-editor-active
-                                     :stage
-                                     [:attributes :substages (keyword substage-id) :coc]
-                                     stage
-                                     {:声音 0
-                                      :视线 0
-                                      :连通区域 (disj (set (for [[i _v] substages]
-                                                         (name i)))
-                                                  (name substage-id))}]))}
+                      :on-click on-substage-info-click}
         [:div.column {:style {:margin "6px"}}
          [:p (str "声音：" (cond
                           (< acoustic 10) "寂静"
@@ -61,7 +63,7 @@
       {:style {:margin-left "0.5em"}}
       [:p {:style {:margin-bottom "0.25em"}} "可到达的区域："]
       [:div.tags.is-normal {:style {:margin-left "1em"
-                     :margin-bottom "1em"}}
+                                    :margin-bottom "1em"}}
        (doall (map (fn [n]
                      (with-meta [:span.tag
                                  (-> ((keyword n) substages)

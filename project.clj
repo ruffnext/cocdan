@@ -43,7 +43,7 @@
                  [ring/ring-defaults "0.3.3"]
                  [selmer "1.12.45"]
                  [thheller/shadow-cljs "2.16.7" :scope "provided"]
-                 [datascript "1.3.9"]
+                 [datascript "1.3.10"]
                  [re-posh "0.3.3"]
                  [denistakeda/posh "0.5.9"]]
 

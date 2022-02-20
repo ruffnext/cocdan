@@ -128,7 +128,8 @@
          [:div.field.has-addons
           [:div.control
            {:style {:width "80%"}}
-           [:textarea.textarea {:type "text"
+           [:textarea.textarea {:style {:resize "none"}
+                                :type "text"
                                 :placeholder (case @action
                                                "说话" "说话"
                                                "使用" "描述你的使用方法"
@@ -143,7 +144,7 @@
                                 :value @text}]]
           [:p.control
            [:a.button
-            {:style {:height "100%"}
+            {:style {:height "100%" :margin-left "1px"}
              :on-click #(do
                           (send-msg avatar-id-use)
                           (reset! text ""))}

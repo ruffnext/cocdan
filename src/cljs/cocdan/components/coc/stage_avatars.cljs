@@ -58,7 +58,9 @@
   [stage avatars my-avatars]
   (r/with-let [expand1? (r/atom true)
                expand2? (r/atom true)]
-   [:div {:style {:margin "6px"}}
+   [:div {:style {:overflow-y "auto"
+                  :max-height "50vh"
+                  :margin "6px"}}
     [:p {:on-click #(swap! expand1? not)} "舞台上的角色"]
     (when @expand1?
       [:div
@@ -68,7 +70,5 @@
     [:p {:on-click #(swap! expand2? not)} "我的角色"]
     (when @expand2?
       [:div
-       {:style {:height "auto"
-                :overflow-y "scroll"}}
        (doall (for [avatar (sort-by #(-> % :attributes :substage) my-avatars)]
                 (with-meta (avatar-item avatar my-avatars stage) {:key (str "sa2-" (:id avatar))})))])]))

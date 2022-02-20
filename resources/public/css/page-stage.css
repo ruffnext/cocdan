@@ -1,0 +1,29 @@
+div.stage-container {
+    margin-top: 2em;
+    margin-bottom: 2em;
+    height: 78vh
+}
+
+div.stage-left-panel {
+    min-width: 25em;
+    max-width: 25em;
+    height: 100%;
+}
+
+div.stage-right-panel {
+    height: 100%
+}
+
+div.stage-log-container {
+    overflow-y: scroll;
+    height: 68%
+}
+
+div.stage-input-container {
+    height: 20%;
+    margin-top: calc(5%);
+}
+
+div.stage-info-reachable-area {
+    margin-left: 0.5em;
+}
