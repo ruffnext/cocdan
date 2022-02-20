@@ -2,7 +2,8 @@
   (:require
    [re-frame.core :as rf]
    [clojure.string :as str]
-   [cocdan.db :as gdb]))
+   [cocdan.db :as gdb]
+   [cocdan.core.stage :refer [posh-am-i-stage-admin?]]))
 
 (defn- remove-perfix
   [substage-name current-substage-name]
@@ -24,14 +25,14 @@
         _can-edit (= (:owned_by stage) (:id avatar))]
     
     [:div
-     [:p.has-text-centered {:on-click #(when (gdb/posh-i-have-control? gdb/conn (:id stage))
+     [:p.has-text-centered {:on-click #(when @(posh-am-i-stage-admin? gdb/conn (:id stage))
                                          (rf/dispatch [:event/modal-substage-edit-active stage substage-id]))
                             :style {:margin-top "6px"}}
       [:strong  substage-name]]
      (when (not (nil? substage-id))
        
        [:div.columns {:style {:margin-bottom "0px"}
-                      :on-click #(when (gdb/posh-i-have-control? gdb/conn (:id stage))
+                      :on-click #(when @(posh-am-i-stage-admin? gdb/conn (:id stage))
                                    (rf/dispatch
                                     [:event/modal-general-attr-editor-active
                                      :stage

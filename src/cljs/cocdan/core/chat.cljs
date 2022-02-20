@@ -6,6 +6,8 @@
    [cocdan.auxiliary :as gaux]
    [re-posh.core :as rp]
    [cocdan.core.indexeddb :as idb]
+   [cocdan.core.stage :refer [posh-stage-by-id posh-am-i-stage-admin?]]
+   [cocdan.core.avatar :refer [posh-my-avatars posh-avatar-by-id]]
    [cocdan.db :as gdb]
    [clojure.string :as str]
    [clojure.core.async :refer [go <! timeout]]))
@@ -139,7 +141,8 @@
     (-> (case msg-type
           "speak-loudly" (conj
                           (for [[aid substage-name status] loud-hear-avatar-maps]
-                            (let [avatar (gdb/query-avatar-by-id @gdb/conn speaker-id)]
+                            (let [avatar (->> @(posh-avatar-by-id gdb/conn speaker-id)
+                                              (gdb/pull-eid gdb/conn))]
                               (when avatar
                                 (case status
                                   "can hear" (assoc (make-system-msg (str "你听见从" substage-name "传来" (:name avatar) "的声音：" msg-text))
@@ -172,7 +175,8 @@
     (-> (for [{{avatar-substage :substage} :attributes avatar-id :id} my-avatars]
           (when (= avatar-substage substage)
             (let [items (:use raw-msg)
-                  avatar (gdb/query-avatar-by-id @gdb/conn sender)]
+                  avatar (->> @(posh-avatar-by-id gdb/conn sender)
+                              (gdb/pull-eid gdb/conn))]
               (assoc raw-msg
                      :receiver avatar-id
                      :type "system-msg"
@@ -196,14 +200,16 @@
 
 (defn- parse-message
   [msg' stage-id]
-  (let [my-avatars (gdb/posh-my-avatars gdb/conn)
+  (let [my-avatars (->> @(posh-my-avatars gdb/conn)
+                        (gdb/pull-eids gdb/conn))
         res (m/mlet [raw-msg (either/try-either (gaux/<-json (.-data msg')))
 
                      _ (m/foldm (fn [_ x] (if (not (nil? (x raw-msg)))
                                             (either/right "")
                                             (either/left (str "invalid message received! missing field " x)))) (either/right "") [:avatar :msg :type :time])
-                     stage (either/try-either (gdb/posh-stage-by-id gdb/conn stage-id))]
-                    (m/return (dispatch-messages raw-msg my-avatars (:id (gdb/posh-i-have-control? gdb/conn stage-id)) stage)))]
+                     stage (either/right (->> @(posh-stage-by-id gdb/conn stage-id)
+                                              (gdb/pull-eid gdb/conn)))]
+                    (m/return (dispatch-messages raw-msg my-avatars (:id (first @(posh-am-i-stage-admin? gdb/conn stage-id))) stage)))]
     (either/branch res
                    (fn [x]
                      (either/left (make-msg 0 alert x)))
@@ -222,7 +228,8 @@
 
 (defn- on-close
   [db [_query-id stage-id _event]]
-  (let [my-avatars (gdb/query-my-avatars @gdb/conn)
+  (let [my-avatars (->> @(posh-my-avatars @gdb/conn)
+                        (gdb/pull-eids gdb/conn))
         on-stage-avatars (filter #(= (:on_stage %) stage-id) my-avatars)]
     (go
       (-> (make-stage-ws {:stage-id stage-id})
@@ -247,7 +254,8 @@
 
 (defn- send-message
   [_app-data [_driven-by stage-id msg]]
-  (let [channel (:stage/channel @(rp/subscribe [:rpsub/stage stage-id]))]
+  (let [channel (:channel (->> @(posh-stage-by-id gdb/conn 2)
+                                     (gdb/pull-eid gdb/conn)))]
     (if (nil? channel)
       (js/console.log (str "stage " stage-id "'s channel is nil!"))
       (.send channel (gaux/->json msg)))))

@@ -72,17 +72,6 @@
          nil)
        (first res)))))
 
-(rf/reg-sub
- :subs/general-get-user-by-id
- (fn [db [_query-id id]]
-   (let [res (take 1 (filter #(= (:id %) id) (:users db)))]
-     (if (empty? res)
-       (do
-         (go (let [res (<! (http/get (str "/api/user/u" id)))]
-               #(rf/dispatch [:event/general-list-map-conj [:users] (:body res)])))
-         nil)
-       (first res)))))
-
 (defn- get-avatars-by-user-id
   [db id]
   (filter #(= (:controlled_by %) id) (:avatars db)))
