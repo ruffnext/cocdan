@@ -228,7 +228,7 @@
 
 (defn- on-close
   [db [_query-id stage-id _event]]
-  (let [my-avatars (->> @(posh-my-avatars @gdb/conn)
+  (let [my-avatars (->> @(posh-my-avatars gdb/conn)
                         (gdb/pull-eids gdb/conn))
         on-stage-avatars (filter #(= (:on_stage %) stage-id) my-avatars)]
     (go
