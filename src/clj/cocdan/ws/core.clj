@@ -84,4 +84,5 @@
    :on-message on-message-ng!})
 
 (defn ws-handler [request]
-  (async/as-channel request websocket-callbacks))
+  (m/mlet [_ (login? (:session request))]
+          (either/right (async/as-channel request websocket-callbacks))))

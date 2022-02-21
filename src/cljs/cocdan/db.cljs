@@ -19,7 +19,7 @@
   [base k]
   (keyword (str (name base) "/" (name k))))
 
-(defn- handle-keys
+(defn handle-keys
   [base attrs]
   (reduce (fn [a [k v]]
             (assoc a (handle-key base k) v)) {} attrs))

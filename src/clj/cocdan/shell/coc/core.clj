@@ -7,7 +7,8 @@
    [cocdan.ws.db :as ws-db]
    [immutant.web.async :as async]
    [cocdan.auxiliary :as gaux]
-   [cocdan.ws.auxiliary :as ws-aux]))
+   [cocdan.ws.auxiliary :as ws-aux]
+   [clojure.core.async :refer [go <!]]))
 
 (defn- get-coc-attr
   [avatar col-keys]
@@ -238,8 +239,9 @@
                                  (= cmd "watch") (watch avatar cmd cmd-rest channel)
                                  (= cmd "show") (show-attr avatar cmd cmd-rest channel)
                                  (= cmd "close") (do
-                                                   (log/debug "CLOSE")
-                                                   (either/try-either (async/close channel)))
+                                                   (go
+                                                     (async/close channel))
+                                                   (either/right "This channel is going to be closed"))
                                  :else (either/left "command not supported"))]
                           (either/right res))]
           (either/branch res

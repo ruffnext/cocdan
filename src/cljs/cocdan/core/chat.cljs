@@ -5,12 +5,14 @@
    [cats.monad.either :as either]
    [cocdan.auxiliary :as gaux]
    [re-posh.core :as rp]
+   [datascript.core :as d]
    [cocdan.core.indexeddb :as idb]
    [cocdan.core.stage :refer [posh-stage-by-id posh-am-i-stage-admin?]]
    [cocdan.core.avatar :refer [posh-my-avatars posh-avatar-by-id]]
    [cocdan.db :as gdb]
    [clojure.string :as str]
-   [clojure.core.async :refer [go <! timeout]]))
+   [clojure.core.async :refer [timeout <! go]]
+   [reagent.core :as r]))
 
 (def alert "alert")
 (def sync "sync")
@@ -226,31 +228,56 @@
     (append-msg stage-id lobby-msg)
     db))
 
+(defonce reconnect-retry-remain (r/atom {}))
+
+(defn- reconnect
+  [stage-id on-stage-avatars]
+  (let [remain ((keyword (str stage-id)) @reconnect-retry-remain)]
+    (cond
+      (nil? remain) (do
+                      (swap! reconnect-retry-remain #(assoc % (keyword (str stage-id)) 3))
+                      (reconnect stage-id on-stage-avatars))
+      (pos-int? remain) (go
+                          (<! (timeout 1000))
+                          (swap! reconnect-retry-remain #(assoc % (keyword stage-id) (- remain 1)))
+                          (make-stage-ws {:stage-id stage-id}))
+      :else (append-msg stage-id
+                        (-> (for [avatar on-stage-avatars]
+                              (assoc (make-system-msg "Reconnection failed after 3 retry") :receiver (:id avatar)))
+                            vec)))))
+
 (defn- on-close
-  [db [_query-id stage-id _event]]
+  [db [_query-id stage-id event]]
+  (js/console.log event)
   (let [my-avatars (->> @(posh-my-avatars gdb/conn)
                         (gdb/pull-eids gdb/conn))
-        on-stage-avatars (filter #(= (:on_stage %) stage-id) my-avatars)]
-    (go
-      (-> (make-stage-ws {:stage-id stage-id})
-          (either/branch-left ; second retry
-           #(do
-              (<! (timeout 1000))
-              (make-stage-ws {:stage-id stage-id})))
-          (either/branch-left ; third retry
-           #(do
-              (<! (timeout 1000))
-              (make-stage-ws {:stage-id stage-id})))
-          (either/branch
-           #(append-msg stage-id (-> (for [avatar on-stage-avatars]
-                                       (assoc (make-system-msg "Reconnection failed after 3 retry") :receiver (:id avatar)))
-                                     vec))
-           #())))
+        on-stage-avatars (filter #(= (:on_stage %) stage-id) my-avatars)
+        stage-eid (first @(posh-stage-by-id gdb/conn stage-id))
+        stage (gdb/pull-eid gdb/conn stage-eid)]
+    (case (.-code event)
+      1005 (reconnect stage-id on-stage-avatars)
+      1006 (append-msg stage-id
+                       (-> (for [avatar on-stage-avatars]
+                             (assoc (make-system-msg "Server rejected reconnection request") :receiver (:id avatar)))
+                           vec))
+      :else (append-msg stage-id
+                        (-> (for [avatar on-stage-avatars]
+                              (assoc (make-system-msg (str "cannot handle ws close code " (.-code event))) :receiver (:id avatar)))
+                            vec)))
+    (when stage-eid
+      (d/transact! gdb/conn [[:db.fn/retractEntity stage-eid]])
+      (d/transact! gdb/conn [(assoc (gdb/handle-keys :stage (dissoc stage :channel)) :db/add -1)]))
+
     (assoc db :stages (gaux/swap-filter-list-map!
                        (:stages db)
                        #(= (:id %) stage-id)
                        (fn [stage]
                          (assoc stage :channel nil))))))
+
+(comment
+  (let [stage-eid (d/entid @gdb/conn [:stage/id 2])]
+    (d/transact! gdb/conn [[:db.fn/retract stage-eid :stage/id]]))
+  )
 
 (defn- send-message
   [_app-data [_driven-by stage-id msg]]
@@ -258,7 +285,8 @@
                                      (gdb/pull-eid gdb/conn)))]
     (if (nil? channel)
       (js/console.log (str "stage " stage-id "'s channel is nil!"))
-      (.send channel (gaux/->json msg)))))
+      (.send channel (gaux/->json msg)))
+    {}))
 
 (defn- sub-substage-msgs
   [db [_query-id stage-id substage-id]]

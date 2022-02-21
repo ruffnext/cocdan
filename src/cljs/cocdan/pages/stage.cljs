@@ -7,6 +7,7 @@
    [cocdan.components.chatting-input :refer [chatting-input]]
    [cocdan.core.avatar :refer [posh-current-use-avatar-eid posh-avatars-by-stage-id posh-my-avatars]]
    [cocdan.core.stage :refer [posh-stage-by-id]]
+   [cocdan.modals.network-indicator :refer [network-indicator]]
    [cocdan.db :as gdb]
    [re-frame.core :as rf]))
 
@@ -59,5 +60,6 @@
                                                   (-> % :attributes :substage)
                                                   (-> current-use-avatar :attributes :substage))
                                                  (not= (:id %) (:id current-use-avatar)))
-                                           avatars-on-stage) my-avatars current-use-avatar)]]]])))
+                                           avatars-on-stage) my-avatars current-use-avatar)]]]
+       (network-indicator (:channel stage))])))
 
