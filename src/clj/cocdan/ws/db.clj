@@ -13,15 +13,15 @@
 ; [db/id   :attr              :value                ...]
 ; [  1     :channel/ws         [Object WebSocket]      ]
 ; [  1     :channel/stage-id   1                       ]
-; [  1     :channel/user       {:name "swz" ...}       ]
+; [  1     :channel/user-id    1                       ]
 ; [  1     :                                           ]
 ; [  2     :stage/id           1                       ]
 ; [  2     :stage/config       {:foo "bar"}            ]
 ; [  2     :stage/...                                  ]
 ; [  3     :avatar/id          1                       ]
 ; [  3     :avatar/on_stage    1                       ]
-;
-;
+; [  4     :user/id            1                       ]
+; [  4     :user/mq            [SET OF MESSAGES]       ]
 ;
 
 
@@ -181,14 +181,38 @@
   [ds stage-id]
   (if (nil? stage-id)
     []
-    (->> (d/q '[:find ?channels
-                :in $ ?stage-id
-                :where
-                [?e :channel/stage-id ?stage-id]
-                [?e :channel/ws ?channels]]
-              ds
-              stage-id)
-         (reduce into []))))
+    (d/q '[:find [?channels ...]
+           :in $ ?stage-id
+           :where
+           [?e :channel/stage-id ?stage-id]
+           [?e :channel/ws ?channels]]
+         ds
+         stage-id)))
+
+(defn query-channels-by-user-id
+  [ds user-id]
+  (d/q '[:find [?channels ...]
+         :in $ ?user-id
+         :where
+         [?e :channel/ws ?channels]
+         [?e :channel/user-id ?user-id]]
+       ds
+       user-id))
+
+(defn query-online-users-by-stage-id
+  [ds stage-id]
+  (d/q '[:find [?user-id ...]
+         :in $ ?stage-id
+         :where 
+         [?e :channel/stage-id ?stage-id]
+         [?e :channel/user-id ?user-id]]
+       ds
+       stage-id))
+
+(comment
+  (query-channels-by-user-id @db 1)
+  (query-online-users-by-stage-id @db 2)
+  )
 
 (defn middleware-ws-update
   "notify ws channels the change of db"

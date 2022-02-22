@@ -4,7 +4,7 @@
    [cocdan.db :as gdb]
    [clojure.string :as str]
    [reagent.core :as r]
-   [cocdan.core.log :refer [posh-unread-message-eids]]
+   [cocdan.core.log :refer [posh-unread-message-count]]
    [cocdan.core.avatar :refer [posh-avatars-by-stage-id]]
    [cocdan.core.stage :refer [posh-am-i-stage-admin?]]))
 
@@ -14,18 +14,17 @@
                                    :avatar [:attributes] avatar
                                    {:substage (sort (for [[k _v] (-> stage :attributes :substages)]
                                                       (subs (str k) 1)))}])
-        i-have-control? (-> @(posh-am-i-stage-admin? gdb/conn (:id stage))
-                            first)
+        i-have-control? @(posh-am-i-stage-admin? gdb/db (:id stage))
         can-edit? (or i-have-control? (contains? (set (map :id my-avatars)) (:id avatar)))
         on-detail-edit (fn []
                          (cond
                            i-have-control?
-                           (let [all-avatars (->> @(posh-avatars-by-stage-id gdb/conn (:id stage))
-                                                  (gdb/pull-eids gdb/conn))]
+                           (let [all-avatars (->> @(posh-avatars-by-stage-id gdb/db (:id stage))
+                                                  (gdb/pull-eids gdb/db))]
                              (rf/dispatch [:event/modal-coc-avatar-edit-active all-avatars (:id avatar)]))
                            (contains? (set (map :id my-avatars)) (:id avatar))
                            (rf/dispatch [:event/modal-coc-avatar-edit-active my-avatars (:id avatar)])))
-        unread-count (count @(posh-unread-message-eids gdb/conn id))]
+        unread-count @(posh-unread-message-count gdb/db id)]
     [:div {:style {:padding-left "6px"
                    :padding-bottom "3px"}} [:span.tag (:name avatar)]
      [:span.is-pulled-right ""]

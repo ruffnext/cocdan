@@ -13,7 +13,7 @@
 
 (defn- init-stage
   [_ _ stage-id]
-  (let [res @(posh-current-use-avatar-eid gdb/conn (js/parseInt stage-id))]
+  (let [res @(posh-current-use-avatar-eid gdb/db (js/parseInt stage-id))]
     (if (nil? res)
       {:fx/chat-new-stage {:stage-id stage-id}
        :fx/stage-refresh-avatars {:stage-id stage-id}
@@ -35,11 +35,11 @@
   [{stage-id :id}]
 
   (let [stage-id (js/parseInt stage-id)
-        stage (->> @(posh-stage-by-id gdb/conn stage-id) (gdb/pull-eid gdb/conn))
-        avatars-on-stage (->> @(posh-avatars-by-stage-id gdb/conn stage-id) (gdb/pull-eids gdb/conn))
-        my-avatars (->> @(posh-my-avatars gdb/conn) (gdb/pull-eids gdb/conn)
+        stage (->> @(posh-stage-by-id gdb/db stage-id) (gdb/pull-eid gdb/db))
+        avatars-on-stage (->> @(posh-avatars-by-stage-id gdb/db stage-id) (gdb/pull-eids gdb/db))
+        my-avatars (->> @(posh-my-avatars gdb/db) (gdb/pull-eids gdb/db)
                         (filter #(= (-> % :on_stage) stage-id)))
-        current-use-avatar (->> @(posh-current-use-avatar-eid gdb/conn stage-id) (gdb/pull-eid gdb/conn))]
+        current-use-avatar (->> @(posh-current-use-avatar-eid gdb/db stage-id) (gdb/pull-eid gdb/db))]
     (when (not (nil? current-use-avatar))
       [:div.container
        [:div.card.columns.stage-container

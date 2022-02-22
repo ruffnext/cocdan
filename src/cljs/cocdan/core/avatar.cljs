@@ -12,7 +12,7 @@
 
 (defn posh-current-use-avatar-eid
   [ds stage-id]
-  (p/q '[:find [?aeid]
+  (p/q '[:find ?aeid .
          :in $ ?stage-id
          :where
          [?seid :stage/id ?stage-id]
@@ -32,7 +32,7 @@
 
 (defn posh-avatar-by-id
   [ds avatar-id]
-  (p/q '[:find [?a-eid]
+  (p/q '[:find ?a-eid .
          :in $ ?avatar-id
          :where [?a-eid :avatar/id ?avatar-id]]
        ds

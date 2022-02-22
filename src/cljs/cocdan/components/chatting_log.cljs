@@ -5,6 +5,7 @@
    [reagent.core :as r]
    [reagent.dom :as d]
    [clojure.string :as str]
+   [cocdan.core.log :refer [posh-avatar-latest-message-time query-latest-messages-by-avatar-id]]
    [cocdan.db :as gdb]))
 
 (defn- log-item
@@ -22,7 +23,7 @@
                        [?e :avatar/name ?name]
                        [?e :avatar/header ?header]
                        [?e :avatar/attributes ?attrs]]
-                     gdb/conn (:avatar msg))
+                     gdb/db (:avatar msg))
                (reduce into [])))
         msg-text (cond
                    (= stage-admin current-use-avatar-id) (str msg-text' "@" substage)
@@ -84,7 +85,9 @@
         [:div.media.media-content
          [:div.content
           [:div
-           [:strong avatar-name]
+           [:p.is-flex.is-justify-content-start [:strong avatar-name] [:span {:style {:font-size 12
+                                                                                    :margin-top "5px"
+                                                                                    :margin-left "5px"}} address-info]]
            [:div.has-background-white-ter
             {:style {:border-radius "0.5em"
                      :padding "0.75em"}}
@@ -106,16 +109,13 @@
          (take limit)
          reverse)))
 
-(comment
-  (get-msgs gdb/conn 3 1)
-  )
+
 
 (defn chatting-log
-  [_stage avatar-id _my-avatars]
+  [_stage _avatar-id _my-avatars]
 
   (r/with-let [always-bottom (r/atom true)
-               limit (r/atom 40)
-               msgs (r/atom [])]
+               limit (r/atom 40)]
     (r/create-class
      {:display-name "chatting-log"
 
@@ -124,7 +124,6 @@
         (let [this-node (d/dom-node this)
               p-node (.-parentNode this-node)]
           (set! (.-scrollTop p-node) (.-scrollHeight p-node))
-          (reset! msgs (get-msgs gdb/conn avatar-id @limit))
           (.addEventListener
            p-node
            "scroll"
@@ -139,7 +138,7 @@
         (let [[_stage avatar-id _my-avatars] (rest (r/argv this))
               this-node (d/dom-node this)
               p-node (.-parentNode this-node)
-              {last-time :time} (last (get-msgs gdb/conn avatar-id 10))]
+              {last-time :time} (last (get-msgs gdb/db avatar-id 10))]
           (when (not (nil? last-time))
             (rp/dispatch [:rpevent/upsert :avatar {:id avatar-id :latest-read-message-time last-time}]))
           (when @always-bottom
@@ -147,12 +146,12 @@
 
       :reagent-render
       (fn [stage current-use-avatar-id _my-avatars]
-        (let [msgs (get-msgs gdb/conn current-use-avatar-id @limit)]
+        (let [_latest-time @(posh-avatar-latest-message-time gdb/db current-use-avatar-id)]
           [:div
            {:style {:width "100%"
                     :padding-bottom "1em"}}
            [:p {:style {:padding-top "1em" :padding-bottom "1em"}
                 :class "has-text-centered"
                 :on-click #(swap! limit (fn [x] (+ x 40)))} [:i "加载更多消息"]]
-           (doall (for [msg msgs]
+           (doall (for [msg (query-latest-messages-by-avatar-id gdb/db current-use-avatar-id @limit)]
                     (with-meta (log-item msg current-use-avatar-id stage) {:key (str "log-" (:time msg) (:receiver msg))})))]))})))

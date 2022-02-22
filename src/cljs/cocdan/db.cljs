@@ -9,11 +9,12 @@
   {:stage/id {:db/unique :db.unique/identity}
    :avatar/id {:db/unique :db.unique/identity}
    :avatar/messages {:db/cardinality :db.cardinality/many}
-   ;:message/time {:db/unique :db.unique/identity}
+   :message/time {:db/index true}
+   :message/receiver {:db/index true}
    })
 
-(defonce conn (d/create-conn schema))
-(rp/connect! conn)
+(defonce db (d/create-conn schema))
+(rp/connect! db)
 
 (defn- handle-key
   [base k]
@@ -80,3 +81,71 @@
    :user {}   ; you
    :users []  ; all users
    :chat []})
+
+
+(comment
+  (take 10 (d/datoms @db :eavt 2))
+  (take 10 (d/q '[:find [?message-time ...]
+                  :in $ ?avatar-id
+                  :where
+                  [?e :message/receiver ?avatar-id]
+                  [?e :message/time ?message-time]]
+                @db
+                2))
+  (->> (d/datoms @db :avet  :message/time)
+       reverse
+       (take 10)
+       (map #(vector (:e %) (:a %) (:v %))))
+  (->> (d/seek-datoms @db :avet :message/receiver 2)
+       reverse
+       (take 10)
+       (map #(vector (:e %) (:a %) (:v %))))
+  (->> (d/datoms @db :avet :message/time)
+       reverse
+       (map :e)
+       (reduce (fn [a x]
+                 (let [message (d/pull @db '[*] x)]
+                   (if (= (:message/receiver message) 2)
+                     (conj a message)
+                     a)))
+               [])
+       (take 10))
+  (reduce (fn [a x]
+            (let [message (d/pull @db '[*] x)]
+              (if (= (:message/receiver message) 2)
+                (conj a message)
+                a)))
+          []
+          [8 9 10])
+
+  (d/pull @db '[*] 8)
+  (d/q '[:find [?e ...]
+         :where
+         [?e :message/time 1645431052943]]
+       @db)
+  (do
+    (d/transact! db [{:message/time 1645431052943 :message/receiver 2}]))
+
+  (d/filter @db
+            (fn [db datom]
+              (or
+      ;; leaving all datoms that are not about :person/* as-is
+               (not= "avatar" (namespace (:a datom)))
+      ;; for :person/* attributes take entity id
+      ;; and check :person/name on that entity using db value
+               (let [eid    (:e datom)
+                     entity (d/entity db eid)]
+                 (= "KP" (:avatar/name entity))))))
+
+
+  (let [dvec #(vector (:e %) (:a %) (:v %))
+        db (-> (d/empty-db {:age {:db/index true}})
+               (d/db-with [[:db/add 1 :name "Petr"]
+                           [:db/add 1 :age 44]
+                           [:db/add 2 :name "Ivan"]
+                           [:db/add 2 :age 25]
+                           [:db/add 3 :name "Sergey"]
+                           [:db/add 3 :age 11]]))]
+    (map dvec (d/datoms db :avet :age)) ;; name non-indexed, excluded from avet
+    )
+  )

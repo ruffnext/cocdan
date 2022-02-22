@@ -10,17 +10,17 @@
 
 (defn- refresh-stage-avatars
   [{stage-id :stage-id}]
-  (go (let [my-avatars (first (filter #(= (:on_stage %) stage-id) (->> @(posh-my-avatars gdb/conn)
-                                                                       (gdb/pull-eids gdb/conn))))
+  (go (let [my-avatars (first (filter #(= (:on_stage %) stage-id) (->> @(posh-my-avatars gdb/db)
+                                                                       (gdb/pull-eids gdb/db))))
             res (<! (http/get (str "/api/stage/s" stage-id "/list/avatar") {:query-params {:id stage-id
                                                                                            :avatar-id (:id my-avatars)}}))]
         (cond
           (= (:status res) 200) 
           (do
             (rp/dispatch-sync [:rpevent/upsert :avatar (:body res)])
-            (when (nil? @(posh-current-use-avatar-eid gdb/conn stage-id))
-              (let [avatars-can-use (filter #(= (:on_stage %) stage-id) (->> @(posh-my-avatars gdb/conn)
-                                                                             (gdb/pull-eids gdb/conn)))]
+            (when (nil? @(posh-current-use-avatar-eid gdb/db stage-id))
+              (let [avatars-can-use (filter #(= (:on_stage %) stage-id) (->> @(posh-my-avatars gdb/db)
+                                                                             (gdb/pull-eids gdb/db)))]
                 (rp/dispatch-sync [:rpevent/upsert :stage {:id stage-id
                                                            :current-use-avatar (:id (first avatars-can-use))}]))))
           :else (js/console.log res)))))
@@ -47,7 +47,7 @@
 
 (defn posh-am-i-stage-admin?
   [ds stage-id]
-  (p/q '[:find [?stage-controller]
+  (p/q '[:find ?stage-controller .
          :in $ ?stage-id
          :where
          [_ :my-info/id ?my-id]
@@ -58,4 +58,5 @@
          [(= ?avatar-id ?stage-controller)]]
        ds
        stage-id))
+
 

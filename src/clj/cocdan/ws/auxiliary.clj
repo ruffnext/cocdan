@@ -2,18 +2,7 @@
   (:require
    [cats.monad.either :as either]
    [cats.core :as m]
-   [cocdan.auxiliary :as gaux]
-   [cocdan.avatars.auxiliary :as avatarsaux]))
-
-(defn
-  wrap-basic-check
-  [res response]
-  (either/branch res
-                 (fn [x] (assoc response
-                                :forward false
-                                :msg x
-                                :avatar 0))
-                 (fn [_] response)))
+   [cocdan.auxiliary :as gaux]))
 
 (def
   msg-fields
@@ -42,9 +31,8 @@
                      (either/right x)))))
 
 (defn check-avatar-access
-  [stage-id avatar-id user-id]
-  (m/mlet [avatars (avatarsaux/list-avatars-by-stage? stage-id)
-           user-controllable (either/right (set (reduce (fn [a x]
+  [avatar-id user-id avatars]
+  (m/mlet [user-controllable (either/right (set (reduce (fn [a x]
                                                           (if (= (:controlled_by x) user-id)
                                                             (conj a (:id x))
                                                             a)) [] avatars)))
@@ -55,3 +43,7 @@
                (either/right "")
                (either/left (format "you have no permission to use avatar %s" (str avatar-id))))]
           (m/return "")))
+
+(defn send!
+  [msg user]
+  ())

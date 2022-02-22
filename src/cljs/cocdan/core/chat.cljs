@@ -78,6 +78,7 @@
             (do
               (set! (.-onmessage channel) #(rf/dispatch [:event/chat-on-message stage-id %]))
               (set! (.-onclose channel) #(rf/dispatch [:event/chat-on-close stage-id %]))
+              (set! (.-onerror channel) #(js/console.log %))
               (rp/dispatch [:rpevent/upsert :stage {:id stage-id
                                                     :channel channel}]))
             (either/right "success"))))
@@ -143,8 +144,8 @@
     (-> (case msg-type
           "speak-loudly" (conj
                           (for [[aid substage-name status] loud-hear-avatar-maps]
-                            (let [avatar (->> @(posh-avatar-by-id gdb/conn speaker-id)
-                                              (gdb/pull-eid gdb/conn))]
+                            (let [avatar (->> @(posh-avatar-by-id gdb/db speaker-id)
+                                              (gdb/pull-eid gdb/db))]
                               (when avatar
                                 (case status
                                   "can hear" (assoc (make-system-msg (str "你听见从" substage-name "传来" (:name avatar) "的声音：" msg-text))
@@ -177,8 +178,8 @@
     (-> (for [{{avatar-substage :substage} :attributes avatar-id :id} my-avatars]
           (when (= avatar-substage substage)
             (let [items (:use raw-msg)
-                  avatar (->> @(posh-avatar-by-id gdb/conn sender)
-                              (gdb/pull-eid gdb/conn))]
+                  avatar (->> @(posh-avatar-by-id gdb/db sender)
+                              (gdb/pull-eid gdb/db))]
               (assoc raw-msg
                      :receiver avatar-id
                      :type "system-msg"
@@ -202,16 +203,16 @@
 
 (defn- parse-message
   [msg' stage-id]
-  (let [my-avatars (->> @(posh-my-avatars gdb/conn)
-                        (gdb/pull-eids gdb/conn))
+  (let [my-avatars (->> @(posh-my-avatars gdb/db)
+                        (gdb/pull-eids gdb/db))
         res (m/mlet [raw-msg (either/try-either (gaux/<-json (.-data msg')))
 
                      _ (m/foldm (fn [_ x] (if (not (nil? (x raw-msg)))
                                             (either/right "")
                                             (either/left (str "invalid message received! missing field " x)))) (either/right "") [:avatar :msg :type :time])
-                     stage (either/right (->> @(posh-stage-by-id gdb/conn stage-id)
-                                              (gdb/pull-eid gdb/conn)))]
-                    (m/return (dispatch-messages raw-msg my-avatars (:id (first @(posh-am-i-stage-admin? gdb/conn stage-id))) stage)))]
+                     stage (either/right (->> @(posh-stage-by-id gdb/db stage-id)
+                                              (gdb/pull-eid gdb/db)))]
+                    (m/return (dispatch-messages raw-msg my-avatars (:id @(posh-am-i-stage-admin? gdb/db stage-id)) stage)))]
     (either/branch res
                    (fn [x]
                      (either/left (make-msg 0 alert x)))
@@ -249,11 +250,11 @@
 (defn- on-close
   [db [_query-id stage-id event]]
   (js/console.log event)
-  (let [my-avatars (->> @(posh-my-avatars gdb/conn)
-                        (gdb/pull-eids gdb/conn))
+  (let [my-avatars (->> @(posh-my-avatars gdb/db)
+                        (gdb/pull-eids gdb/db))
         on-stage-avatars (filter #(= (:on_stage %) stage-id) my-avatars)
-        stage-eid (first @(posh-stage-by-id gdb/conn stage-id))
-        stage (gdb/pull-eid gdb/conn stage-eid)]
+        stage-eid (first @(posh-stage-by-id gdb/db stage-id))
+        stage (gdb/pull-eid gdb/db stage-eid)]
     (case (.-code event)
       1005 (reconnect stage-id on-stage-avatars)
       1006 (append-msg stage-id
@@ -265,8 +266,8 @@
                               (assoc (make-system-msg (str "cannot handle ws close code " (.-code event))) :receiver (:id avatar)))
                             vec)))
     (when stage-eid
-      (d/transact! gdb/conn [[:db.fn/retractEntity stage-eid]])
-      (d/transact! gdb/conn [(assoc (gdb/handle-keys :stage (dissoc stage :channel)) :db/add -1)]))
+      (d/transact! gdb/db [[:db.fn/retractEntity stage-eid]])
+      (d/transact! gdb/db [(assoc (gdb/handle-keys :stage (dissoc stage :channel)) :db/add -1)]))
 
     (assoc db :stages (gaux/swap-filter-list-map!
                        (:stages db)
@@ -275,14 +276,14 @@
                          (assoc stage :channel nil))))))
 
 (comment
-  (let [stage-eid (d/entid @gdb/conn [:stage/id 2])]
-    (d/transact! gdb/conn [[:db.fn/retract stage-eid :stage/id]]))
+  (let [stage-eid (d/entid @gdb/db [:stage/id 2])]
+    (d/transact! gdb/db [[:db.fn/retract stage-eid :stage/id]]))
   )
 
 (defn- send-message
   [_app-data [_driven-by stage-id msg]]
-  (let [channel (:channel (->> @(posh-stage-by-id gdb/conn stage-id)
-                                     (gdb/pull-eid gdb/conn)))]
+  (let [channel (:channel (->> @(posh-stage-by-id gdb/db stage-id)
+                                     (gdb/pull-eid gdb/db)))]
     (if (nil? channel)
       (js/console.log (str "stage " stage-id "'s channel is nil!"))
       (.send channel (gaux/->json msg)))
@@ -311,7 +312,3 @@
 
 (doseq [[sub f] {:subs/chat-substage-msgs sub-substage-msgs}]
   (rf/reg-sub sub f))
-
-(comment
-  (either/branch-left (either/right "hello")
-                      (fn [x] x)))

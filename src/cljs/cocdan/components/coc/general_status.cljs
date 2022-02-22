@@ -23,7 +23,7 @@
                                    nil
                                    ((keyword substage-id) substages))
         _can-edit (= (:owned_by stage) (:id avatar))
-        am-i-stage-admin? @(posh-am-i-stage-admin? gdb/conn (:id stage))
+        am-i-stage-admin? @(posh-am-i-stage-admin? gdb/db (:id stage))
         on-substage-info-click (if am-i-stage-admin?
                                  #(rf/dispatch
                                    [:event/modal-general-attr-editor-active

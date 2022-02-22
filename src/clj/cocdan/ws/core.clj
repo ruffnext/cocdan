@@ -3,6 +3,7 @@
    [clojure.tools.logging :as log]
    [cocdan.users.core :refer [login?]]
    [cocdan.stages.auxiliary :as stages-aux]
+   [cocdan.avatars.auxiliary :as avatars-aux]
    [cocdan.auxiliary :as gaux]
    [cocdan.shell.router :as router]
    [cocdan.ws.auxiliary :as ws-aux]
@@ -10,30 +11,29 @@
    [cats.core :as m]
    [immutant.web.async :as async]
    [cats.monad.either :as either]
-   [datascript.core :as d]
-   [cocdan.avatars.auxiliary :as avatars-aux]))
+   [datascript.core :as d]))
 
 (defonce current-channel (atom nil))
 
 (defn connect! [channel]
   (let [res (m/mlet
              [request (either/right (async/originating-request channel))
-              user (login? (:session request))
+              {user-id :id} (login? (:session request))
               stage (stages-aux/get-by-id? (:stage (:path-params request)))
               avatars (avatars-aux/list-avatars-by-stage? (:id stage))
               stageId (either/right (str (:id stage)))]
              (ws-db/upsert! ws-db/db :channel {:ws channel
                                                :stage-id (:id stage)
-                                               :user user})
+                                               :user-id user-id})
              (ws-db/upsert! ws-db/db :stage stage)
              (ws-db/upsert! ws-db/db :avatar avatars)
-             (m/return {:stageId stageId :user user}))]
+             (m/return {:stageId stageId :user-id user-id}))]
     (either/branch res
                    (fn [x]
                      (log/error x)
                      (async/close channel))
                    (fn [x]
-                     (log/info "user " (:id (:user x)) " connected to stage " (:stageId x))))))
+                     (log/info "user " (:user-id x) " connected to stage " (:stageId x))))))
 
 (defn disconnect! [channel {:keys [code reason]}]
   (log/info "close code:" code "reason:" reason)
@@ -60,9 +60,10 @@
 (defn on-message-ng! [channel msg-raw]
   (reset! current-channel channel)
   (-> (m/mlet [{avatar-id :avatar :as msg-json} (ws-aux/parse-message msg-raw)
-               {stage-id :stage-id user :user} (ws-db/pull-channel @ws-db/db channel)
+               {_stage-id :stage-id user-id :user-id} (ws-db/pull-channel @ws-db/db channel)
+               user-avatars (avatars-aux/list-avatars-by-user? user-id)
                _check (-> (m/do-let
-                           (ws-aux/check-avatar-access stage-id avatar-id (:id user))))
+                           (ws-aux/check-avatar-access avatar-id user-id user-avatars)))
                response (router/handle-msg (assoc msg-json :time (.getTime (java.util.Date.))) channel)]
               (m/return response))
       (handle-msg-response channel)))
