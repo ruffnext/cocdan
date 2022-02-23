@@ -24,6 +24,6 @@
 
 (defn handle-msg
   [msg channel]
-  (m/->=
-   (substage msg channel)
+  (m/->= (either/right msg)
+   (substage channel)
    (coc channel)))

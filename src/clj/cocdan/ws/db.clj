@@ -12,16 +12,14 @@
 
 ; [db/id   :attr              :value                ...]
 ; [  1     :channel/ws         [Object WebSocket]      ]
-; [  1     :channel/stage-id   1                       ]
-; [  1     :channel/user-id    1                       ]
+; [  1     :channel/stage      1                       ]
+; [  1     :channel/user       1                       ]
 ; [  1     :                                           ]
 ; [  2     :stage/id           1                       ]
 ; [  2     :stage/config       {:foo "bar"}            ]
 ; [  2     :stage/...                                  ]
 ; [  3     :avatar/id          1                       ]
 ; [  3     :avatar/on_stage    1                       ]
-; [  4     :user/id            1                       ]
-; [  4     :user/mq            [SET OF MESSAGES]       ]
 ;
 
 
@@ -61,8 +59,8 @@
               :in $ ?channel
               :where
               [?id :channel/ws ?channel]
-              [?id :channel/stage-id ?stage-id]
-              [?cids :channel/stage-id ?stage-id]
+              [?id :channel/stage ?stage-id]
+              [?cids :channel/stage ?stage-id]
               [?cids :channel/ws ?channels]]
             ds
             channel)
@@ -75,7 +73,7 @@
               :in $ ?channel
               :where
               [?id :channel/ws ?channel]
-              [?id :channel/stage-id ?stage-id]
+              [?id :channel/stage ?stage-id]
               [?avatar-eids :avatar/on_stage ?stage-id]]
             ds
             channel)
@@ -106,7 +104,7 @@
                               :in $ ?channel
                               :where
                               [?cid :channel/ws ?channel]
-                              [?cid :channel/stage-id ?stage-id]
+                              [?cid :channel/stage ?stage-id]
                               [?eid :stage/id ?stage-id]]
                             ds channel)
                        (reduce into [])
@@ -177,17 +175,29 @@
      (doseq [channel channels]
        (async/send! channel responseMsg)))))
 
-(defn- query-channels-by-stage-id
+(defn query-channels-by-stage-id
   [ds stage-id]
   (if (nil? stage-id)
     []
     (d/q '[:find [?channels ...]
            :in $ ?stage-id
            :where
-           [?e :channel/stage-id ?stage-id]
+           [?e :channel/stage ?stage-id]
            [?e :channel/ws ?channels]]
          ds
          stage-id)))
+
+(defn query-channels-by-avatar-id
+  [ds avatar-id]
+  (d/q '[:find [?channels ...]
+         :in $ ?avatar-id
+         :where
+         [?ae :avatar/id ?avatar-id]
+         [?ae :avatar/on_stage ?stage-id]
+         [?ce :channel/stage ?stage-id]
+         [?ce :channel/ws ?channels]]
+       ds
+       avatar-id))
 
 (defn query-channels-by-user-id
   [ds user-id]
@@ -204,35 +214,44 @@
   (d/q '[:find [?user-id ...]
          :in $ ?stage-id
          :where 
-         [?e :channel/stage-id ?stage-id]
+         [?e :channel/stage ?stage-id]
          [?e :channel/user-id ?user-id]]
        ds
        stage-id))
 
+(defn pull-eid
+  [ds eid]
+  (-> (d/pull ds '[*] (cond
+                        (vector? eid) (first eid)
+                        :else eid))
+      remove-db-perfix))
+
+(comment
+  (pull-eid @db 20)
+  )
+
+(defn pull-eids
+  [ds eids]
+  (-> (d/pull-many ds '[*] eids)
+      remove-db-perfix))
+
 (comment
   (query-channels-by-user-id @db 1)
   (query-online-users-by-stage-id @db 2)
+  (d/q '[:find (max ?order) .
+         :in $ ?stage-id
+         :where
+         [?e :message/stage ?stage-id]
+         [?e :message/order ?order]]
+       @db
+       2)
+  (d/q '[:find ?e
+         :where
+         [?e :message/order _]]
+       @db)
+  (d/pull @db '[*] 15)
+  (query-channels-by-stage-id @db 2)
   )
-
-(defn middleware-ws-update
-  "notify ws channels the change of db"
-  [{status :status
-    {id :id :as val} :body :as response} col-key]
-  (when (and (or (= 200 status) (nil? status)) (contains? #{:avatar :stage} col-key))
-        (let [channels (case col-key
-                         :stage (query-channels-by-stage-id @db id)
-                         :avatar (query-channels-by-stage-id @db (:on_stage val))
-                         :else [])
-              responseMsg (gaux/->json (ws-aux/make-msg 0 "sync" {:target (name col-key)
-                                                                  :value val}))]
-          (when (seq channels)
-            (doseq [channel channels]
-              (async/send! channel responseMsg))
-            (upsert! db col-key val))))
-  response)
-
-
-(contains? #{:avatar :stage} :stage)
 
 (comment
   (d/entid @db [:stage/id 1])
@@ -250,4 +269,5 @@
   (d/q '[:find ?eids
          :where [?eids :avatar/id]]
        @db)
+  (pr-str db)
   )

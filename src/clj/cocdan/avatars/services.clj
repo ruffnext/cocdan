@@ -8,9 +8,9 @@
             [cats.monad.either :as either]
             [clojure.string :as string]
             [clojure.tools.logging :as log]
-            [cocdan.ws.db :as ws-db]
             [clojure.spec.alpha :as s]
-            [cocdan.auxiliary :as gaux]))
+            [cocdan.auxiliary :as gaux]
+            [cocdan.middleware.ws :refer [middleware-ws-update]]))
 
 (defn create!
   [{{{:keys [name on_stage] :as avatar} :body} :parameters session :session}]
@@ -101,4 +101,4 @@
              :handler #(-> %
                            transfer!
                            schema/middleware-either-api
-                           (ws-db/middleware-ws-update :avatar))}}]])
+                           (middleware-ws-update :avatar))}}]])

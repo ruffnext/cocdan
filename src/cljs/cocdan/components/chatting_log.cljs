@@ -1,33 +1,20 @@
 (ns cocdan.components.chatting-log
   (:require
-   [posh.reagent :as p]
    [re-posh.core :as rp]
    [reagent.core :as r]
    [reagent.dom :as d]
    [clojure.string :as str]
-   [cocdan.core.log :refer [posh-avatar-latest-message-time query-latest-messages-by-avatar-id]]
+   [cocdan.core.log :refer [posh-avatar-latest-message-time query-latest-messages-by-avatar-id get-avatar-from-ctx]]
    [cocdan.db :as gdb]))
 
 (defn- log-item
-  [{msg-text' :msg
+  [{msg-text :content
     msg-type :type
-    substage :substage
-    avatar-id :avatar :as msg} current-use-avatar-id {stage-admin :owned_by}]
-  (let [[avatar-name avatar-header avatar-attrs]
-        (if (= 0 (:avatar msg))
-          "system"
-          (->> @(p/q '[:find ?name ?header ?attrs
-                       :in $ ?avatar-id
-                       :where
-                       [?e :avatar/id ?avatar-id]
-                       [?e :avatar/name ?name]
-                       [?e :avatar/header ?header]
-                       [?e :avatar/attributes ?attrs]]
-                     gdb/db (:avatar msg))
-               (reduce into [])))
-        msg-text (cond
-                   (= stage-admin current-use-avatar-id) (str msg-text' "@" substage)
-                   :else msg-text')
+    ctx-eid :ctx
+    avatar-id :sender :as _msg} current-use-avatar-id]
+  (let [{avatar-attrs :attributes
+         avatar-header :header
+         avatar-name :name} (get-avatar-from-ctx ctx-eid avatar-id)
         address-info (let [items (->> avatar-attrs :coc :items)
                            hands (->> (reduce (fn [a [k vs]]
                                                 (if (contains? #{:左手持 :右手持 :双手持} k)
@@ -37,14 +24,11 @@
                                                                       (conj a name)
                                                                       a)) [] vs))
                                                   a)) [] items)
-                                      flatten)
-                           res (-> ""
-                                   (#(if (empty? hands)
-                                       %
-                                       (str % "手持" (str/join "," hands)))))]
-                       res)]
+                                      flatten)]
+                       (when (seq hands)
+                         (str "手持" (str/join "," hands))))]
     (cond
-      (= msg-type "action") [:p {:style {:padding-top "1em" :padding-bottom "1em"}
+      (= msg-type "use-items") [:p {:style {:padding-top "1em" :padding-bottom "1em"}
                                  :class "has-text-centered"} [:i (str "--- " avatar-name " " msg-text " ---")]]
       (= msg-type "system-msg") [:p {:style {:padding-top "1em"
                                              :padding-bottom "1em"
@@ -59,9 +43,11 @@
         [:div.media.media-content
          [:div.content
           [:div
-           [:p.is-flex.is-justify-content-end [:strong avatar-name] [:span {:style {:font-size 12
-                                                                                    :margin-top "5px"
-                                                                                    :margin-left "5px"}} address-info]]
+           [:p.is-flex.is-justify-content-end
+            [:strong avatar-name]
+            [:span {:style {:font-size 12
+                            :margin-top "5px"
+                            :margin-left "5px"}} address-info]]
            [:div.has-background-white-ter
             {:style {:border-radius "0.5em"
                      :padding "0.75em"}}
@@ -86,30 +72,12 @@
          [:div.content
           [:div
            [:p.is-flex.is-justify-content-start [:strong avatar-name] [:span {:style {:font-size 12
-                                                                                    :margin-top "5px"
-                                                                                    :margin-left "5px"}} address-info]]
+                                                                                      :margin-top "5px"
+                                                                                      :margin-left "5px"}} address-info]]
            [:div.has-background-white-ter
             {:style {:border-radius "0.5em"
                      :padding "0.75em"}}
             msg-text]]]]]])))
-
-(defn- get-msgs
-  [ds current-use-avatar limit]
-  (let [ids (->> @(p/q '[:find ?id
-                         :in $ ?current-use-avatar-id
-                         :where
-                         [?id :message/receiver ?current-use-avatar-id]]
-                       ds
-                       current-use-avatar)
-                 (reduce into []))
-        msgs @(p/pull-many ds '[*] ids)]
-    (->> (gdb/remove-db-perfix msgs)
-         (sort-by :time)
-         reverse
-         (take limit)
-         reverse)))
-
-
 
 (defn chatting-log
   [_stage _avatar-id _my-avatars]
@@ -138,15 +106,15 @@
         (let [[_stage avatar-id _my-avatars] (rest (r/argv this))
               this-node (d/dom-node this)
               p-node (.-parentNode this-node)
-              {last-time :time} (last (get-msgs gdb/db avatar-id 10))]
+              {last-time :time} (last (query-latest-messages-by-avatar-id gdb/db avatar-id 10))]
           (when (not (nil? last-time))
             (rp/dispatch [:rpevent/upsert :avatar {:id avatar-id :latest-read-message-time last-time}]))
           (when @always-bottom
             (set! (.-scrollTop p-node) (.-scrollHeight p-node)))))
 
       :reagent-render
-      (fn [stage current-use-avatar-id _my-avatars]
-        (let [_latest-time @(posh-avatar-latest-message-time gdb/db current-use-avatar-id)]
+      (fn [_stage current-use-avatar-id _my-avatars]
+        (let [_latest-time @(posh-avatar-latest-message-time gdb/db current-use-avatar-id)] ;; trigger re-rendering
           [:div
            {:style {:width "100%"
                     :padding-bottom "1em"}}
@@ -154,4 +122,4 @@
                 :class "has-text-centered"
                 :on-click #(swap! limit (fn [x] (+ x 40)))} [:i "加载更多消息"]]
            (doall (for [msg (query-latest-messages-by-avatar-id gdb/db current-use-avatar-id @limit)]
-                    (with-meta (log-item msg current-use-avatar-id stage) {:key (str "log-" (:time msg) (:receiver msg))})))]))})))
+                    (with-meta (log-item msg current-use-avatar-id) {:key (str "log-" (:time msg) (:receiver msg))})))]))})))

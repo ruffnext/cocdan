@@ -8,7 +8,7 @@
    [immutant.web.async :as async]
    [cocdan.auxiliary :as gaux]
    [cocdan.ws.auxiliary :as ws-aux]
-   [clojure.core.async :refer [go <!]]))
+   [clojure.core.async :refer [go]]))
 
 (defn- get-coc-attr
   [avatar col-keys]

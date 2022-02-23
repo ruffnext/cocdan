@@ -7,10 +7,12 @@
             [cocdan.auxiliary :as gaux]
             [cocdan.users.core :as users]
             [cocdan.schema.core :as schema]
-            [cocdan.ws.db :as ws-db]
             [clojure.tools.logging :as log]
             [clojure.data.json :as json]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [cocdan.middleware.ws :refer [middleware-ws-update]]
+            [cocdan.shell.db :refer [query-stage-action?]]
+            [cocdan.ws.db :refer [remove-db-perfix]]))
 
 (defn- create!
   [{{{_ :title
@@ -115,6 +117,20 @@
            avatar' (avatarsaux/transfer-avatar! (assoc avatar :on_stage (:id stage)))]
           (m/return {:body avatar'})))
 
+(defn- query-history-actions?
+  [{{{stage-id :id} :path
+     {orders :orders} :query} :parameters session :session}]
+  (m/mlet [_ (users/login? session)]
+          (m/return {:status 200
+                     :body (->> (if (seq orders)
+                                  orders
+                                  [(Integer/parseInt orders)])
+                                (map #(->
+                                       (query-stage-action? stage-id %)
+                                       remove-db-perfix))
+                                (filter #(seq %)))})))
+
+
 (s/def ::code string?)
 (s/def ::avatar-id int?)
 
@@ -152,7 +168,7 @@
              :handler #(-> %
                            patch!
                            schema/middleware-either-api
-                           (ws-db/middleware-ws-update :stage))}}]
+                           (middleware-ws-update :stage))}}]
    ["/get-by-code"
     {:get {:summary "get stage info by code"
            :parameters {:query {:code string?}}
@@ -162,11 +178,18 @@
                          schema/middleware-either-api)}}]
    ["/s:id/list/avatar"
     {:get {:summary "list a stage's avatars"
-           :parameters {:query (s/keys :opt-un [::code ::avatar-id] )
+           :parameters {:query (s/keys :opt-un [::code ::avatar-id])
                         :path {:id int?}}
            :responses {200 {:schema [schema/SchemaAvatar]}}
            :handler #(-> %
                          list-avatars
+                         schema/middleware-either-api)}}]
+   ["/s:id/history-actions"
+    {:get {:summary "query history actions"
+           :parameters {:path {:id int?}
+                        :query {:orders [int?]}}
+           :handler #(-> %
+                         query-history-actions?
                          schema/middleware-either-api)}}]
    ["/s:id/make-invite"
     {:post {:summary "generate a invite url"
@@ -183,6 +206,6 @@
             :handler #(-> %
                           join-by-code!
                           schema/middleware-either-api
-                          (ws-db/middleware-ws-update :avatar))}}]])
+                          (middleware-ws-update :avatar))}}]])
 
 
