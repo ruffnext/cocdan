@@ -13,11 +13,6 @@
    [clojure.core.async :refer [timeout <! go]]
    [reagent.core :as r]))
 
-(def alert "alert")
-(def sync "sync")
-(def info  "info")
-(def msg  "msg")
-
 (defn make-msg
   ([avatar type msg]
    {:time (. js/Date now)
@@ -73,7 +68,6 @@
 
 (defn init-stage-ws!
   [{stage-id :stage-id}]
-  (js/console.log " -- INIT STAGE -- ")
   (let [url (str "ws://"  ws-host ":" ws-port "/ws/" stage-id)]
     (m/mlet [channel (either/try-either (js/WebSocket. url))]
             (do
@@ -81,12 +75,7 @@
               (set! (.-onclose channel) #(rf/dispatch [:event/chat-on-close stage-id %]))
               (set! (.-onerror channel) #(js/console.log %))
               (rp/dispatch [:rpevent/upsert :stage {:id stage-id
-                                                    :channel channel}])
-              (when (nil? @(posh-current-use-avatar-eid gdb/db stage-id))
-                (let [avatars-can-use (filter #(= (:on_stage %) stage-id) (->> @(posh-my-avatars gdb/db)
-                                                                               (gdb/pull-eids gdb/db)))]
-                  (rp/dispatch [:rpevent/upsert :stage {:id stage-id
-                                                        :current-use-avatar (:id (first avatars-can-use))}]))))
+                                                    :channel channel}]))
             (either/right "success"))))
 
 (defn check-msg-syntax

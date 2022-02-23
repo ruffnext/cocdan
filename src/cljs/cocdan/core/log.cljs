@@ -145,17 +145,18 @@
 
 (defn posh-stage-latest-ctx-eid
   [db stage-id]
-  (let [[_ ctx-eid] (->> @(p/q '[:find ?order ?ctx-eid
-                                 :in $ ?stage-id
-                                 :where
-                                 [?ctx-eid :action/type "snapshot"]
-                                 [?ctx-eid :action/stage ?stage-id]
-                                 [?ctx-eid :action/order ?order]]
-                               db
-                               stage-id)
-                         (sort-by first)
-                         reverse
-                         first)]
+  (let [ctx-eid (->> @(p/q '[:find ?order ?ctx-eid
+                             :in $ ?stage-id
+                             :where
+                             [?ctx-eid :action/type "snapshot"]
+                             [?ctx-eid :action/stage ?stage-id]
+                             [?ctx-eid :action/order ?order]]
+                           db
+                           stage-id)
+                     (sort-by first)
+                     reverse
+                     first
+                     second)]
     ctx-eid))
 
 (comment
