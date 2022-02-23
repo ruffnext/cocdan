@@ -2,7 +2,8 @@
   (:require [clojure.tools.logging :as log]
             [cats.monad.either :as either]
             [cats.core :as m]
-            [cocdan.ws.db :as ws-db]))
+            [cocdan.ws.db :as ws-db]
+            [cocdan.shell.db :as s-db]))
 
 (def default-substages
   {:debug {:name "debug"}
@@ -25,7 +26,7 @@
                                  (either/right avatar-on-substage)
                                  (do
                                    (ws-db/upsert-db! ws-db/db :avatar (assoc-in avatar [:attributes :substage] default-substage))
-                                   (ws-db/notify-clients-db! @ws-db/db :avatar channel)
+                                   (s-db/make-snapshot! (:on_stage avatar))
                                    (either/right default-substage)))]
           (m/return current-substage-id)))
 
@@ -39,7 +40,7 @@
            substages (let [substages (-> stage :attributes :substages)]
                        (cond (or (nil? substages) (empty? substages) (empty? (get-substage-ids-from-substage-dict substages)))
                              (do (ws-db/upsert-db! ws-db/db :stage (assoc-in stage [:attributes :substages] default-substages))
-                                 (ws-db/notify-clients-db! @ws-db/db :stage channel)
+                                 (s-db/make-snapshot! (:id stage))
                                  (either/right default-substages))
                              :else (either/right substages)))
            substage-ids (either/right (get-substage-ids-from-substage-dict substages))

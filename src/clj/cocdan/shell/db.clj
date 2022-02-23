@@ -1,6 +1,10 @@
 (ns cocdan.shell.db
   (:require
-   [datascript.core :as d]))
+   [datascript.core :as d]
+   [cocdan.avatars.auxiliary :as avatars-aux]
+   [cocdan.stages.auxiliary :as stages-aux]
+   [cats.core :as m]
+   [clojure.tools.logging :as log]))
 
 (def db-schema
   {:action/stage {:db/index true}
@@ -47,7 +51,13 @@
        stage-id
        order))
 
-(defn initialize-stage!
-  [{stage-id :id :as stage} avatars]
-  (action! stage-id "snapshot" {:avatars avatars
-                                :stage stage}))
+(defn make-snapshot!
+  "append a snapshot action to db"
+  ([stage-id]
+   (m/mlet [avatars (avatars-aux/list-avatars-by-stage? stage-id)
+            stage (stages-aux/get-by-id? stage-id)]
+           (action! stage-id "snapshot" {:avatars avatars
+                                         :stage stage})))
+  ([{stage-id :id :as stage} avatars]
+   (action! stage-id "snapshot" {:avatars avatars
+                                 :stage stage})))

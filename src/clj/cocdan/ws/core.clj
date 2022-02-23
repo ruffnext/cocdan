@@ -29,13 +29,12 @@
              (ws-db/upsert! ws-db/db :stage stage)
              (ws-db/upsert! ws-db/db :avatar avatars)
              (let [current-order (s-db/query-max-order-of-stage-action (:id stage))]
-               (log/debug current-order)
                (if current-order
                  (async/send! channel  (->> current-order
                                             (s-db/query-stage-action? (:id stage))
                                             remove-db-perfix
                                             gaux/->json))
-                 (s-db/initialize-stage! stage avatars)))
+                 (s-db/make-snapshot! stage avatars)))
              (m/return {:stageId stage-id :user user-id}))]
     (either/branch res
                    (fn [x]

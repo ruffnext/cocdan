@@ -7,7 +7,7 @@
    [re-posh.core :as rp]
    [datascript.core :as d]
    [cocdan.core.stage :refer [posh-stage-by-id]]
-   [cocdan.core.avatar :refer [posh-my-avatars]]
+   [cocdan.core.avatar :refer [posh-my-avatars posh-current-use-avatar-eid]]
    [cocdan.core.log :refer [append-action! register-action-to-log-listener]]
    [cocdan.db :as gdb]
    [clojure.core.async :refer [timeout <! go]]
@@ -71,8 +71,9 @@
 (goog-define ws-port 3000)
 (register-action-to-log-listener gdb/db)
 
-(defn- make-stage-ws
+(defn init-stage-ws!
   [{stage-id :stage-id}]
+  (js/console.log " -- INIT STAGE -- ")
   (let [url (str "ws://"  ws-host ":" ws-port "/ws/" stage-id)]
     (m/mlet [channel (either/try-either (js/WebSocket. url))]
             (do
@@ -80,7 +81,12 @@
               (set! (.-onclose channel) #(rf/dispatch [:event/chat-on-close stage-id %]))
               (set! (.-onerror channel) #(js/console.log %))
               (rp/dispatch [:rpevent/upsert :stage {:id stage-id
-                                                    :channel channel}]))
+                                                    :channel channel}])
+              (when (nil? @(posh-current-use-avatar-eid gdb/db stage-id))
+                (let [avatars-can-use (filter #(= (:on_stage %) stage-id) (->> @(posh-my-avatars gdb/db)
+                                                                               (gdb/pull-eids gdb/db)))]
+                  (rp/dispatch [:rpevent/upsert :stage {:id stage-id
+                                                        :current-use-avatar (:id (first avatars-can-use))}]))))
             (either/right "success"))))
 
 (defn check-msg-syntax
@@ -119,7 +125,7 @@
       (pos-int? remain) (go
                           (<! (timeout 1000))
                           (swap! reconnect-retry-remain #(assoc % (keyword stage-id) (- remain 1)))
-                          (make-stage-ws {:stage-id stage-id}))
+                          (init-stage-ws! {:stage-id stage-id}))
       :else ""
       ;; (append-msg stage-id
       ;;             (-> (for [avatar on-stage-avatars]
@@ -158,17 +164,6 @@
       (.send channel (gaux/->json msg)))
     {}))
 
-(defn- sub-substage-msgs
-  [db [_query-id stage-id substage-id]]
-  (->> db
-       :stages
-       (filter #(= (:id %) stage-id))
-       first
-       :sub-stages
-       (filter #(= (:id %) substage-id))
-       first
-       :history-msg))
-
 (doseq [[event f] {:event/chat-on-close on-close
                    :event/chat-on-message on-message!}]
   (rf/reg-event-db event f))
@@ -176,8 +171,5 @@
 (doseq [[event f] {:event/chat-send-message send-message}]
   (rf/reg-event-fx event f))
 
-(doseq [[fx f] {:fx/chat-new-stage make-stage-ws}]
+(doseq [[fx f] {:fx/chat-new-stage init-stage-ws!}]
   (rf/reg-fx fx f))
-
-(doseq [[sub f] {:subs/chat-substage-msgs sub-substage-msgs}]
-  (rf/reg-sub sub f))

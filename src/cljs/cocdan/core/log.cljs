@@ -5,7 +5,8 @@
    [cocdan.db :as gdb :refer [remove-db-perfix]]
    [cljs-http.client :as http]
    [clojure.core.async :refer [go <!]]
-   [clojure.string :as str]))
+   [clojure.string :as str]
+   [re-posh.core :as rp]))
 
 (defn make-log
   [sender receiver stage-id content log-time log-type ctx-eid]
@@ -116,7 +117,7 @@
         (d/transact! db res)))
     (append-action! db [actions])))
 
-(defn query-last-ctx
+(defn query-action-ctx?
   [ds stage-id current-order]
   (let [res (->> (d/q '[:find [(pull ?eid [*]) ...]
                         :in $ ?stage-id ?current-order
@@ -141,6 +142,25 @@
     (if (= (:action/type last-ctx') "snapshot")
       (assoc (remove-db-perfix last-ctx') :eid (:db/id last-ctx'))
       nil)))
+
+(defn posh-stage-latest-ctx-eid
+  [db stage-id]
+  (let [[_ ctx-eid] (->> @(p/q '[:find ?order ?ctx-eid
+                                 :in $ ?stage-id
+                                 :where
+                                 [?ctx-eid :action/type "snapshot"]
+                                 [?ctx-eid :action/stage ?stage-id]
+                                 [?ctx-eid :action/order ?order]]
+                               db
+                               stage-id)
+                         (sort-by first)
+                         reverse
+                         first)]
+    ctx-eid))
+
+(comment
+  (posh-stage-latest-ctx-eid gdb/db 2)
+  )
 
 (defn query-stage-latest-action-order
   [ds stage-id]
@@ -268,10 +288,12 @@
   (let [logs (cond
                (= (:type transact-map) "snapshot") ;; re-render following actions
                (when-let [actions (query-following-actions (:db-after report) (:stage transact-map) (:order transact-map))]
+                 (rp/dispatch [:rpevent/upsert :stage (-> transact-map :fact :stage)])
+                 (rp/dispatch [:rpevent/upsert :avatar (-> transact-map :fact :avatars)])
                  (parse-action transact-map (vec (map remove-db-perfix actions))))
 
                (:fact transact-map) ;; render this action
-               (when-let [ctx (query-last-ctx (:db-after report) (:stage transact-map) (:order transact-map))]
+               (when-let [ctx (query-action-ctx? (:db-after report) (:stage transact-map) (:order transact-map))]
                  (parse-action ctx [(remove-db-perfix transact-map)]))
 
                :else [])]

@@ -79,6 +79,16 @@
             channel)
        (reduce into [])))
 
+(defn query-stage-by-channel
+  [ds channel]
+  (d/q '[:find ?stage-id
+         :in $ ?channel
+         :where
+         [?e :channel/ws ?channel]
+         [?e :channel/stage ?stage-id]]
+       ds
+       channel))
+
 (defn
   pull-channel
   [ds channel]
@@ -159,21 +169,6 @@
     :stage (upsert-persistent-db! col-key attrs)
     :avatar (upsert-persistent-db! col-key attrs)
     ))
-
-(defn notify-clients-db!
-  "send synchronization information to all end users on the same stage"
-  ([ds col-key channel]
-   (m/mlet [attrs (case col-key
-                    :stage (pull-stage-by-channel ds channel)
-                    :avatar (pull-avatars-by-channel ds channel)
-                    (either/left (str "col-key " col-key " not found")))]
-           (notify-clients-db! ds col-key channel attrs)))
-  ([_ds col-key channel attrs]
-   (let [responseMsg (gaux/->json (ws-aux/make-msg 0 "sync" {:target (name col-key)
-                                                             :value attrs}))
-         channels (query-channels-by-channel @db channel)]
-     (doseq [channel channels]
-       (async/send! channel responseMsg)))))
 
 (defn query-channels-by-stage-id
   [ds stage-id]
@@ -256,16 +251,8 @@
 (comment
   (d/entid @db [:stage/id 1])
   (log/info (pull-stage @db 1))
-  (let [channel (->> (d/q '[:find ?channel
-                            :where
-                            [?e :channel/ws ?channel]]
-                          @db)
-                     (reduce into [])
-                     first)]
-    ;; (query-channels-by-channel @db channel)
-    (notify-clients-db! @db :stage channel))
 
-  
+
   (d/q '[:find ?eids
          :where [?eids :avatar/id]]
        @db)

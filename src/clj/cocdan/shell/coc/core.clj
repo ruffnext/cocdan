@@ -8,7 +8,8 @@
    [immutant.web.async :as async]
    [cocdan.auxiliary :as gaux]
    [cocdan.ws.auxiliary :as ws-aux]
-   [clojure.core.async :refer [go]]))
+   [clojure.core.async :refer [go]]
+   [cocdan.shell.db :as s-db]))
 
 (defn- get-coc-attr
   [avatar col-keys]
@@ -22,14 +23,15 @@
       (either/right res))))
 
 (defn- set-coc-attr
-  [avatar col-keys val channel]
+  [avatar col-keys val _channel]
   (let [new-avatar (assoc-in
                     avatar
                     (-> (conj [:attributes :coc] col-keys)
                         flatten)
-                    val)]
+                    val)
+        stage-id (:on_stage new-avatar)]
     (ws-db/upsert-db! ws-db/db :avatar new-avatar)
-    (ws-db/notify-clients-db! @ws-db/db :avatar channel)
+    (s-db/make-snapshot! stage-id)
     new-avatar))
 
 (defn- chinese-english-attr-map
@@ -177,7 +179,7 @@
                        avatar
                        res)]
           (ws-db/upsert-db! ws-db/db :avatar new-avatar)
-          (ws-db/notify-clients-db! @ws-db/db :avatar channel)
+          (s-db/make-snapshot! (:on_stage avatar))
           (m/return new-avatar))
   (either/right "set attr"))
 
