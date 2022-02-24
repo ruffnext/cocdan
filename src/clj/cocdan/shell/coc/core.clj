@@ -163,7 +163,7 @@
                  (either/left "sc [success]/[failed]")))))
 
 (defn- set-attr
-  [avatar _cmd cmd-rest channel]
+  [avatar _cmd cmd-rest _channel]
   (m/mlet [res (let [res (re-seq #"(?<attr>[^0-9]+)(?<val>[0-9]+)" (str/lower-case cmd-rest))]
                  (if (nil? res)
                    (either/left "设置命令非法")

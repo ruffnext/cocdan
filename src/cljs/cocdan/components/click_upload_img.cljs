@@ -55,7 +55,6 @@
       :reagent-render
       (fn
         [styles img _]
-        (js/console.log (merge {:class "modal-stage-banner-img has-text-centered"} styles))
         [:div
          [:input {:type "file"
                   :style {:display "none"}

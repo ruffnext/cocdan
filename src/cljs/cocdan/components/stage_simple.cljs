@@ -1,47 +1,8 @@
 (ns cocdan.components.stage-simple
   (:require [markdown.core :refer [md->html]]
-            [cocdan.auxiliary :as aux]
             [re-frame.core :as rf]
-            [cljs-http.client :as http]))
-
-(defn- handle-edit-modal-active
-  [{:keys [db]} _ res _]
-  {:db (assoc-in db [:stage-simple :edit-modal-active] res)})
-
-(defn- handle-edit-modal-done
-  [{:keys [db]} _ res _]
-  (-> {:db db}
-      (#(assoc-in % [:db :stage-simple :edit-modal] res))
-      (#(if (nil? (:id res))
-          (-> %
-              (assoc-in [:http-request] {:url "/api/stage/create"
-                                               :req-params {:json-params res}
-                                               :method http/post
-                                               :resp-event :event/stage-simple-update-done})
-              (assoc-in [:db :stage-simple :edit-modal-submit-status] "is-loading"))
-          (do
-            (js/console.log "UPDATE modal")
-            %)))))
-
-(defn- handle-edit-modal
-  [{:keys [db]} _ res _]
-  {:db (update-in db [:stage-simple] assoc
-                  :edit-modal-active false
-                  :edit-modal res)})
-
-(defn- handle-stage-update
-  [{:keys [db]} _ res _]
-  (let [stage (-> res :body)]
-    (if (not= 201 (:status res))
-      {:db (assoc-in db [:stage-simple :edit-modal-submit-status] "is-danger")}
-      (do
-        (js/setTimeout (fn [] (rf/dispatch [:event/stage-simple-edit-modal nil])) 1000)
-        (rf/dispatch [:event/avatar-refresh])
-        {:db (-> db
-                 (assoc  :stages (aux/swap-filter-list-map! (:stages db) #(= (:id %) (:id stage)) (fn [_] stage)))
-                 (assoc-in [:stage-simple :edit-modal-submit-status] "is-done"))}))))
-
-
+            [cocdan.db :as gdb]
+            [cocdan.core.stage :refer [posh-stage-by-id]]))
 
 (defn component-stage-simple
   [{id :id 
@@ -77,7 +38,7 @@
         [:div  {:dangerouslySetInnerHTML {:__html (md->html intro)}}]]]
       [:footer.card-footer
        [:a.card-footer-item {:class "has-text-primary"
-                             :on-click #(rf/dispatch [:event/page-goto-stage id])} "Join"]
+                             :href (str "#/stage/" id)} "Join"]
        [:a.card-footer-item {:class "has-text-info" :on-click on-click} (case card-type
                                                                           "joined" "Detail"
                                                                           "controlled" "Edit"
@@ -104,32 +65,32 @@
      [:i {:class "fas fa-search fa-7x" :style {:width "100%"}}]
      [:p {:class "subtitle is-3"} "Find One"]]]])
 
-(aux/init-page
- {:subs/stage-simple-edit-modal-active #(->> % :stage-simple :edit-modal-active)
-  :subs/edit-modal #(->> % :stage-simple :edit-modal)
-  :subs/stages-joined (fn [db]
-                        (let [my_avatars (set (map #(:id %) (filter #(= (:controlled_by %) (:id (:user db))) (:avatars db))))]
-                          (filter #(not (contains? my_avatars (:owned_by %))) (:stages db))))
-  :subs/stages-owned (fn [db]
-                       (let [my_avatars (set (map #(:id %) (filter #(= (:controlled_by %) (:id (:user db))) (:avatars db))))]
-                         (filter #(contains? my_avatars (:owned_by %)) (:stages db))))}
- {:event/stage-simple-edit-modal-active handle-edit-modal-active
-  :event/stage-simple-edit-modal-done handle-edit-modal-done
-  :event/stage-simple-edit-modal handle-edit-modal
-  :event/stage-simple-update-done handle-stage-update})
-
 (defn component-stages-list
-  []
-  (list
-   ^{:key "mjs"} [:section.section
-                  [:h1.title "我主持的舞台"]
-                  [:div.columns {:class "is-multiline" :style {:margin-left 12}}
-                   (doall (for [v @(rf/subscribe [:subs/stages-owned])]
-                            (with-meta (component-stage-simple v "controlled") {:key (str (:id v))})))
-                   (with-meta (component-edit #(rf/dispatch [:event/modal-stage-edit-active nil])) {:key "cssp1"})]]
-   ^{:key "mms"} [:section.section
-                  [:h1.title "我参加的舞台"]
-                  [:div.columns {:class "is-multiline" :style {:margin-left 12}}
-                   (doall (for [v @(rf/subscribe [:subs/stages-joined])]
-                            (with-meta (component-stage-simple v "joined") {:key (str (:id v))})))
-                   (with-meta (component-search #(rf/dispatch [:event/modal-find-stage-active true])) {:key "cssp"})]]))
+  [avatar-eids]
+  (let [avatars (for [avatar-eid avatar-eids] 
+                  (gdb/pull-eid gdb/db avatar-eid))
+        avatar-ids (set (map :id avatars))
+        stage-ids (set (reduce (fn [a {on_stage :on_stage}] (if on_stage (conj a on_stage) a)) [] avatars))
+        stages (for [stage-id stage-ids]
+                 (gdb/pull-eid gdb/db @(posh-stage-by-id gdb/db stage-id)))
+        [stages-owned stages-joined]
+        (reduce (fn [a {owned_by :owned_by :as x}]
+                  (if owned_by
+                   (if (contains? avatar-ids owned_by)
+                    (assoc-in a [0] (conj (first a) x))
+                    (assoc-in a [1] (conj (second a) x)))
+                    a))
+                [[] []] stages)]
+    (list
+     ^{:key "mjs"} [:section.section
+                    [:h1.title "我主持的舞台"]
+                    [:div.columns {:class "is-multiline" :style {:margin-left 12}}
+                     (doall (for [v stages-owned]
+                              (with-meta (component-stage-simple v "controlled") {:key (str (:id v))})))
+                     (with-meta (component-edit #(rf/dispatch [:event/modal-stage-edit-active nil])) {:key "cssp1"})]]
+     ^{:key "mms"} [:section.section
+                    [:h1.title "我参加的舞台"]
+                    [:div.columns {:class "is-multiline" :style {:margin-left 12}}
+                     (doall (for [v stages-joined]
+                              (with-meta (component-stage-simple v "joined") {:key (str (:id v))})))
+                     (with-meta (component-search #(rf/dispatch [:event/modal-find-stage-active true])) {:key "cssp"})]])))

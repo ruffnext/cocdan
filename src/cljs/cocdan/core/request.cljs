@@ -10,5 +10,8 @@
    (when (and (contains? #{:avatar :stage} base-key) (not (nil? (:id attrs))))
      (go (let [id (:id attrs)
                url (str "/api/" (name base-key) "/" (first (name base-key)) id)
-               _res (<! (http/patch url {:json-params attrs}))])))
+               res (<! (http/patch url {:json-params attrs}))]
+           (when (= (:status res) 200)
+             (js/console.log res)
+             (rf/dispatch [:rpevent/upsert base-key (:body res)])))))
    {}))

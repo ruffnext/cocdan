@@ -3,12 +3,9 @@
    [datascript.core :as d]
    [clojure.string :as str]
    [cats.monad.either :as either]
-   [cats.core :as m]
    [clojure.tools.logging :as log]
    [cocdan.db.core :refer [general-transfer]]
-   [cocdan.auxiliary :as gaux]
-   [cocdan.ws.auxiliary :as ws-aux]
-   [immutant.web.async :as async]))
+   [cocdan.auxiliary :as gaux]))
 
 ; [db/id   :attr              :value                ...]
 ; [  1     :channel/ws         [Object WebSocket]      ]

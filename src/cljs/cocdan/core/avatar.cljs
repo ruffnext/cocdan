@@ -1,6 +1,9 @@
 (ns cocdan.core.avatar
   (:require
-   [posh.reagent :as p]))
+   [posh.reagent :as p]
+   [re-frame.core :as rf]
+   [clojure.core.async :refer [go <!]]
+   [cljs-http.client :as http]))
 
 (defn posh-my-avatars
   [ds]
@@ -31,9 +34,27 @@
        stage-id))
 
 (defn posh-avatar-by-id
-  [ds avatar-id]
+  [db avatar-id]
   (p/q '[:find ?a-eid .
          :in $ ?avatar-id
          :where [?a-eid :avatar/id ?avatar-id]]
-       ds
+       db
        avatar-id))
+
+(rf/reg-event-db
+ :event/refresh-my-avatars
+ (fn [db [_driven-by]]
+   (go
+     (let [res (<! (http/get "/api/user/avatar/list"))]
+       (when (= (:status res) 200)
+         (let [avatars (-> res :body)
+               stage-ids (-> (reduce (fn [a {on_stage :on_stage}]
+                                       (if on_stage
+                                         (conj a on_stage)
+                                         a))
+                                     [] avatars)
+                             set)]
+           (rf/dispatch [:rpevent/upsert :avatar avatars])
+           (doseq [stage-id stage-ids]
+             (rf/dispatch [:event/refresh-stage stage-id]))))))
+   db))

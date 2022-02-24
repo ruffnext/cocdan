@@ -3,7 +3,8 @@
   (:require
    [cljs.core.async :refer [<!]]
    [re-frame.core :as rf]
-   [cljs-http.client :as http]))
+   [cljs-http.client :as http]
+   [clojure.string :as str]))
 
 (defn swap-filter-list-map!
   [xs f transform]
@@ -77,11 +78,6 @@
   (filter #(= (:controlled_by %) id) (:avatars db)))
 
 (rf/reg-sub
- :subs/general-get-avatars-by-user-id
- (fn [db [_query-id id]]
-   (get-avatars-by-user-id db id)))
-
-(rf/reg-sub
  :subs/general-get-my-avatars
  (fn [db [_query-id]]
    (let [my-id (:id (:user db))]
@@ -108,9 +104,33 @@
    (apply handle-list-map-conj db driven-by event-args)))
 
 (defn <-json
+  "from json str to map"
   [val]
   (js->clj (.parse js/JSON val) :keywordize-keys true))
 
 (defn ->json
+  "from map to json str"
   [kv]
   (.stringify js/JSON (clj->js kv)))
+
+(defn- handle-key
+  [base k]
+  (keyword (str (name base) "/" (name k))))
+
+(defn handle-keys
+  [base attrs]
+  (reduce (fn [a [k v]]
+            (assoc a (handle-key base k) v)) {} attrs))
+
+(defn- remove-perfix
+  [k]
+  (keyword (first (str/split (name k) "/" 1))))
+
+(defn remove-db-perfix
+  [vals]
+  (cond
+    (nil? vals) nil
+    (or (vector? vals)
+        (list? vals)) (map remove-db-perfix vals)
+    :else (reduce (fn [a [k v]]
+                    (assoc a (remove-perfix k) v)) {} (dissoc vals :db/id))))

@@ -3,11 +3,11 @@
    [re-frame.core :as rf]
    [cats.core :as m]
    [cats.monad.either :as either]
-   [cocdan.auxiliary :as gaux]
+   [cocdan.auxiliary :refer [handle-keys <-json <-json swap-filter-list-map! ->json ->json]]
    [re-posh.core :as rp]
    [datascript.core :as d]
    [cocdan.core.stage :refer [posh-stage-by-id]]
-   [cocdan.core.avatar :refer [posh-my-avatars posh-current-use-avatar-eid]]
+   [cocdan.core.avatar :refer [posh-my-avatars]]
    [cocdan.core.log :refer [append-action! register-action-to-log-listener]]
    [cocdan.db :as gdb]
    [clojure.core.async :refer [timeout <! go]]
@@ -90,7 +90,7 @@
   [db [_query-id _ msg]]
   (either/branch-left
    (m/mlet [raw-msg (m/->=
-                     (either/try-either (gaux/<-json (.-data msg)))
+                     (either/try-either (<-json (.-data msg)))
                      check-msg-syntax)]
            (append-action! gdb/db raw-msg)
            (m/return ""))
@@ -124,7 +124,6 @@
 
 (defn- on-close
   [db [_query-id stage-id event]]
-  (js/console.log event)
   (let [my-avatars (->> @(posh-my-avatars gdb/db)
                         (gdb/pull-eids gdb/db))
         on-stage-avatars (filter #(= (:on_stage %) stage-id) my-avatars)
@@ -136,9 +135,9 @@
       :else (js/console.log (str "cannot handle ws close code " (.-code event))))
     (when stage-eid
       (d/transact! gdb/db [[:db.fn/retractEntity stage-eid]])
-      (d/transact! gdb/db [(assoc (gdb/handle-keys :stage (dissoc stage :channel)) :db/add -1)]))
+      (d/transact! gdb/db [(assoc (handle-keys :stage (dissoc stage :channel)) :db/add -1)]))
 
-    (assoc db :stages (gaux/swap-filter-list-map!
+    (assoc db :stages (swap-filter-list-map!
                        (:stages db)
                        #(= (:id %) stage-id)
                        (fn [stage]
@@ -150,7 +149,7 @@
                                      (gdb/pull-eid gdb/db)))]
     (if (nil? channel)
       (js/console.log (str "stage " stage-id "'s channel is nil!"))
-      (.send channel (gaux/->json msg)))
+      (.send channel (->json msg)))
     {}))
 
 (doseq [[event f] {:event/chat-on-close on-close

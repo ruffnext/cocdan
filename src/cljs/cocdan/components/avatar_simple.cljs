@@ -1,10 +1,15 @@
 (ns cocdan.components.avatar-simple
-  (:require [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]
+            [cocdan.db :as gdb]
+            [cocdan.core.stage :refer [posh-stage-by-id]]))
 
 (defn component-avatar-simple
-  [{id :id name :name on_stage :on_stage header :header :as avatar}]
-  (let [{stage-title :title
-         stage-admin :owned_by} (when (not (nil? on_stage)) @(rf/subscribe [:subs/general-get-stage-by-id on_stage]))]
+  [avatar-eid]
+  (let [{id :id name :name on_stage :on_stage header :header :as avatar} (gdb/pull-eid gdb/db avatar-eid)
+        {stage-title :title
+         stage-id :id
+         stage-admin :owned_by} (when (not (nil? on_stage)) (->> @(posh-stage-by-id gdb/db on_stage)
+                                                                 (gdb/pull-eid gdb/db)))]
     [:div.card
      [:div.card-content
       [:div.media
@@ -17,7 +22,7 @@
                                                                    [:span {:class "subtitle is-7"} " 管理员"])]
         [:p {:class "subtitle is-6"} (if (nil? on_stage)
                                        "无所属"
-                                       [:a {:on-click #(rf/dispatch [:event/page-goto-stage on_stage])}
+                                       [:a {:href (str "#/stage/" stage-id)}
                                         (str "@" stage-title)])]]]
       [:div.content
        [:div {:class "columns is-multiline has-text-centered"}

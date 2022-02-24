@@ -2,7 +2,7 @@
   (:require
    [datascript.core :as d]
    [re-posh.core :as rp]
-   [clojure.string :as str]
+   [cocdan.auxiliary :refer [handle-keys remove-db-perfix]]
    [posh.reagent :as p]))
 
 (def schema
@@ -15,30 +15,6 @@
 
 (defonce db (d/create-conn schema))
 (rp/connect! db)
-
-(defn- handle-key
-  [base k]
-  (keyword (str (name base) "/" (name k))))
-
-(defn handle-keys
-  [base attrs]
-  (reduce (fn [a [k v]]
-            (assoc a (handle-key base k) v)) {} attrs))
-
-(defn- remove-perfix
-  [k]
-  (keyword (first (str/split (name k) "/" 1))))
-
-(defn remove-db-perfix
-  [vals]
-  (cond
-    (nil? vals) nil
-    (or (vector? vals)
-        (list? vals)) (map remove-db-perfix vals)
-    :else (reduce (fn [a [k v]]
-                    (assoc a (remove-perfix k) v)) {} (dissoc vals :db/id))))
-
-
 
 (rp/reg-pull-sub
  :rpsub/entity
@@ -56,10 +32,18 @@
      :else [])))
 
 (defn pull-eid
+  [db eid]
+  (when eid
+    (-> @(p/pull db '[*] (cond
+                           (vector? eid) (first eid)
+                           :else eid))
+        remove-db-perfix)))
+
+(defn d-pull-eid
   [ds eid]
-  (-> @(p/pull ds '[*] (cond
-                         (vector? eid) (first eid)
-                         :else eid))
+  (-> (d/pull ds '[*] (cond
+                        (vector? eid) (first eid)
+                        :else eid))
       remove-db-perfix))
 
 (defn pull-eids
@@ -68,17 +52,4 @@
       remove-db-perfix))
 
 (def defaultDB
-  {:stage-simple {:stage-simple-edit-modal-active false
-                  :stage-simple-edit-modal-submit-status "is-primary"
-                  :stage-simple-edit-modal {}}
-   :login {:username ""
-           :email ""
-           :username-error nil
-           :email-error nil
-           :status "default"
-           :register-status "default"}
-   :avatars []; all avatars
-   :stages [] ; all stages
-   :user {}   ; you
-   :users []  ; all users
-   :chat []})
+  {}) ; re-frame db is deprecated

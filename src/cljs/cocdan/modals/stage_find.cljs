@@ -1,6 +1,5 @@
 (ns cocdan.modals.stage-find
   (:require
-   [cocdan.auxiliary :as aux]
    [reagent.core :as r]
    [clojure.string :as str]
    [cljs-http.client :as http]
@@ -8,7 +7,10 @@
    [markdown.core :refer [md->html]]
    [re-frame.core :as rf]
    [cats.monad.either :as either]
-   [cats.core :as m]))
+   [cats.core :as m]
+   [cocdan.core.stage :refer [posh-stage-by-id]]
+   [cocdan.db :as gdb]
+   [cocdan.auxiliary :refer [init-page]]))
 
 (defonce active? (r/atom false))
 (defonce join-status (r/atom "is-disabled"))
@@ -22,7 +24,7 @@
 (defonce stage (r/atom nil))
 (defonce stage-avatars (r/atom nil))
 
-(aux/init-page
+(init-page
  {}
  {:event/modal-find-stage-active (fn [{:keys [db]}]
                                    (swap! active? not)
@@ -59,10 +61,14 @@
 
 (defn- generate-avatar-select-option
   [avatar]
-  [:option {:value (:id avatar)} (str (:name avatar) (if (nil? (:on_stage avatar))
-                                                       ""
-                                                       (let [stage @(rf/subscribe [:subs/general-get-stage-by-id (:on_stage avatar)])]
-                                                         (str " @ " (:title stage)))))])
+  [:option {:value (:id avatar)}
+   (str (:name avatar)
+        (if (nil? (:on_stage avatar))
+          ""
+          (let [stage (->> @(posh-stage-by-id gdb/db (:on_stage avatar))
+                           (gdb/pull-eid gdb/db))]
+            (js/console.log stage)
+            (str " @ " (:title stage)))))])
 
 (defn- join-stage
   []

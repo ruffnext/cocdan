@@ -1,6 +1,5 @@
 (ns cocdan.pages.stage
   (:require
-   [cocdan.auxiliary :as gaux]
    [cocdan.components.coc.general-status :refer [general-status]]
    [cocdan.components.coc.stage-avatars :refer [stage-avatars]]
    [cocdan.components.chatting-log :refer [chatting-log]]
@@ -9,30 +8,12 @@
    [cocdan.modals.network-indicator :refer [network-indicator]]
    [cocdan.core.chat :refer [init-stage-ws!]]
    [cocdan.db :as gdb]
-   [re-frame.core :as rf]
    [cocdan.core.log :refer [posh-stage-latest-ctx-eid]]
    [cocdan.core.user :refer [posh-my-eid]]
    [cocdan.core.stage :refer [posh-stage-by-id]]
    [clojure.core.async :refer [go]]
    [re-posh.core :as rp]))
 
-(defn- init-stage
-  [_ _ stage-id]
-  (let [res @(posh-current-use-avatar-eid gdb/db (js/parseInt stage-id))]
-    (if (nil? res)
-      {:fx/chat-new-stage {:stage-id stage-id}}
-      {})))
-
-(defn- goto-stage
-  [_ _ stage-id]
-  (rf/dispatch [:common/navigate! :stage {:id stage-id}])
-  (rf/dispatch [:event/page-init-stage stage-id])
-  {})
-
-(gaux/init-page
- {}
- {:event/page-goto-stage goto-stage
-  :event/page-init-stage init-stage})
 
 (defn page
   [{stage-id :id}]
@@ -83,4 +64,3 @@
       
       :else
       nil)))
-

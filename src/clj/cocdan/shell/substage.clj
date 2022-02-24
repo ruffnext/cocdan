@@ -19,7 +19,7 @@
   "lobby")
 
 (defn- get-message-substage-id
-  [{avatar-id :avatar} substage-ids channel]
+  [{avatar-id :avatar} substage-ids _channel]
   (m/mlet [avatar (ws-db/pull-avatar-by-id @ws-db/db avatar-id)
            avatar-on-substage (either/right (-> avatar :attributes :substage))
            current-substage-id (if (contains? substage-ids (keyword avatar-on-substage))

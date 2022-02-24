@@ -2,7 +2,8 @@
   (:require
    [posh.reagent :as p]
    [datascript.core :as d]
-   [cocdan.db :as gdb :refer [remove-db-perfix]]
+   [cocdan.db :as gdb]
+   [cocdan.auxiliary :refer [remove-db-perfix]]
    [cljs-http.client :as http]
    [clojure.core.async :refer [go <!]]
    [clojure.string :as str]

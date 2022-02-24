@@ -46,7 +46,6 @@
       [:div.navbar-start
        [nav-link "#/" "Home" :home]
        [nav-link "#/about" "About" :about]
-       [nav-link "#/cmd" "Command" :cmd]
        [nav-link "#/bulma" "Bulma" :bulma]]
       [:div.navbar-end
        (let [user @(rf/subscribe [:user])]

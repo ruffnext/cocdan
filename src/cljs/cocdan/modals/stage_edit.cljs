@@ -6,7 +6,10 @@
    ["rich-markdown-editor" :refer (default) :rename {default RichMarkdownEditor}]
    [clojure.core.async :refer [go <!]]
    [cljs-http.client :as http]
-   [re-frame.core :as rf]))
+   [re-frame.core :as rf]
+   [cocdan.core.avatar :refer [posh-my-avatars]]
+   [cocdan.db :as gdb]
+   [cocdan.core.stage :refer [posh-stage-by-id]]))
 
 
 
@@ -29,7 +32,7 @@
           (if (or (= 200 (:status res)) (= 201 (:status res)))
             (do
               (reset! submit-status "is-primary")
-              (rf/dispatch [:event/avatar-refresh])
+              (rf/dispatch [:event/refresh-my-avatars])
               (js/setTimeout #(reset! active? false) 1000))
             (reset! submit-status "is-danger"))))))
 
@@ -54,11 +57,9 @@
   [avatar]
   [:option {:value (:id avatar)} (str (:name avatar) (if (nil? (:on_stage avatar))
                                                     ""
-                                                    (str " @ " (->> @(rf/subscribe [:subs/general [:stages]])
-                                                                    (filter #(= (:id %) (:on_stage avatar)))
-                                                                    (take 1)
-                                                                    (first)
-                                                                    (:title)))))])
+                                                    (str " @ " (let [stage (->> @(posh-stage-by-id gdb/db (:on_stage avatar))
+                                                                                (gdb/pull-eid gdb/db))]
+                                                                 (:title stage)))))])
 
 (defn stage-edit
   []
@@ -109,7 +110,8 @@
               :defaultValue (:owned_by @stage)}
              [:option {:value 0} "create a new kp avatar"]
              (let [sid (:id @stage)
-                   avatars @(rf/subscribe [:subs/general [:avatars]])]
+                   avatars (->> @(posh-my-avatars gdb/db)
+                                (gdb/pull-eids gdb/db))]
                (doall (map-indexed (fn [i v] (when (= (:on_stage v) sid)
                                                (with-meta (generate-admin-options v) {:key (str "gaos" i)}))) avatars)))]]]]]]]
       [:footer.modal-card-foot
