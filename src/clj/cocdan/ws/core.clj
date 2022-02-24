@@ -7,12 +7,13 @@
    [cocdan.shell.router :as router]
    [cocdan.ws.auxiliary :as ws-aux]
    [cocdan.shell.db :as s-db]
-   [cocdan.ws.db :as ws-db :refer [remove-db-perfix]]
+   [cocdan.ws.db :as ws-db :refer [remove-db-perfix query-is-stage-inited?]]
    [cats.core :as m]
    [immutant.web.async :as async]
    [cats.monad.either :as either]
    [datascript.core :as d]
-   [cocdan.auxiliary :as gaux]))
+   [cocdan.auxiliary :as gaux]
+   [clojure.core.async :refer [go]]))
 
 (defonce current-channel (atom nil))
 
@@ -20,22 +21,28 @@
   (let [res (m/mlet
              [request (either/right (async/originating-request channel))
               {user-id :id} (login? (:session request))
-              stage (stages-aux/get-by-id? (:stage (:path-params request)))
-              avatars (avatars-aux/list-avatars-by-stage? (:id stage))
-              stage-id (either/right (str (:id stage)))]
+              {stage-id :id :as stage} (stages-aux/get-by-id? (:stage (:path-params request)))
+              avatars (avatars-aux/list-avatars-by-stage? (:id stage))]
              (ws-db/upsert! ws-db/db :channel {:ws channel
                                                :stage (:id stage)
                                                :user user-id})
+             (when-not (query-is-stage-inited? @ws-db/db stage-id)
+               (m/mlet [actions (stages-aux/query-actions-of-stage? stage-id)]
+                       (ws-db/upsert! s-db/db :action actions)))
+             (when-not (s-db/query-latest-ctx-eid stage-id)
+               (s-db/reset-stage-actions! stage-id)
+               (stages-aux/reset-stage-actions! stage-id))
              (ws-db/upsert! ws-db/db :stage stage)
              (ws-db/upsert! ws-db/db :avatar avatars)
-             (let [current-order (s-db/query-max-order-of-stage-action (:id stage))]
+             (let [current-order (s-db/query-max-order-of-stage-action stage-id)]
                (if current-order
                  (async/send! channel  (->> current-order
-                                            (s-db/query-stage-action? (:id stage))
+                                            (s-db/query-stage-action? stage-id)
                                             remove-db-perfix
                                             gaux/->json))
-                 (s-db/make-snapshot! stage avatars)))
-             (m/return {:stageId stage-id :user user-id}))]
+                 (go 
+                   (s-db/make-snapshot! stage avatars))))
+             (m/return {:stageId (str stage-id) :user user-id}))]
     (either/branch res
                    (fn [x]
                      (log/error x)

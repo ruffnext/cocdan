@@ -110,3 +110,28 @@ SELECT * FROM stages WHERE id = :id
 -- :name delete-stage! :! :n
 -- :doc delete a stage by id
 DELETE FROM stages WHERE id = :id
+
+
+-- ACTION --
+
+-- :name list-actions-by-stage-id? :? :*
+-- :doc list all actions by stage id
+SELECT * FROM stage_action WHERE stage = :stage ORDER BY `order`
+
+-- :name get-action-by-stage-id-and-order :? :*
+SELECT * FROM stage_action WHERE `stage` = :stage AND `order` = :order
+
+-- :name insert-action! :! :n
+-- :doc insert an action
+INSERT INTO stage_action 
+(`order`, `type`, `fact`, `time`, `stage`)
+VALUES
+(:order, :type, :fact, :time, :stage)
+
+-- :name update-action!! :! :n
+-- :doc update an action! use it carefully!
+UPDATE stage_action SET `fact` = :fact WHERE stage = :stage AND `order` = :order
+
+-- :name clear-history-actions! :! :n
+-- :doc clear history actions! use it carefully!
+DELETE FROM stage_action WHERE stage = :stage

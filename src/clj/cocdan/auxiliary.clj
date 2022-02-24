@@ -31,6 +31,14 @@
         res
         (cover-json-field res field-key)))))
 
+(defn timestamp-to-date
+  [timestamp]
+  (new java.util.Date timestamp))
+
+(defn date-to-timestamp
+  [date]
+  (. (. java.sql.Timestamp valueOf date) getTime))
+
 (defn cover-int-field
   [val]
   (cond

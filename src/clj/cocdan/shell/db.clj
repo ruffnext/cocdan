@@ -61,3 +61,40 @@
   ([{stage-id :id :as stage} avatars]
    (action! stage-id "snapshot" {:avatars avatars
                                  :stage stage})))
+
+(defn query-latest-ctx-eid
+  [stage-id]
+  (let [ctx-eid (->> (d/q '[:find ?order ?ctx-eid
+                            :in $ ?stage-id
+                            :where
+                            [?ctx-eid :action/type "snapshot"]
+                            [?ctx-eid :action/stage ?stage-id]
+                            [?ctx-eid :action/order ?order]]
+                          @db
+                          stage-id)
+                     (sort-by first)
+                     reverse
+                     first
+                     second)]
+    ctx-eid))
+
+(defn reset-stage-actions!
+  [stage-id]
+  (let [action-eids (d/q '[:find [?e ...]
+                           :in $ ?stage-id
+                           :where [?e :action/stage ?stage-id]]
+                         @db
+                         stage-id)]
+    (d/transact! db (vec (map (fn [x] [:db.fn/retractEntity x]) action-eids))))
+  )
+
+(comment
+  (let [res (d/q '[:find [?e ...]
+                   :in $ ?stage-id
+                   :where [?e :action/stage ?stage-id]]
+                 @db
+                 1)]
+    (vec (map (fn [x] [:db.fn/retractEntity x]) res)))
+  (query-stage-action? 2 4)
+  (query-max-order-of-stage-action 2)
+  )

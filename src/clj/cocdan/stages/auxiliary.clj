@@ -3,9 +3,10 @@
             [cats.monad.either :as either]
             [cocdan.avatars.auxiliary :refer [transfer-avatar!]]
             [cocdan.db.core :as db]
-            [cocdan.auxiliary :as gaux]
+            [cocdan.auxiliary :as gaux :refer [date-to-timestamp]]
             [clojure.tools.logging :as log]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.data.json :as json]))
 
 (defn find-by-name?
   "find specified stage"
@@ -78,18 +79,51 @@
   [stage-id]
   (either/try-either (db/delete-stage! {:id stage-id})))
 
-(defn stage-curtain!
-  "pause a stage"
-  []
-  ())
+(defn query-an-action?
+  [stage-id action-order]
+  (m/->= (either/try-either (db/get-action-by-stage-id-and-order {:stage stage-id :order action-order}))
+         ((fn [x]
+            (if (empty? x)
+              (either/left (str "There is no action whose order is " action-order " on stage " stage-id))
+              (either/right (-> (gaux/cover-json-field  (first x) :fact)
+                                ((fn [x]
+                                   (assoc x :time (date-to-timestamp (:time x))))))))))))
 
-(defn stage-destory!
-  "destory a stage"
-  []
-  ())
+(defn query-actions-of-stage?
+  [stage-id]
+  (m/->= (either/try-either (db/list-actions-by-stage-id? {:stage stage-id}))
+         ((fn [xs]
+            (if (empty? xs)
+              (either/left (str "There is no action on stage " stage-id))
+              (either/right (vec (map (fn [x]
+                                        (-> (gaux/cover-json-field  x :fact)
+                                            ((fn [x]
+                                               (assoc x :time (date-to-timestamp (:time x)))))))
+                                      xs))))))))
 
-(defn avatar-on-stage?
-  "check if avatar on this stage"
-  []
-  ())
+(defn upsert-an-action!
+  [{order :order stage-id :stage fact :fact :as action}]
+  (either/branch (query-an-action? stage-id order)
+                 (fn [_left-val]
+                   (either/try-either (db/insert-action! (assoc action 
+                                                                :time (new java.util.Date (:time action))
+                                                                :fact (json/write-str fact)))))
+                 (fn [right-val]
+                   (either/try-either (db/update-action!! (assoc action 
+                                                                 :time (new java.util.Date (:time right-val))
+                                                                 :fact (json/write-str fact)))))))
 
+(defn reset-stage-actions!
+  [stage-id]
+  (either/try-either (db/clear-history-actions! {:stage stage-id})))
+
+(comment
+  (log/debug (upsert-an-action! {:order 1 :time (new java.util.Date) :stage 1 :fact {:hello "World"} :type "msg"}))
+  (m/mlet [action (query-an-action? 1 1)]
+           action)
+  (new java.util.Date)
+  (log/debug (query-actions-of-stage? 1))
+  (. (new java.util.Date 1645691703808) getTime)
+  (db/get-action-by-stage-id-and-order {:stage 1 :order 1})
+  (log/debug (reset-stage-actions! 1))
+  )

@@ -84,15 +84,17 @@
 
 (defn query-stage-action?
   [ds stage-id order]
-  (-> (d/q '[:find (pull ?e [*]) .
-             :in $ ?stage-id ?order
-             :where
-             [?e :action/stage ?stage-id]
-             [?e :action/order ?order]]
-           ds
-           stage-id
-           order)
-      remove-db-perfix))
+  (let [res (d/q '[:find (pull ?e [*]) .
+                   :in $ ?stage-id ?order
+                   :where
+                   [?e :action/stage ?stage-id]
+                   [?e :action/order ?order]]
+                 ds
+                 stage-id
+                 order)]
+    (if (nil? res)
+      nil
+      (assoc (remove-db-perfix res) :db/id (:db/id res)))))
 
 (defn query-log-eid
   [ds receiver time]
@@ -109,8 +111,11 @@
   [db actions]
   (if (vector? actions)
     (let [res (->> (map (fn [{stage-id :stage order :order :as action}]
-                          (when-not (query-stage-action? @db stage-id order)
-                            (reduce (fn [a [k v]] (assoc a (keyword (str "action/" (name k))) v)) {} action)))
+                          (let [res (query-stage-action? @db stage-id order)
+                                new-action (reduce (fn [a [k v]] (assoc a (keyword (str "action/" (name k))) v)) {} action)]
+                            (if res
+                              (assoc new-action :db/id (:db/id res))
+                              new-action)))
                         actions)
                    (filter #(not (nil? %)))
                    vec)]

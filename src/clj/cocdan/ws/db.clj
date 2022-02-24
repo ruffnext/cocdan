@@ -211,6 +211,15 @@
        ds
        stage-id))
 
+(defn query-is-stage-inited?
+  [ds stage-id]
+  (d/q '[:find ?eid .
+         :in $ ?stage-id
+         :where
+         [?eid :stage/id ?stage-id]]
+       ds
+       stage-id))
+
 (defn pull-eid
   [ds eid]
   (-> (d/pull ds '[*] (cond

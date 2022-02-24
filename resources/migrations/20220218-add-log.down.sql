@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS avatar_messages;
+DROP TABLE IF EXISTS stage_action;

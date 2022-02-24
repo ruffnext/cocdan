@@ -1,13 +1,14 @@
 (ns cocdan.core
   (:require
-    [cocdan.handler :as handler]
-    [cocdan.nrepl :as nrepl]
-    [luminus.http-server :as http]
-    [luminus-migrations.core :as migrations]
-    [cocdan.config :refer [env]]
-    [clojure.tools.cli :refer [parse-opts]]
-    [clojure.tools.logging :as log]
-    [mount.core :as mount])
+   [cocdan.handler :as handler]
+   [cocdan.nrepl :as nrepl]
+   [luminus.http-server :as http]
+   [luminus-migrations.core :as migrations]
+   [cocdan.shell.core]
+   [cocdan.config :refer [env]]
+   [clojure.tools.cli :refer [parse-opts]]
+   [clojure.tools.logging :as log]
+   [mount.core :as mount])
   (:gen-class))
 
 (declare http-server repl-server)

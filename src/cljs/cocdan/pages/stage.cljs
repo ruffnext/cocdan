@@ -22,8 +22,9 @@
         ctx-eid (posh-stage-latest-ctx-eid gdb/db stage-id)
         {{avatars-on-stage :avatars
           stage :stage} :fact} (gdb/pull-eid gdb/db ctx-eid)
-        current-use-avatar (->> @(posh-current-use-avatar-eid gdb/db stage-id)
-                                (gdb/pull-eid gdb/db))
+        {current-use-avatar-id :id} (->> @(posh-current-use-avatar-eid gdb/db stage-id)
+                                         (gdb/pull-eid gdb/db))
+        current-use-avatar (first (filter #(= (:id %) current-use-avatar-id) avatars-on-stage))
         my-eid @(posh-my-eid gdb/db)
         my-info (gdb/pull-eid gdb/db my-eid)
         my-avatars (filter #(= (:controlled_by %) (:id my-info)) avatars-on-stage)
