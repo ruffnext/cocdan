@@ -227,10 +227,6 @@
                         :else eid))
       remove-db-perfix))
 
-(comment
-  (pull-eid @db 20)
-  )
-
 (defn pull-eids
   [ds eids]
   (-> (d/pull-many ds '[*] eids)

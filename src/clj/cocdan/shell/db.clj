@@ -97,4 +97,5 @@
     (vec (map (fn [x] [:db.fn/retractEntity x]) res)))
   (query-stage-action? 2 4)
   (query-max-order-of-stage-action 2)
+  (make-snapshot! 2)
   )

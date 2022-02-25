@@ -1,9 +1,11 @@
 (ns cocdan.core.stage
   (:require
    [posh.reagent :as p]
+   [datascript.core :as d]
    [cljs-http.client :as http]
    [clojure.core.async :refer [go <!]]
-   [re-frame.core :as rf]))
+   [re-frame.core :as rf]
+   [cocdan.auxiliary :refer [remove-db-perfix]]))
 
 
 (defn posh-stage-by-id
@@ -15,7 +17,7 @@
        stage-id))
 
 (defn posh-am-i-stage-admin?
-  [ds stage-id]
+  [db stage-id]
   (p/q '[:find ?stage-controller .
          :in $ ?stage-id
          :where
@@ -25,8 +27,15 @@
          [?avatar-eid :avatar/controlled_by ?my-id]
          [?avatar-eid :avatar/id ?avatar-id]
          [(= ?avatar-id ?stage-controller)]]
-       ds
+       db
        stage-id))
+
+(defn query-all-stages
+  [ds]
+  (-> (d/q '[:find [(pull ?e [*]) ...]
+             :where [?e :stage/id _]]
+           ds)
+      remove-db-perfix))
 
 (rf/reg-event-db
  :event/refresh-stage

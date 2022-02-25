@@ -8,9 +8,10 @@
    [re-frame.core :as rf]
    [cats.monad.either :as either]
    [cats.core :as m]
-   [cocdan.core.stage :refer [posh-stage-by-id]]
+   [cocdan.core.stage :refer [posh-stage-by-id query-all-stages]]
    [cocdan.db :as gdb]
-   [cocdan.auxiliary :refer [init-page]]))
+   [cocdan.auxiliary :refer [init-page]]
+   [cocdan.core.avatar :refer [posh-avatar-by-id posh-my-avatars]]))
 
 (defonce active? (r/atom false))
 (defonce join-status (r/atom "is-disabled"))
@@ -40,24 +41,25 @@
   (reset! stage nil)
   (reset! join-status "is-disabled"))
 
-(defn- do-search
-  []
-  (go (let [res (<! (http/get "api/stage/get-by-code" {:query-params {:code @input-search}}))]
-        (cond
-          (= 200 (:status res)) (do
-                                  (reset! stage (:body res))
-                                  (reset! join-status "is-primary"))
-          :else (js/console.log res)))))
-
 (declare option-check)
 
-(defn- refresh-stage-avatars
+(defn- refresh-stage-avatars!
   []
   (go (let [res (<! (http/get (str "api/stage/s" (:id @stage) "/list/avatar") {:query-params {:code @input-search}}))]
         (cond
           (= 200 (:status res)) (do
                                   (reset! stage-avatars (:body res))
                                   (option-check))))))
+
+(defn- do-search
+  []
+  (go (let [res (<! (http/get "api/stage/get-by-code" {:query-params {:code @input-search}}))]
+        (cond
+          (= 200 (:status res)) (do
+                                  (reset! stage (:body res))
+                                  (refresh-stage-avatars!)
+                                  (reset! join-status "is-primary"))
+          :else (js/console.log res)))))
 
 (defn- generate-avatar-select-option
   [avatar]
@@ -67,7 +69,6 @@
           ""
           (let [stage (->> @(posh-stage-by-id gdb/db (:on_stage avatar))
                            (gdb/pull-eid gdb/db))]
-            (js/console.log stage)
             (str " @ " (:title stage)))))])
 
 (defn- join-stage
@@ -95,7 +96,7 @@
         (reset! join-status "is-danger")
         (do
           (reset! join-status "is-success")
-          (rf/dispatch [:event/avatar-refresh])
+          (rf/dispatch [:event/refresh-my-avatars])
           (js/setTimeout #(reset! active? false) 1000))))))
 
 
@@ -124,8 +125,8 @@
 
 (defn- check-transform-option
   []
-  (let [kp-list (set (reduce (fn [a x] (conj a (:owned_by x))) [] @(rf/subscribe [:subs/general [:stages]])))]
-    (if (contains? kp-list @select-avatar)
+  (let [kp-ids (set (filter #(not (nil? %)) (map :owned_by (query-all-stages @gdb/db))))]
+    (if (contains? kp-ids @select-avatar)
       (do
         (reset! avatar-transform-option "copy")
         (reset! avatar-transform-limit true))
@@ -133,7 +134,7 @@
 
 (defn- option-check
   []
-  (when (nil? @stage-avatars) (refresh-stage-avatars))
+  (when (nil? @stage-avatars) (refresh-stage-avatars!))
   (reset! join-status "is-disabled")
   (check-transform-option)
   (m/mlet [name (either/right (str/lower-case @avatar-name-input))
@@ -157,12 +158,13 @@
   [id]
   (reset! select-avatar id)
   (if (not= 0 id)
-    (reset! avatar-name-input (:name @(rf/subscribe [:subs/general-get-avatar-by-id id])))
+    (reset! avatar-name-input (:name (->> @(posh-avatar-by-id gdb/db id)
+                                          (gdb/pull-eid gdb/db))))
     (reset! avatar-name-input ""))
   (option-check))
 
 (defn- modal-body
-  [stage]
+  [{stage-id :id :as stage}]
   [:div.modal-card-body
    [:div.content
     {:dangerouslySetInnerHTML {:__html (md->html (:introduction stage))}}]
@@ -178,8 +180,11 @@
        [:option {:value 0} "create a new avatar"]
        (doall
         (map-indexed 
-         (fn [i x] (with-meta (generate-avatar-select-option x) {:key (str "ss" i)}))
-         @(rf/subscribe [:subs/general-get-my-avatars])))]]]
+         (fn [i x] (if (= stage-id (:on_stage x))
+                     nil
+                     (with-meta (generate-avatar-select-option x) {:key (str "ss" i)})))
+         (->> @(posh-my-avatars gdb/db)
+              (gdb/pull-eids gdb/db))))]]]
     [:div.field {:class "is-horizontal"}
      [:div {:class "field-label is-normal"}
       [:label.label " Name"]]

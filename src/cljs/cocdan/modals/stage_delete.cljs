@@ -28,9 +28,7 @@
         (if (= 204 (:status res))
           (do
             (reset! delete-status "is-danger")
-            (rf/dispatch [:event/avatar-refresh])
-            (rf/dispatch [:event/general-update-list-map [:stages] {:filter #(= (:id %) (:id @stage))
-                                                                    :transform (fn [_] nil)}])
+            (rf/dispatch [:event/refresh-my-avatars])
             (js/setTimeout #(reset! active? false) 1000))
           (reset! delete-status "is-danger")))))
 

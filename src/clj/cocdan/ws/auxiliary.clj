@@ -17,14 +17,6 @@
   ([avatar type msg]
    (make-msg avatar type msg (.getTime (java.util.Date.)))))
 
-(defn make-initial-msg
-  [max-order]
-  {:avatar 0
-   :type "sync"
-   :msg {:target "order"
-         :value max-order}
-   :time (.getTime (java.util.Date.))})
-
 (defn parse-message
   [msg-raw]
   (let [res (m/mlet [msg-parsed (either/try-either (gaux/<-json msg-raw))

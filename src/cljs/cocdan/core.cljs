@@ -21,7 +21,9 @@
    [cocdan.core.chat]
    [cocdan.core.stage]
    [cocdan.core.request]
-   [cocdan.db :refer [defaultDB]])
+   [cocdan.db :refer [defaultDB]]
+   [cocdan.core.user :refer [posh-my-eid]]
+   [cocdan.db :as gdb])
   #_{:clj-kondo/ignore [:unused-import]}
   (:import goog.History))
 
@@ -48,10 +50,11 @@
        [nav-link "#/about" "About" :about]
        [nav-link "#/bulma" "Bulma" :bulma]]
       [:div.navbar-end
-       (let [user @(rf/subscribe [:user])]
-         (if (empty? user)
-           [nav-link "#/login" "Login" :login]
-           [nav-link "#/user" (:name user) :user]))]]]))
+       (let [user (->> @(posh-my-eid gdb/db)
+                       (gdb/pull-eid gdb/db))]
+         (if user
+           [nav-link "#/user" (:name user) :user]
+           [nav-link "#/login" "Login" :login]))]]]))
 
 (defn about-page []
   [:section.section>div.container>div.content

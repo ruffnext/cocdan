@@ -2,7 +2,8 @@
   (:require [markdown.core :refer [md->html]]
             [re-frame.core :as rf]
             [cocdan.db :as gdb]
-            [cocdan.core.stage :refer [posh-stage-by-id]]))
+            [cocdan.core.stage :refer [posh-stage-by-id]]
+            [cocdan.core.avatar :refer [posh-avatar-by-id]]))
 
 (defn component-stage-simple
   [{id :id 
@@ -18,7 +19,8 @@
         on-danger (fn [_] (case card-type
                             "controlled" (rf/dispatch [:event/modal-stage-delete-active stage])
                             nil))
-        directed-by @(rf/subscribe [:subs/general-get-avatar-by-id owned_by])]
+        directed-by (->> @(posh-avatar-by-id gdb/db owned_by)
+                         (gdb/pull-eid gdb/db))]
     [:div {:style {:margin "10px"}}
      [:div.card {:class "component-stage-simple"}
       [:div.card-image {:class "component-stage-simple-header"}
@@ -70,17 +72,19 @@
   (let [avatars (for [avatar-eid avatar-eids] 
                   (gdb/pull-eid gdb/db avatar-eid))
         avatar-ids (set (map :id avatars))
+        avatar-joined (set (filter #(not (nil? %)) (map :on_stage avatars)))
         stage-ids (set (reduce (fn [a {on_stage :on_stage}] (if on_stage (conj a on_stage) a)) [] avatars))
         stages (for [stage-id stage-ids]
                  (gdb/pull-eid gdb/db @(posh-stage-by-id gdb/db stage-id)))
-        [stages-owned stages-joined]
-        (reduce (fn [a {owned_by :owned_by :as x}]
+        [stages-owned stages-joined _rest]
+        (reduce (fn [a {owned_by :owned_by stage-id :id :as x}]
                   (if owned_by
-                   (if (contains? avatar-ids owned_by)
-                    (assoc-in a [0] (conj (first a) x))
-                    (assoc-in a [1] (conj (second a) x)))
+                   (cond
+                     (contains? avatar-ids owned_by) (assoc-in a [0] (conj (first a) x))
+                     (contains? avatar-joined stage-id) (assoc-in a [1] (conj (second a) x))
+                     :else (assoc-in a [2] (conj (nth a 2) x)))
                     a))
-                [[] []] stages)]
+                [[] [] []] stages)]
     (list
      ^{:key "mjs"} [:section.section
                     [:h1.title "我主持的舞台"]

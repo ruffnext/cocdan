@@ -11,7 +11,7 @@
             [clojure.data.json :as json]
             [clojure.spec.alpha :as s]
             [cocdan.middleware.ws :refer [middleware-ws-update]]
-            [cocdan.shell.db :refer [query-stage-action?]]
+            [cocdan.shell.db :refer [query-stage-action? make-snapshot!]]
             [cocdan.ws.db :refer [remove-db-perfix]]))
 
 (defn- create!
@@ -113,8 +113,11 @@
   [{{{code :code} :query {avatar :avatar} :body} :parameters session :session}]
   (m/mlet [_ (users/login? session)
            stage (aux/get-by-code? code)
-           avatar (avatarsaux/get-avatar-by-id? avatar)
-           avatar' (avatarsaux/transfer-avatar! (assoc avatar :on_stage (:id stage)))]
+           {previous-stage :on_stage :as avatar} (avatarsaux/get-avatar-by-id? avatar)
+           avatar' (avatarsaux/transfer-avatar! (-> (assoc avatar :on_stage (:id stage))
+                                                    (assoc-in [:attributes :substage] "lobby")))]
+          (when (and (not (nil? previous-stage)) (not= (:id stage) previous-stage))
+            (make-snapshot! previous-stage))
           (m/return {:body avatar'})))
 
 (defn- query-history-actions?
