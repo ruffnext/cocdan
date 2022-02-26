@@ -1,4 +1,7 @@
 {
+  "script": {
+    "build": "shadow-cljs release app"
+  },
   "devDependencies": {
     "shadow-cljs": "^2.16.5"
   },
