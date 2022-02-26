@@ -19,10 +19,12 @@
    [cocdan.pages.modals :as modals]
    [cocdan.core.indexeddb]
    [cocdan.core.chat]
+   [cocdan.core.ws]
    [cocdan.core.stage]
    [cocdan.core.request]
    [cocdan.core.user :refer [posh-my-eid]]
-   [cocdan.db :as gdb])
+   [cocdan.db :as gdb]
+   [cocdan.core.log :refer [register-action-to-log-listener!]])
   #_{:clj-kondo/ignore [:unused-import]}
   (:import goog.History))
 
@@ -136,4 +138,5 @@
   (ajax/load-interceptors!)
   (mount-components)
   (init-sys gdb/defaultDB)
-  (init-events))
+  (init-events)
+  (register-action-to-log-listener! gdb/db))

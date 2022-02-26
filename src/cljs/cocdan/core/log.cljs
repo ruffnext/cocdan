@@ -309,7 +309,7 @@
       (when (and receiver log-time (not (query-log-by-receiver-and-time @gdb/db receiver log-time)))
         (append-log gdb/db log-item)))))
 
-(defn register-action-to-log-listener
+(defn register-action-to-log-listener!
   [db]
   (d/listen! db :action-to-log (fn [report]
                                  (let [tx-data (-> report :tx-data)

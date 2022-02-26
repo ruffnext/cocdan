@@ -6,13 +6,12 @@
    [cocdan.components.chatting-input :refer [chatting-input]]
    [cocdan.core.avatar :refer [posh-current-use-avatar-eid]]
    [cocdan.modals.network-indicator :refer [network-indicator]]
-   [cocdan.core.chat :refer [init-stage-ws!]]
    [cocdan.db :as gdb]
    [cocdan.core.log :refer [posh-stage-latest-ctx-eid]]
    [cocdan.core.user :refer [posh-my-eid]]
    [cocdan.core.stage :refer [posh-stage-by-id]]
-   [clojure.core.async :refer [go]]
-   [re-posh.core :as rp]))
+   [re-posh.core :as rp]
+   [re-frame.core :as rf]))
 
 
 (defn page
@@ -58,10 +57,7 @@
          (network-indicator (:channel (->> @(posh-stage-by-id gdb/db stage-id)
                                            (gdb/pull-eid gdb/db))))])
       (nil? channel)
-      (do
-        (go
-          (init-stage-ws! {:stage-id stage-id}))
-        nil)
-      
+      (rf/dispatch [:ws-event/init! stage-id])
+
       :else
       nil)))

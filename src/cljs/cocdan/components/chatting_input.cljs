@@ -47,7 +47,7 @@
                                           "使用" (chat/make-action-use id (reduce (fn [a x]
                                                                                   (conj a (:value x))) [] @items-to-use) @text)
                                           "msg")]
-                                (rf/dispatch [:event/chat-send-message stage-id msg]))))
+                                (rf/dispatch [:ws-event/send-msg stage-id msg]))))
                  reset-input (fn []
                                (reset! voice-to-target [])
                                (reset! last-avatar-use avatar-id-use)
