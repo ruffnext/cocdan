@@ -3,7 +3,8 @@
    [datascript.core :as d]
    [re-posh.core :as rp]
    [cocdan.auxiliary :refer [handle-keys remove-db-perfix]]
-   [posh.reagent :as p]))
+   [posh.reagent :as p]
+   [re-frame.core :as rf]))
 
 (def schema
   {:stage/id {:db/unique :db.unique/identity}
@@ -50,6 +51,16 @@
   [ds eids]
   (-> @(p/pull-many ds '[*] eids)
       remove-db-perfix))
+
+(defn request-eid-if-not-exist
+  [ds col-key id]
+  (let [res (d/entid ds [(keyword (str (name col-key) "/id")) id])]
+    (when-not res
+      (case col-key
+        :avatar (rf/dispatch [:event/request-avatar id])
+        :stage (rf/dispatch [:event/request-stage id])
+        :else))
+    res))
 
 (def defaultDB
   {}) ; re-frame db is deprecated

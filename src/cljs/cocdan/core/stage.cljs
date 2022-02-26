@@ -37,10 +37,10 @@
            ds)
       remove-db-perfix))
 
-(rf/reg-event-db
- :event/refresh-stage
- (fn [db [_driven-by stage-id]]
+(rf/reg-event-fx
+ :event/request-stage
+ (fn [_ [_driven-by stage-id]]
    (go (let [res (<! (http/get (str "/api/stage/s" stage-id)))]
          (when (= (:status res) 200)
            (rf/dispatch [:rpevent/upsert :stage (:body res)]))))
-   db))
+   {}))
