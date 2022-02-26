@@ -21,7 +21,6 @@
    [cocdan.core.chat]
    [cocdan.core.stage]
    [cocdan.core.request]
-   [cocdan.db :refer [defaultDB]]
    [cocdan.core.user :refer [posh-my-eid]]
    [cocdan.db :as gdb])
   #_{:clj-kondo/ignore [:unused-import]}
@@ -136,5 +135,5 @@
   (start-router!)
   (ajax/load-interceptors!)
   (mount-components)
-  (init-sys defaultDB)
+  (init-sys gdb/defaultDB)
   (init-events))

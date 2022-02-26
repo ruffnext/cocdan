@@ -34,6 +34,7 @@
        stage-id))
 
 (defn posh-avatar-by-id
+  "return null if avatar does not exist in current context"
   [db avatar-id]
   (p/q '[:find ?a-eid .
          :in $ ?avatar-id
@@ -56,5 +57,14 @@
                              set)]
            (rf/dispatch [:rpevent/upsert :avatar avatars])
            (doseq [stage-id stage-ids]
-             (rf/dispatch [:event/refresh-stage stage-id]))))))
+             (rf/dispatch [:event/request-stage stage-id]))))))
    db))
+
+(rf/reg-event-fx
+ :event/request-avatar
+ (fn [_ [_ avatar-id]]
+   (go
+     (let [{avatar :body status :status} (<! (http/get (str "/api/avatar/a" avatar-id)))]
+       (when (= status 200)
+         (rf/dispatch [:rpevent/upsert :avatar avatar]))))
+   {}))
