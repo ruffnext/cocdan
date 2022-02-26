@@ -18,7 +18,7 @@ You will need [Leiningen][1] 2.0 or above installed.
 
 To start a web server for the application, run:
 
-    shadow-cljs release app // generate app.js
+    yarn build // generate app.js
     lein run migrate      // to create database for server
     lein run              // start server and watch
 
