@@ -60,7 +60,7 @@
                                                  "reconnecting")
                            (= 1006 close-code) "server reject ws connect"
                            :else (js/console.log (str "cannot handle ws close code " (.-code event))))]
-    (swap! retry-remain (fn [x] (- x 1)))
+    (swap! retry-remain dec)
     (js/console.log (str "trying to reconnect to stage " stage-id " , remain " @retry-remain))
     (when stage-eid ; remove channel of stage
       (rf/dispatch [:rpevent/upsert :stage {:id stage-id :channel (either/left reconnect-status)}]))

@@ -11,6 +11,7 @@
    [cocdan.events]
    [reitit.core :as reitit]
    [reitit.frontend.easy :as rfe]
+   [datascript.core :as d]
    [cocdan.pages.login :as login-page]
    [cocdan.pages.user :as user-page]
    [cocdan.pages.bulma :as bulma]
@@ -24,7 +25,8 @@
    [cocdan.core.request]
    [cocdan.core.user :refer [posh-my-eid]]
    [cocdan.db :as gdb]
-   [cocdan.core.log :refer [register-action-to-log-listener!]])
+   [cocdan.core.log :refer [action-to-log-listener query-pull-stage-latest-ctx]]
+   [cocdan.auxiliary :refer [rebuild-action-from-tx-data]])
   #_{:clj-kondo/ignore [:unused-import]}
   (:import goog.History))
 
@@ -132,6 +134,20 @@
      init-db))
   (rf/dispatch-sync [:init-db]))
 
+(defn init-db-listener!
+  []
+  (d/listen! gdb/db :action-to-log action-to-log-listener)
+  (d/listen! gdb/db :latest-snapshot-to-db
+             (fn [report]
+               (let [tx-data (-> report :tx-data)
+                     transact-maps (rebuild-action-from-tx-data tx-data)
+                     snapshots (filter #(= (:type %) "snapshot") transact-maps)
+                     stage-ids (set (map :stage snapshots))]
+                 (doseq [stage-id stage-ids]
+                   (when-let [{{stage :stage avatars :avatars} :fact} (query-pull-stage-latest-ctx (:db-after report) stage-id)]
+                     (rf/dispatch [:rpevent/upsert :stage stage])
+                     (rf/dispatch [:rpevent/upsert :avatar avatars])))))))
+
 #_{:clj-kondo/ignore [:clojure-lsp/unused-public-var]}
 (defn init! []
   (start-router!)
@@ -139,4 +155,4 @@
   (mount-components)
   (init-sys gdb/defaultDB)
   (init-events)
-  (register-action-to-log-listener! gdb/db))
+  (init-db-listener!))

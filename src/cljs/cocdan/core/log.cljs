@@ -3,7 +3,7 @@
    [posh.reagent :as p]
    [datascript.core :as d]
    [cocdan.db :as gdb]
-   [cocdan.auxiliary :refer [remove-db-perfix]]
+   [cocdan.auxiliary :refer [remove-db-perfix rebuild-action-from-tx-data]]
    [cljs-http.client :as http]
    [clojure.core.async :refer [go <!]]
    [clojure.string :as str]
@@ -165,7 +165,7 @@
                      second)]
     ctx-eid))
 
-(defn- query-pull-stage-latest-ctx
+(defn query-pull-stage-latest-ctx
   [ds stage-id]
   (let [ctx-eid (->> (d/q '[:find ?order ?ctx-eid
                             :in $ ?stage-id
@@ -309,28 +309,12 @@
           (when (and (= status 200) (seq body))
             (append-action! gdb/db body)))))))
 
-(defn- rebuild-action-from-tx-data
-  [tx-data]
-  (let [eids (reduce (fn [a [eid attr & _r]]
-                       (if (= attr :action/order) (conj a eid) a))
-                     [] tx-data)
-        res (reduce (fn [a [eid attr val & _r]]
-                      (if (contains? (set eids) eid)
-                        (assoc-in a [(.indexOf eids eid) attr] val)
-                        a))
-                    (vec (map (fn [x] {:eid x}) eids))
-                    tx-data)]
-    (map remove-db-perfix res)))
-
 (defn action-to-log!
   [report transact-map]
   (let [logs (cond
                (= (:type transact-map) "snapshot") ;; re-render following actions
                (when-let [actions (query-following-actions (:db-after report) (:stage transact-map) (:order transact-map))]
-                 (parse-action transact-map (vec (map remove-db-perfix actions)))
-                 (when-let [{{stage :stage avatars :avatars} :fact} (query-pull-stage-latest-ctx (:db-after report) (:stage transact-map))]
-                   (rp/dispatch [:rpevent/upsert :stage stage])
-                   (rp/dispatch [:rpevent/upsert :avatar avatars])))
+                 (parse-action transact-map (vec (map remove-db-perfix actions))))
 
                (:fact transact-map) ;; render this action
                (when-let [ctx (query-action-ctx? (:db-after report) (:stage transact-map) (:order transact-map))]
@@ -342,16 +326,15 @@
       (when (and receiver log-time (not (query-log-by-receiver-and-time @gdb/db receiver log-time)))
         (append-log gdb/db log-item)))))
 
-(defn register-action-to-log-listener!
-  [db]
-  (d/listen! db :action-to-log (fn [report]
-                                 (let [tx-data (-> report :tx-data)
-                                       transact-maps (rebuild-action-from-tx-data tx-data)
-                                       stage-ids (set (map :stage transact-maps))]
-                                   (doseq [transact-map transact-maps]
-                                     (action-to-log! report transact-map))
-                                   (doseq [stage-id stage-ids]
-                                     (check-missing-history-actions! (:db-after report) stage-id (query-stage-latest-action-order (:db-after report) stage-id)))))))
+(defn action-to-log-listener
+  [report]
+  (let [tx-data (-> report :tx-data)
+        transact-maps (rebuild-action-from-tx-data tx-data)
+        stage-ids (set (map :stage transact-maps))]
+    (doseq [transact-map transact-maps]
+      (action-to-log! report transact-map))
+    (doseq [stage-id stage-ids]
+      (check-missing-history-actions! (:db-after report) stage-id (query-stage-latest-action-order (:db-after report) stage-id)))))
 
 (comment
   [(reduce (fn [a [k v]] (assoc a (keyword (str "action/" (name k))) v)) {} {:order 1 :time 2})]

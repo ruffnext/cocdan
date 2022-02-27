@@ -69,3 +69,16 @@
         (list? vals)) (map remove-db-perfix vals)
     :else (reduce (fn [a [k v]]
                     (assoc a (remove-perfix k) v)) {} (dissoc vals :db/id))))
+
+(defn rebuild-action-from-tx-data
+  [tx-data]
+  (let [eids (reduce (fn [a [eid attr & _r]]
+                       (if (= attr :action/order) (conj a eid) a))
+                     [] tx-data)
+        res (reduce (fn [a [eid attr val & _r]]
+                      (if (contains? (set eids) eid)
+                        (assoc-in a [(.indexOf eids eid) attr] val)
+                        a))
+                    (vec (map (fn [x] {:eid x}) eids))
+                    tx-data)]
+    (map remove-db-perfix res)))
