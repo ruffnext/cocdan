@@ -13,7 +13,8 @@
                           :stage id
                           :avatar (:on_stage body)
                           :else nil)]
-      (make-snapshot! stage-id)))
+      (make-snapshot! stage-id)
+      (ws-db/upsert! ws-db/db col-key body)))
   response)
 
 (comment

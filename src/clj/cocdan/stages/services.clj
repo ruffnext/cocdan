@@ -12,7 +12,8 @@
             [clojure.spec.alpha :as s]
             [cocdan.middleware.ws :refer [middleware-ws-update]]
             [cocdan.shell.db :refer [query-stage-action? make-snapshot!]]
-            [cocdan.ws.db :refer [remove-db-perfix]]))
+            [cocdan.ws.db :refer [remove-db-perfix]]
+            [clojure.string :as str]))
 
 (defn- create!
   [{{{_ :title
@@ -123,19 +124,26 @@
 (defn- query-history-actions?
   [{{{stage-id :id} :path
      {orders :orders} :query} :parameters session :session}]
+  (log/debug orders)
   (m/mlet [_ (users/login? session)]
           (m/return {:status 200
-                     :body (->> (if (seq orders)
-                                  orders
-                                  [(Integer/parseInt orders)])
-                                (map #(->
-                                       (query-stage-action? stage-id %)
-                                       remove-db-perfix))
-                                (filter #(seq %)))})))
+                     :body (->>
+                            (str/split orders #",")
+                            (reduce (fn [a x]
+                                      (either/branch
+                                       (either/try-either (Integer/parseInt x))
+                                       (fn [_left] a)
+                                       (fn [right] (conj a right))))
+                                    [])
+                            (map #(->
+                                   (query-stage-action? stage-id %)
+                                   remove-db-perfix))
+                            (filter #(seq %)))})))
 
 
 (s/def ::code string?)
 (s/def ::avatar-id int?)
+
 
 (def service-routes
   ["/stage"
@@ -190,7 +198,7 @@
    ["/s:id/history-actions"
     {:get {:summary "query history actions"
            :parameters {:path {:id int?}
-                        :query {:orders [int?]}}
+                        :query {:orders any?}}
            :handler #(-> %
                          query-history-actions?
                          schema/middleware-either-api)}}]

@@ -1,7 +1,12 @@
-(ns cocdan.modals.network-indicator)
+(ns cocdan.modals.network-indicator 
+  (:require [cats.monad.either :as either]))
 
 (defn network-indicator
   [channel]
-  (when (nil? channel)
-    [:div.network-indicator.has-text-danger.sketch.has-text-centered
-     "网络连接丢失"]))
+  (let [status (cond
+                 (nil? channel) "尚未连接"
+                 (either/left? channel) (either/branch-left channel (fn [x] (str x)))
+                 (either/right? channel) nil)]
+    (when status
+      [:div.network-indicator.has-text-danger.sketch.has-text-centered
+       status])))

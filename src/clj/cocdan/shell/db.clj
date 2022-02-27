@@ -60,7 +60,7 @@
                                          :stage stage})))
   ([{stage-id :id :as stage} avatars]
    (action! stage-id "snapshot" {:avatars avatars
-                                 :stage stage})))
+                                 :stage stage}))) 
 
 (defn query-latest-ctx-eid
   [stage-id]

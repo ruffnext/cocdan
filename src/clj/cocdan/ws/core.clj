@@ -69,9 +69,10 @@
            (s-db/action! stage-id (:type response) response (:time response))
            (m/return ""))
    (fn [x]
+     (log/error x)
      (async/send! channel (if (map? x)
-                            x
-                            (ws-aux/make-msg 0 "alert" (str x)))))))
+                            (gaux/->json x)
+                            (gaux/->json (ws-aux/make-msg 0 "alert" (str x))))))))
 
 (def websocket-callbacks
   "WebSocket callback functions"

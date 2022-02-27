@@ -305,7 +305,7 @@
                              (take 20))]
     (when (seq missing-actions)
       (go
-        (let [{body :body status :status} (<! (http/get (str "/api/stage/s" stage-id "/history-actions") {:query-params {:orders missing-actions}}))]
+        (let [{body :body status :status} (<! (http/get (str "/api/stage/s" stage-id "/history-actions") {:query-params {:orders (str/join "," missing-actions)}}))]
           (when (and (= status 200) (seq body))
             (append-action! gdb/db body)))))))
 

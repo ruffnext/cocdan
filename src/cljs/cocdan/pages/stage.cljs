@@ -11,7 +11,8 @@
    [cocdan.core.user :refer [posh-my-eid]]
    [cocdan.core.stage :refer [posh-stage-by-id]]
    [re-posh.core :as rp]
-   [re-frame.core :as rf]))
+   [re-frame.core :as rf]
+   [cats.monad.either :as either]))
 
 
 (defn page
@@ -58,6 +59,11 @@
                                            (gdb/pull-eid gdb/db))))])
       (nil? channel)
       (rf/dispatch [:ws-event/init! stage-id])
+
+      (either/left? channel)
+      (either/branch-left
+       channel
+       (fn [left-val] [:p (str left-val)]))
 
       :else
       nil)))
