@@ -165,6 +165,24 @@
                      second)]
     ctx-eid))
 
+(defn- query-pull-stage-latest-ctx
+  [ds stage-id]
+  (let [ctx-eid (->> (d/q '[:find ?order ?ctx-eid
+                            :in $ ?stage-id
+                            :where
+                            [?ctx-eid :action/type "snapshot"]
+                            [?ctx-eid :action/stage ?stage-id]
+                            [?ctx-eid :action/order ?order]]
+                          ds
+                          stage-id)
+                     (sort-by first)
+                     reverse
+                     first
+                     second)
+        res (d/pull ds '[*] ctx-eid)]
+    (-> (remove-db-perfix res)
+        (assoc :db/id (:db/id res)))))
+
 (comment
   (posh-stage-latest-ctx-eid gdb/db 2)
   )
@@ -241,6 +259,19 @@
     (vec (for [{receiver :id} (-> actor-env :avatars :same-stage)]
            (make-log sender receiver stage-id (str "使用" (str/join "," item-used) "，" action) action-time action-type eid)))))
 
+(defn- handle-system-msg
+  [{{{stage-admin :owned_by} :stage avatars :avatars} :fact eid :eid} {{sender :avatar msg :msg receiver-id :receiver substage :substage :as fact} :fact action-time :time stage-id :stage}]
+  (when (not= sender 0)
+    (js/console.log "this system msg is not send from system (id = 0)")
+    (js/console.log fact))
+  (let [receivers (-> (if (nil? receiver-id)
+                       (map :id (filter #(= substage (-> % :attributes :substage)) avatars))
+                       (list receiver-id))
+                     (conj stage-admin)
+                     set)]
+    (vec (for [receiver receivers]
+           (make-log 0 receiver stage-id msg action-time "system-msg" eid)))))
+
 (defn- parse-action
   [ctx action]
   (cond
@@ -249,6 +280,7 @@
             (cond
               (str/starts-with? action-type "speak") (handle-speak ctx action)
               (str/starts-with? action-type "use") (handle-use ctx action)
+              (= action-type "system-msg") (handle-system-msg ctx action)
               :else (do
                       (js/console.log (str "unreadered action " action-type))
                       (js/console.log action)
@@ -295,9 +327,10 @@
   (let [logs (cond
                (= (:type transact-map) "snapshot") ;; re-render following actions
                (when-let [actions (query-following-actions (:db-after report) (:stage transact-map) (:order transact-map))]
-                 (rp/dispatch [:rpevent/upsert :stage (-> transact-map :fact :stage)])
-                 (rp/dispatch [:rpevent/upsert :avatar (-> transact-map :fact :avatars)])
-                 (parse-action transact-map (vec (map remove-db-perfix actions))))
+                 (parse-action transact-map (vec (map remove-db-perfix actions)))
+                 (when-let [{{stage :stage avatars :avatars} :fact} (query-pull-stage-latest-ctx (:db-after report) (:stage transact-map))]
+                   (rp/dispatch [:rpevent/upsert :stage stage])
+                   (rp/dispatch [:rpevent/upsert :avatar avatars])))
 
                (:fact transact-map) ;; render this action
                (when-let [ctx (query-action-ctx? (:db-after report) (:stage transact-map) (:order transact-map))]
@@ -325,4 +358,6 @@
   (get-avatar-from-ctx 17 2)
   (d/pull @gdb/db '[*] 17)
   (query-latest-messages-by-avatar-id gdb/db 2 10)
+  (rp/dispatch [:rpevent/upsert :avatar [{:id 7 :attributes {:foo "barr"}}]])
+  (d/pull @gdb/db '[*] [:avatar/id 7])
   )

@@ -6,10 +6,9 @@
    [clojure.string :as str]
    [cocdan.ws.db :as ws-db]
    [immutant.web.async :as async]
-   [cocdan.auxiliary :as gaux]
    [cocdan.ws.auxiliary :as ws-aux]
    [clojure.core.async :refer [go]]
-   [cocdan.shell.db :as s-db]))
+   [cocdan.shell.db :as s-db :refer [action!]]))
 
 (defn- get-coc-attr
   [avatar col-keys]
@@ -227,7 +226,8 @@
   [{msg :msg
     msg-type :type
     avatar-id :avatar
-    substage :substage  :as msg-raw}  channel]
+    substage :substage 
+    stage-id :stage :as msg-raw}  channel]
   (when (= msg-type "speak-normal")
     (let [match-res (re-matcher #"^[.。](?<cmd>(close|show|watch|sc|st|aa|r[b]+|r[p]+|rd|ra|rc|r\d{1,}d\d{1,}[^ ]*))[ ]*(?<rest>.*)" (str/replace msg #"[\r\n]" ""))]
       (when (.matches match-res)
@@ -249,14 +249,13 @@
           (either/branch res
                          (fn [left-value]
                            (let [resp-msg (assoc (ws-aux/make-msg 0 "system-msg" left-value)
-                                                 :receiver avatar-id
                                                  :substage substage)]
-                             (async/send! channel (gaux/->json resp-msg))))
+                             (action! stage-id "system-msg" resp-msg)))
                          (fn [right-value]
                            (let [resp-msg (assoc (ws-aux/make-msg 0 "system-msg" right-value)
-                                                 :substage substage)]
-                             (doseq [channel (ws-db/query-channels-by-channel @ws-db/db channel)]
-                               (async/send! channel (gaux/->json resp-msg))))))))))
+                                                 :substage substage
+                                                 :receiver avatar-id)]
+                             (action! stage-id "system-msg" resp-msg))))))))
   (either/right msg-raw))
 
 (comment

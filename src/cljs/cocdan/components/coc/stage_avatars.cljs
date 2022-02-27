@@ -8,8 +8,14 @@
    [cocdan.core.avatar :refer [posh-avatars-by-stage-id]]
    [cocdan.core.stage :refer [posh-am-i-stage-admin?]]))
 
+(defn- unread-count-item
+  [avatar-id]
+  (let [unread-count @(posh-unread-message-count gdb/db avatar-id)]
+    (when unread-count
+      (str unread-count))))
+
 (defn- avatar-item
-  [{id :id :as avatar} my-avatars stage]
+  [{avatar-id :id :as avatar} my-avatars stage]
   (let [avatar-edit #(rf/dispatch [:event/modal-general-attr-editor-active
                                    :avatar [:attributes] avatar
                                    {:substage (sort (for [[k _v] (-> stage :attributes :substages)]
@@ -23,8 +29,8 @@
                                                   (gdb/pull-eids gdb/db))]
                              (rf/dispatch [:event/modal-coc-avatar-edit-active all-avatars (:id avatar)]))
                            (contains? (set (map :id my-avatars)) (:id avatar))
-                           (rf/dispatch [:event/modal-coc-avatar-edit-active my-avatars (:id avatar)])))
-        unread-count @(posh-unread-message-count gdb/db id)]
+                           (rf/dispatch [:event/modal-coc-avatar-edit-active my-avatars (:id avatar)])
+                           :else nil))]
     [:div {:style {:padding-left "6px"
                    :padding-bottom "3px"}} [:span.tag (:name avatar)]
      [:span.is-pulled-right ""]
@@ -49,9 +55,8 @@
             ((fn [x] (take-last 1 x)))
             ; ((fn [x] (str/join ">" x)))
             ))]]
-     (when (pos-int? unread-count)
-       [:span.is-pulled-right.has-text-danger
-        unread-count])]))
+     [:span.is-pulled-right.has-text-danger
+      (unread-count-item avatar-id)]]))
 
 (defn stage-avatars
   [stage avatars my-avatars]

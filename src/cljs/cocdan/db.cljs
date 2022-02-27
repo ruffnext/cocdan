@@ -27,8 +27,8 @@
    (cond
      (or (list? attrs)
          (vector? attrs)
-         (seq? attrs)) (doall (for [attr attrs]
-                                (handle-keys col-key attr)))
+         (seq? attrs)) (vec (doall (for [attr attrs]
+                                     (handle-keys col-key attr))))
      (map? attrs) [(handle-keys col-key attrs)]
      :else [])))
 
