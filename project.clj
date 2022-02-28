@@ -31,6 +31,7 @@
                  [org.clojure/core.async "1.5.644"]
                  [org.clojure/tools.cli "1.0.206"]
                  [org.clojure/tools.logging "1.2.3"]
+                 [org.clojure/data.csv "1.0.0"]
                  [org.webjars.npm/bulma "0.9.3"]
                  [org.webjars.npm/fortawesome__fontawesome-free "5.15.4"]
                  [org.webjars.npm/material-icons "1.0.0"]

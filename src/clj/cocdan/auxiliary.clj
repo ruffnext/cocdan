@@ -101,4 +101,9 @@
     :else (reduce (fn [a [k v]]
                     (assoc a (remove-perfix k) v)) {} (dissoc vals :db/id))))
 
-
+(defn csv-data->maps [csv-data]
+  (map zipmap
+       (->> (first csv-data) ;; First row is the header
+            (map keyword) ;; Drop if you want string keys instead
+            repeat)
+       (rest csv-data)))

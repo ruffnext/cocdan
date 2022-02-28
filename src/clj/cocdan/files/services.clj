@@ -37,6 +37,16 @@
                                 :body (-> file-path
                                           (io/input-stream))}))))
 
+(defn fetch-resource!
+  [{{{file-path :file-path} :path} :parameters session :session}]
+  (m/mlet [_ (users/login? session)
+           _ (m/do-let
+              (core/path_validate? file-path))
+           {content-type :content-type body :body} (core/fetch-resource! file-path)]
+          (m/return {:status 200
+                     :headers {"Content-Type" content-type}
+                     :body body})))
+
 (def service-routes
   ["/files"
    {:swagger {:tags ["files"]}}
@@ -53,4 +63,10 @@
            :parameters {:path {:filename string?}}
            :handler #(-> %
                          download-image!
+                         schema/middleware-either-api)}}]
+   ["/res/:file-path"
+    {:get {:summary "fetch a resource"
+           :parameters {:path {:file-path string?}}
+           :handler #(-> %
+                         fetch-resource!
                          schema/middleware-either-api)}}]])
