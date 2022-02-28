@@ -2,7 +2,7 @@
   (:require [markdown.core :refer [md->html]]
             [re-frame.core :as rf]
             [cocdan.db :as gdb]
-            [cocdan.core.stage :refer [posh-stage-by-id]]
+            [cocdan.core.stage :refer [posh-stage-by-id default-stage]]
             [cocdan.core.avatar :refer [posh-avatar-by-id]]))
 
 (defn component-stage-simple
@@ -91,7 +91,7 @@
                     [:div.columns {:class "is-multiline" :style {:margin-left 12}}
                      (doall (for [v stages-owned]
                               (with-meta (component-stage-simple v "controlled") {:key (str (:id v))})))
-                     (with-meta (component-edit #(rf/dispatch [:event/modal-stage-edit-active nil])) {:key "cssp1"})]]
+                     (with-meta (component-edit #(rf/dispatch [:event/modal-stage-edit-active default-stage])) {:key "cssp1"})]]
      ^{:key "mms"} [:section.section
                     [:h1.title "我参加的舞台"]
                     [:div.columns {:class "is-multiline" :style {:margin-left 12}}

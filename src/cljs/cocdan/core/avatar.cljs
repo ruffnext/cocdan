@@ -68,3 +68,18 @@
        (when (= status 200)
          (rf/dispatch [:rpevent/upsert :avatar avatar]))))
    {}))
+
+(rf/reg-event-fx
+ :http-event/create-avatar
+ (fn [_ [_ avatar]]
+   (go
+     (let [{status :status body :body :as v} (<! (http/post "/api/avatar/create" {:json-params avatar}))]
+       (js/console.log v)
+       (when (= status 201)
+         (rf/dispatch [:rpevent/upsert :avatar body]))))
+   {}))
+
+(def default-avatar
+  {:name ""
+   :header "img/avatar.png"
+   :attributes {:gender "其他"}})

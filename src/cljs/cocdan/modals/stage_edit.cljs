@@ -50,9 +50,6 @@
                                    (swap! active? not)
                                    {:db db})})
 
-;; event/modal-stage-edit-active nil --> do not change current edit stage
-;; event/modal-stage-edit-active {}  --> reset current edit stage to {}
-
 (defn- generate-admin-options
   [avatar]
   [:option {:value (:id avatar)} (str (:name avatar) (if (nil? (:on_stage avatar))

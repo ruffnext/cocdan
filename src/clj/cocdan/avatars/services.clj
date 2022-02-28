@@ -16,7 +16,7 @@
   [{{{:keys [name on_stage] :as avatar} :body} :parameters session :session}]
   {:pre [(not (string/blank? name))]}
   (m/mlet [user (users/login? session)
-           res (aux/create-avatar! (assoc avatar :controlled_by (:id user) :on_stage on_stage))]
+           res (aux/create-avatar! (assoc (dissoc avatar :id) :controlled_by (:id user) :on_stage on_stage))]
           (either/right {:status 201 :body res})))
 
 

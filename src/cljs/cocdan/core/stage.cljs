@@ -37,6 +37,12 @@
            ds)
       remove-db-perfix))
 
+(def default-stage
+  {:title ""
+   :introduction ""
+   :banner "/img/stage.jpg"
+   :attributes {}})
+
 (rf/reg-event-fx
  :event/request-stage
  (fn [_ [_driven-by stage-id]]
