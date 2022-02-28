@@ -7,7 +7,8 @@
    [ring.util.response]
    [ring.util.http-response :as response]
    [struct.core :as st]
-   [clojure.java.io :as io]))
+   [clojure.java.io :as io]
+   [clojure.tools.logging :as log]))
 
 
 (defn home-page [{:keys [flash] :as request}]
@@ -43,7 +44,7 @@
 
 
 (defn home-routes []
-  [ "" 
+  [""
    {:middleware [middleware/wrap-csrf
                  middleware/wrap-formats]}
    ["/" {:get home-page

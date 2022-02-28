@@ -7,12 +7,12 @@
    [cocdan.shell.router :as router]
    [cocdan.ws.auxiliary :as ws-aux]
    [cocdan.shell.db :as s-db]
-   [cocdan.ws.db :as ws-db :refer [remove-db-perfix query-is-stage-inited?]]
+   [cocdan.ws.db :as ws-db :refer [query-is-stage-inited?]]
    [cats.core :as m]
    [immutant.web.async :as async]
    [cats.monad.either :as either]
    [datascript.core :as d]
-   [cocdan.auxiliary :as gaux]
+   [cocdan.auxiliary :as gaux :refer [remove-db-perfix]]
    [clojure.core.async :refer [go]]))
 
 (defonce current-channel (atom nil))

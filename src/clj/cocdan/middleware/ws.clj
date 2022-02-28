@@ -16,8 +16,3 @@
       (make-snapshot! stage-id)
       (ws-db/upsert! ws-db/db col-key body)))
   response)
-
-(comment
-  (log/debug 
-   (ws-db/pull-avatar-by-id @ws-db/db 2))
-  )

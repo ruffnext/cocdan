@@ -6,7 +6,7 @@
    [cocdan.stages.auxiliary :as stages-aux]
    [cocdan.ws.db :as ws-db]
    [immutant.web.async :as async]
-   [cocdan.auxiliary :as gaux]))
+   [cocdan.auxiliary :as gaux :refer [remove-db-perfix]]))
 
 (defn action-listener
   [report]
@@ -16,7 +16,7 @@
                              {} tx-data)]
     (when-let [stage-id (:action/stage transact-map)]
       (let [channels (ws-db/query-channels-by-stage-id @ws-db/db stage-id)
-            action (ws-db/remove-db-perfix transact-map)
+            action (remove-db-perfix transact-map)
             response (gaux/->json action)]
         (stages-aux/upsert-an-action! action)
         (doseq [channel channels]

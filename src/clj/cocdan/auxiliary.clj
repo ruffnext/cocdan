@@ -1,4 +1,4 @@
-(ns cocdan.auxiliary 
+(ns cocdan.auxiliary
   (:require
    [jsonista.core :as json]
    [cats.monad.either :as either]
@@ -76,3 +76,29 @@
              (if (nil? v)
                a
                (assoc-in a (map keyword (str/split (subs (str k) 1) (re-pattern p))) v))) {} m)))
+
+(defn- handle-key
+  [base k]
+  (keyword (str (name base) "/" (name k))))
+
+(defn handle-keys
+  [base attrs]
+  (reduce (fn [a [k v]]
+            (if v
+              (assoc a (handle-key base k) v)
+              a)) {} attrs))
+
+(defn- remove-perfix
+  [k]
+  (keyword (first (str/split (name k) #"/" 1))))
+
+(defn remove-db-perfix
+  [vals]
+  (cond
+    (nil? vals) nil
+    (or (vector? vals)
+        (list? vals)) (map remove-db-perfix vals)
+    :else (reduce (fn [a [k v]]
+                    (assoc a (remove-perfix k) v)) {} (dissoc vals :db/id))))
+
+

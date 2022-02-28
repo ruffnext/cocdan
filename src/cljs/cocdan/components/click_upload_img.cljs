@@ -6,7 +6,7 @@
    [cljs-http.client :as http]
    [clojure.core.async :refer [go <!]]))
 
-(def upload-url "/api/files/upload")
+(def upload-url "/api/files/upload/image")
 
 (defn- handle-upload
   []

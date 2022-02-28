@@ -12,7 +12,6 @@
             [clojure.spec.alpha :as s]
             [cocdan.middleware.ws :refer [middleware-ws-update]]
             [cocdan.shell.db :refer [query-stage-action? make-snapshot!]]
-            [cocdan.ws.db :refer [remove-db-perfix]]
             [clojure.string :as str]))
 
 (defn- create!
@@ -137,7 +136,7 @@
                                     [])
                             (map #(->
                                    (query-stage-action? stage-id %)
-                                   remove-db-perfix))
+                                   gaux/remove-db-perfix))
                             (filter #(seq %)))})))
 
 

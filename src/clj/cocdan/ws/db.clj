@@ -1,11 +1,10 @@
 (ns cocdan.ws.db
   (:require
    [datascript.core :as d]
-   [clojure.string :as str]
    [cats.monad.either :as either]
    [clojure.tools.logging :as log]
    [cocdan.db.core :refer [general-transfer]]
-   [cocdan.auxiliary :as gaux]))
+   [cocdan.auxiliary :refer [remove-db-perfix handle-keys ->json]]))
 
 ; [db/id   :attr              :value                ...]
 ; [  1     :channel/ws         [Object WebSocket]      ]
@@ -26,27 +25,6 @@
    :avatar/id {:db/unique :db.unique/identity}})
 
 (defonce db (d/create-conn db-schema))
-
-(defn- handle-key
-  [base k]
-  (keyword (str (name base) "/" (name k))))
-
-(defn- handle-keys
-  [base attrs]
-  (reduce (fn [a [k v]]
-            (assoc a (handle-key base k) v)) {} attrs))
-
-(defn- remove-perfix
-  [k]
-  (keyword (first (str/split (name k) #"/" 1))))
-
-(defn remove-db-perfix
-  [vals]
-  (cond
-    (or (vector? vals)
-        (list? vals)) (map remove-db-perfix vals)
-    :else (reduce (fn [a [k v]]
-                    (assoc a (remove-perfix k) v)) {} (dissoc vals :db/id))))
 
 (defn
   query-channels-by-channel
@@ -155,7 +133,7 @@
                                   (dissoc :id)
                                   (#(if (nil? (:attributes %))
                                       %
-                                      (assoc % :attributes (gaux/->json (:attributes %))))))
+                                      (assoc % :attributes (->json (:attributes %))))))
                      :id (:id attrs)}))
 
 (defn upsert-db!

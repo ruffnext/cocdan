@@ -6,12 +6,12 @@
             [clojure.java.io :as io]))
 
 
-(defn upload!
+(defn upload-img!
   [file suffix _]
-  (let [file-name (format "%s%s.%s" (:upload-file-path env) (gaux/rand-alpha-str 32) suffix)
-        file-path (format "%s/resources/public/%s" (System/getProperty "user.dir") file-name)
+  (let [file-name (format "%s.%s" (gaux/rand-alpha-str 32) suffix)
+        file-path (format "%s/resources/public/%s%s" (System/getProperty "user.dir") (:upload-file-path env) file-name)
         res (either/try-either (io/copy (io/file (.getAbsolutePath file)) (io/file file-path)))]
     (either/branch res
                    #(either/left %)
                    (fn [_] (either/right {:status 200
-                                          :body {:name file-name}})))))
+                                          :body {:name (str "api/files/image/" file-name)}})))))
