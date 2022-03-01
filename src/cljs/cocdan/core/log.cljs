@@ -318,7 +318,9 @@
 
                (:fact transact-map) ;; render this action
                (when-let [ctx (query-action-ctx? (:db-after report) (:stage transact-map) (:order transact-map))]
-                 (parse-action ctx [(remove-db-perfix transact-map)]))
+                 (parse-action ctx (conj 
+                                    (or (query-following-actions (:db-after report) (:stage transact-map) (:order transact-map)) [])
+                                    (remove-db-perfix transact-map)) ))
 
                :else [])]
     (doseq [{receiver :receiver
@@ -343,4 +345,5 @@
   (query-latest-messages-by-avatar-id gdb/db 2 10)
   (rp/dispatch [:rpevent/upsert :avatar [{:id 7 :attributes {:foo "barr"}}]])
   (d/pull @gdb/db '[*] [:avatar/id 7])
+  (conj [] 1)
   )

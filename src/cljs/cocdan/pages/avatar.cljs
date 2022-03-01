@@ -2,6 +2,7 @@
   (:require
    [cocdan.db :refer [db]]
    [cocdan.core.avatar :refer [posh-avatar-by-id default-avatar]]
+   [cocdan.core.coc :refer [complete-coc-avatar-attributes]]
    [reagent.core :as r]
    [datascript.core :as d]
    [clojure.core.async :refer [go <!]]
@@ -15,31 +16,37 @@
    [:div.control
     [:input.input.table-input-centered
      {:style {:padding 0}
-      :on-change (fn [event] (swap! attr #(assoc-in % path (js/parseInt (-> event .-target .-value)))))
+      :on-change (fn [event]
+                   (let [new-avatar (assoc-in @attr path (-> event .-target .-value js/parseInt))]
+                     (reset! attr (complete-coc-avatar-attributes @attr new-avatar))))
       :type "tel"
-      :default-value (reduce (fn [a f]
-                               (f a)) @attr path)}]]
+      :value (reduce (fn [a f]
+                       (f a)) @attr path)}]]
    [:div.control
     [:a.button.is-static.table-input-addons 
      {:style {:margin-left "2px"}}
      "±0"]]])
 
 (defn- input-str
-  ([attr path default-val]
+  ([attr _check-msg path default-val]
    (let [current-val (reduce (fn [a f] (f a)) @attr path)]
      (when-not current-val (swap! attr #(assoc-in % path default-val)))
      [:input.input.table-input
-      {:on-change (fn [event] (swap! attr #(assoc-in % path (-> event .-target .-value))))
+      {:on-change (fn [event]
+                    (let [new-avatar (assoc-in @attr path (-> event .-target .-value))]
+                      (reset! attr (complete-coc-avatar-attributes @attr new-avatar))))
        :type "text"
-       :default-value current-val}]))
-  ([attr path]
-   (input-str attr path "")))
+       :value current-val}]))
+  ([attr check-msg path]
+   (input-str attr check-msg path "")))
 
 (defn- select-str
-  [attr path candidates k]
+  [attr _check-avatar path candidates k]
   (let [current-val (or (reduce (fn [a f] (f a)) @attr path) (first candidates))]
     [:select.select.table-select 
-     {:on-change (fn [event] (swap! attr #(assoc-in % path (-> event .-target .-value))))
+     {:on-change (fn [event]
+                   (let [new-avatar (assoc-in @attr path (-> event .-target .-value))]
+                     (reset! attr (complete-coc-avatar-attributes @attr new-avatar))))
       :value current-val
       :style {:height "3em"}}
      (doall (for [candidate candidates]
@@ -48,6 +55,7 @@
 (defn page
   [{id :id}]
   (let [avatar (r/atom default-avatar)
+        check-avatar (r/atom {})
         submit (fn []
                  (case id
                    "0" (rf/dispatch [:http-event/create-avatar @avatar])
@@ -90,21 +98,21 @@
              [:tbody
               [:tr
                [:th.nested-th {:style {:width "20%"}} "姓名"]
-               [:td.no-padding {:style {:width "80%"} :col-span 3} (input-str avatar [:name])]]
+               [:td.no-padding {:style {:width "80%"} :col-span 3} (input-str avatar check-avatar [:name])]]
+              [:tr
+               [:th.nested-th {:style {:width "20%"}} "性别"]
+               [:td.no-padding {:style {:width "30%"}} (select-str avatar check-avatar [:attributes :gender] ["男" "女" "其他"] "gender")]
+               [:th.nested-th {:style {:width "20%"}} "生日"]
+               [:td.no-padding {:style {:width "30%"}} [:input.input.table-input {:on-change (fn [event] (reset! avatar #(assoc-in % [:attributes :birthday] (-> event .-target .-value))))
+                                                                                  :type "date"}]]]
+              [:tr
+               [:th.nested-th {:style {:width "20%"}} "职业"]
+               [:td.no-padding {:style {:width "30%"}} [:input.input.table-input]]
+               [:th.nested-th {:style {:width "20%"}} "现时间"]
+               [:td.no-padding {:style {:width "30%"}} [:input.input.table-input {:type "date"}]]]
               [:tr
                [:th.nested-th {:style {:width "20%"}} "故乡"]
-               [:td.no-padding {:style {:width "30%"}} (input-str avatar [:attributes :homeland])]
-               [:th.nested-th {:style {:width "20%"}} "性别"]
-               [:td.no-padding {:style {:width "30%"}} (select-str avatar [:attributes :gender] ["男" "女" "其他"] "gender")]]
-              [:tr
-               [:th.nested-th {:style {:width "20%"}} "现时间"]
-               [:td.no-padding {:style {:width "30%"}} [:input.input.table-input {:type "date"}]]
-               [:th.nested-th {:style {:width "20%"}} "职业"]
-               [:td.no-padding {:style {:width "30%"}} [:input.input.table-input]]]
-              [:tr
-               [:th.nested-th {:style {:width "20%"}} "生日"]
-               [:td.no-padding {:style {:width "80%"} :col-span 3} [:input.input.table-input {:on-change (fn [event] (reset! avatar #(assoc-in % [:attributes :birthday] (-> event .-target .-value))))
-                                                                                              :type "date"}]]]
+               [:td.no-padding {:style {:width "80%"} :col-span 3} (input-str avatar check-avatar [:attributes :homeland]) ]]
               [:tr
                [:th.nested-th {:style {:width "20%"}} "住址"]
                [:td.no-padding {:style {:width "80%"} :col-span 3} [:input.input.table-input]]]]]]
