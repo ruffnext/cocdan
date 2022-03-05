@@ -12,7 +12,8 @@
    :avatar/messages {:db/cardinality :db.cardinality/many}
    :log/time {:db/index true}
    :action/order {:db/index true}
-   })
+   :coc-occupation/occupation-name {:db/unique :db.unique/identity}
+   :coc-skill/skill-name {:db/unique :db.unique/identity}})
 
 (defonce db (d/create-conn schema))
 (rp/connect! db)
