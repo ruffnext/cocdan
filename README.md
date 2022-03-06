@@ -48,6 +48,9 @@ Start Development:
 ![login-page](resources/public/img/login-page.jpeg)
 ![user-page](resources/public/img/user-page.jpeg)
 ![stage-page](resources/public/img/stage-page.jpeg)
+![avatar-edit-page](resources/public/img/avatar-edit-page.png)
+
+> 以上截图为来发中的预览截图
 
 ## Warning
 

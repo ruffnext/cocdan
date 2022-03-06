@@ -41,6 +41,12 @@
          :where [?eid :coc-occupation/occupation-name ?occupation-name]]
        db))
 
+(defn posh-skill-name-list
+  []
+  (p/q '[:find [?skill-name ...]
+         :where [?eid :coc-skill/skill-name ?skill-name]]
+       db))
+
 
 (defn- translate-skill-name-to-eng
   [skill-name']
@@ -91,14 +97,14 @@
   (cond
     (str/includes? skill-name "个人或时代特长")
     (let [n (chinese-n-to-int (nth skill-name 2))]
-      (vec (repeat n (list "any"))))
+      (list #{"any"} n))
 
     (str/includes? skill-name "社交技能")
     (let [n (chinese-n-to-int (nth skill-name 0))]
-      (vec (repeat n (set (map translate-skill-name-to-eng ["魅惑" "话术" "说服" "恐吓"])))))
+      (list (set (map translate-skill-name-to-eng ["魅惑" "话术" "说服" "恐吓"])) n))
 
     (str/includes? skill-name "或")
-    (set (map handle-skill-item (str/split skill-name #"或")))
+    (list (set (map handle-skill-item (str/split skill-name #"或"))) 1)
 
     :else (let [skills (str/split skill-name #"[（）]")]
             (map translate-skill-name-to-eng skills))))
@@ -232,11 +238,12 @@
 
 (defn- handle-occupation-skills
   [avatar {occupation-skills' :occupation-skills}]
-  (let [occupation-skills (reduce (fn [a x]
-                                    (let [res (handle-skill-item x)]
-                                      (if (vector? res)
-                                        (concat a res)
-                                        (conj a res)))) [] (if (string? occupation-skills') (str/split occupation-skills' #"[，]") []))]
+  (let [occupation-skills (vec (reduce (fn [a x]
+                                         (let [res (handle-skill-item x)]
+                                           (cond
+                                             (vector? res) (concat a res)
+                                             :else  (conj a res))))
+                                       [] (if (string? occupation-skills') (str/split occupation-skills' #"[，]") [])))]
     (set-coc-attr avatar :occupation-skills (conj occupation-skills (list "credit-rating")))))
 
 (defn clear-coc-skills-when-occupation-change
@@ -274,14 +281,15 @@
 (defn list-occupation-skills-from-avatar
   [avatar]
   (let [occupation-skills (get-coc-attr avatar :occupation-skills)]
-    (reduce (fn [a x]
-              (cond
-                (set? x) a
-                (= (first x) "any") a
-                (seq? x) (conj a (first x))
-                :else a))
-            []
-            occupation-skills)))
+    (-> (reduce (fn [a [skill-name _ & res]]
+                  (cond
+                    (string? skill-name) (conj a skill-name)
+                    (and (set? skill-name) (seq res)) (concat a res)
+                    :else a))
+                []
+                occupation-skills)
+        sort)))
+
 
 (defn calc-coc-used-occupation-skill-points
   [avatar]
@@ -308,9 +316,7 @@
                                (conj a (str/replace (name k) #"-base" ""))
                                a))
                            [] attrs)
-            occupation-skills (->> (get-coc-attr avatar-now :occupation-skills)
-                                   (map first)
-                                   set)
+            occupation-skills (set (list-occupation-skills-from-avatar avatar-now))
             interest-skills (reduce (fn [a x]
                                       (if (contains? occupation-skills x)
                                         a
@@ -324,6 +330,31 @@
                     :else (set-avatar-skill-success-rate a (first x) "interest")))
                 avatar-modified
                 interest-skills)))))
+
+(defn remove-coc-skill
+  [avatar skill-name-eng]
+  (let [res (reduce (fn [a x]
+                      (update-in a [:attributes :coc :attrs] dissoc (keyword x)))
+                    avatar
+                    [skill-name-eng
+                     (str skill-name-eng "-base")
+                     (str skill-name-eng "-occupation")
+                     (str skill-name-eng "-interest")])]
+    (handle-initial-interest-skills {} res)))
+
+(defn avatar-add-coc-interest-skill
+  [avatar skill-name-eng]
+  (let [skill (remove-db-perfix (d/pull @db '[*] [:coc-skill/skill-name skill-name-eng]))
+        interest-skills-raw (get-coc-attr avatar :interest-skills)
+        interest-skills-set (set (map first interest-skills-raw))]
+    (if (and skill (not (contains? interest-skills-set (:skill-name skill))))
+      (->
+       avatar
+       (set-coc-default-attr (keyword (str skill-name-eng "-base")) (:initial skill))
+       (set-coc-default-attr (keyword (str skill-name-eng)) (:initial skill))
+       (set-coc-default-attr (keyword (str skill-name-eng "-interest")) 0)
+       (#(handle-initial-interest-skills {} %)))
+      avatar)))
 
 (defn- handle-db
   [avatar-now]

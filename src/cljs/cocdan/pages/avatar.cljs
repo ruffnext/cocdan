@@ -9,8 +9,15 @@
                             translate-skill-name-to-ch
                             posh-occupation-name-list
                             set-avatar-skill-success-rate
-                            calc-coc-skill-success-rate calc-coc-used-occupation-skill-points calc-coc-used-interest-skill-points]]
+                            calc-coc-skill-success-rate 
+                            calc-coc-used-occupation-skill-points
+                            calc-coc-used-interest-skill-points
+                            remove-coc-skill
+                            list-occupation-skills-from-avatar
+                            posh-skill-name-list
+                            list-avatar-all-coc-skills avatar-add-coc-interest-skill]]
    [reagent.core :as r]
+   ["react-select" :refer (default) :rename {default react-select}]
    [datascript.core :as d]
    [clojure.core.async :refer [go <!]]
    [cljs-http.client :as http]
@@ -156,9 +163,36 @@
      [:td.no-padding (skill-int-input attr skill "interest")]
      [:td.no-padding (str skill-all)]]))
 
+(defn- gen-new-occupation-skill-options
+  [avatar]
+  (let [avatar-skills (set (list-avatar-all-coc-skills avatar))]
+    (->>
+     (get-coc-attr avatar :occupation-skills)
+     (map-indexed (fn [i [v can-select & current-selected]]
+                    (cond
+                      (and (set? v) (not (contains? v "any")) (not= (count current-selected) can-select))
+                      {:label (str "组" (inc i) " - 任选其" can-select) :options (reduce (fn [a skill-name]
+                                                                                       (if (contains? avatar-skills skill-name)
+                                                                                         a
+                                                                                         (conj a {:label (translate-skill-name-to-ch skill-name)
+                                                                                                  :value skill-name
+                                                                                                  :group i}))) [] v)}
+
+                      (and (set? v) (contains? v "any") (not= (count current-selected) can-select))
+                      {:label (str "组" (inc i) " - 任选" can-select "项时代或个人特长") :options (reduce (fn [a skill-name]
+                                                                                                 (if (contains? avatar-skills skill-name)
+                                                                                                   a
+                                                                                                   (conj a {:label (translate-skill-name-to-ch skill-name)
+                                                                                                            :value skill-name
+                                                                                                            :group i}))) [] @(posh-skill-name-list))}
+
+                      :else nil)))
+     (filter #(not (nil? %))))))
+
 (defn page
   [{id :id}]
   (r/with-let [avatar (r/atom default-avatar)
+               addition-occupation-skills (r/atom [])
                check-avatar (r/atom {})
                submit (fn [avatar]
                         (case (:id avatar)
@@ -203,7 +237,6 @@
 
       :reagent-render
       (fn [{_id :id}]
-        (js/console.log (get-coc-attr @avatar :occupation-skills))
         [:div.container>div.section>div.card
          [:div.container
           {:style {:padding-top "2em"
@@ -327,12 +360,33 @@
                [:td {:style {:width "17%"}} "兴趣"]
                [:td {:style {:width "22%"}} "成功率"]]]
              [:tbody
-              (doall (for [vs (get-coc-attr @avatar :occupation-skills)]
-                       (cond
-                         (set? vs) nil
-                         (= (first vs) "any") nil
-                         :else (let [[skill-name _sub-skill] vs]
-                                 (with-meta (gen-occupation-skill-table avatar skill-name) {:key (str "o-skill-" skill-name)})))))]]]
+              (doall (for [skill-name (list-occupation-skills-from-avatar @avatar)]
+                       (with-meta (gen-occupation-skill-table avatar skill-name) {:key (str "o-skill-" skill-name)})))
+              [:tr>td.no-padding {:col-span 5}
+               (let [options (gen-new-occupation-skill-options @avatar)]
+                 [:> react-select
+                  {:placeholder (if (seq options) "您有可用的额外本职技能" "您没有可用的额外本职技能")
+                   :isMulti true
+                   :onChange (fn [res]
+                               (let [current-selected (map (fn [x] {:value (.-value x)
+                                                                    :group (.-group x)}) res)
+                                     previous-selected-set (set @addition-occupation-skills)
+                                     current-selected-set (set current-selected)
+                                     added (filter #(not (contains? previous-selected-set %)) current-selected)
+                                     removed (filter #(not (contains? current-selected-set %)) previous-selected-set)
+                                     groups (get-coc-attr @avatar :occupation-skills)
+                                     handled-add (reduce (fn [a {group :group
+                                                                 value :value}]
+                                                           (assoc-in a [:attributes :coc :attrs :occupation-skills group] (concat (nth groups group) [value])))
+                                                         @avatar added)
+                                     handled-remove (reduce (fn [a {group :group
+                                                                    value :value}]
+                                                              (let [current-group-value (filter #(not= value %) (nth (get-coc-attr a :occupation-skills) group))]
+                                                                (assoc-in (remove-coc-skill a value) [:attributes :coc :attrs :occupation-skills group] current-group-value)))
+                                                            handled-add removed)]
+                                 (reset! addition-occupation-skills current-selected)
+                                 (reset! avatar (complete-coc-avatar-attributes @avatar handled-remove))))
+                   :options options}])]]]]
            [:div.column.is-two-fifths
             {:style {:padding-left "0"}}
             [:p.is-title {:style {:width "100%" :text-align "center"}} "个人特长"
@@ -356,7 +410,23 @@
                          (set? vs) nil
                          (= (first vs) "any") nil
                          :else (let [[skill-name _sub-skill] vs]
-                                 (with-meta (gen-interest-skill-table avatar skill-name) {:key (str "i-skill-" skill-name)})))))]]]
+                                 (with-meta (gen-interest-skill-table avatar skill-name) {:key (str "i-skill-" skill-name)})))))
+              [:tr
+               [:td.no-padding {:col-span 4}
+                (let [avatar-all-skills (set (list-avatar-all-coc-skills @avatar))
+                      all-skills @(posh-skill-name-list)
+                      options (map (fn [skill-name]
+                                     {:value skill-name
+                                      :label (translate-skill-name-to-ch skill-name)})
+                                   (sort (filter #(not (contains? avatar-all-skills %)) all-skills)))]
+                  [:> react-select
+                   {:placeholder "新增个人特长"
+                    :style {:width "100%"}
+                    :on-change (fn [event]
+                                 (let [skill-name-eng (.-value event)]
+                                   (swap! avatar #(complete-coc-avatar-attributes @avatar (avatar-add-coc-interest-skill % skill-name-eng)))))
+                    :value ""
+                    :options options}])]]]]]
            [:div.column.is-half]]
           ; new-skills (use react-select)
           ; background-story (markdown editor)
@@ -364,3 +434,6 @@
           [:div
            [:button.submit {:on-click #(submit @avatar)} "提交"]]]])})))
 
+(comment
+  (conj [1] 2)
+  )
