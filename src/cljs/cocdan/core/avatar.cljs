@@ -68,6 +68,10 @@
   [attrs path value]
   (assoc-in attrs (concat [:attributes] path) value))
 
+(defn remove-avatar-attr
+  [attrs path]
+  (update-in attrs (concat [:attributes] (take (- (count path) 1) path)) dissoc (last path)))
+
 (defn set-avatar-default-attr
   [attrs path value]
   (let [final-path (concat [:attributes] path)
