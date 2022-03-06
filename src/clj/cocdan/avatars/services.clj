@@ -58,6 +58,7 @@
                                       (gaux/flatten-map avatar)
                                       (merge (gaux/flatten-map newAvatar))
                                       (gaux/reconstruct-map-kvs)
+                                      (assoc :attributes (or (:attributes newAvatar) (:attributes avatar)))
                                       (assoc :controlled_by (:id new-controller))))]
           (m/return {:body res})))
 

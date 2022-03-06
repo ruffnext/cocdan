@@ -77,8 +77,10 @@
         on-remove-clicked (cond
                             (contains? #{"language(own)" "dodge"} skill-name-eng) nil
                             :else (fn []
-                                    (let [new-avatar (remove-coc-skill @attr skill-name-eng)]
-                                      (reset! attr (complete-coc-avatar-attributes @attr new-avatar)))))]
+                                    (let [new-avatar (remove-coc-skill @attr skill-name-eng)
+                                          res (complete-coc-avatar-attributes @attr new-avatar)]
+                                      (js/console.log res)
+                                      (reset! attr res))))]
     (when (not= skill-all (calc-coc-skill-success-rate @attr skill-name-eng "interest"))
       (swap! attr #(set-avatar-skill-success-rate % skill-name-eng "interest")))
     [:tr
@@ -97,7 +99,7 @@
      (get-coc-attr avatar :occupation-skills)
      (map-indexed (fn [i [v can-select & current-selected]]
                     (cond
-                      (and (set? v) (not (contains? v "any")) (not= (count current-selected) can-select))
+                      (and (vector? v) (not (contains? (set v) "any")) (not= (count current-selected) can-select))
                       {:label (str "组" (inc i) " - 任选其" can-select) :options (reduce (fn [a skill-name]
                                                                                        (if (contains? avatar-skills skill-name)
                                                                                          a
@@ -105,7 +107,7 @@
                                                                                                   :value skill-name
                                                                                                   :group i}))) [] v)}
 
-                      (and (set? v) (contains? v "any") (not= (count current-selected) can-select))
+                      (and (vector? v) (contains? (set v) "any") (not= (count current-selected) can-select))
                       {:label (str "组" (inc i) " - 任选" can-select "项时代或个人特长") :options (reduce (fn [a skill-name]
                                                                                                  (if (contains? avatar-skills skill-name)
                                                                                                    a
@@ -139,31 +141,43 @@
       (doall (for [skill-name (list-occupation-skills-from-avatar @ref-avatar)]
                (with-meta (gen-occupation-skill-table ref-avatar skill-name) {:key (str "o-skill-" skill-name)})))
       [:tr>td.no-padding {:col-span 5}
-       (r/with-let [addition-occupation-skills (r/atom [])]
-         (let [options (gen-new-occupation-skill-options @ref-avatar)]
-           [:> react-select
-            {:placeholder (if (seq options) "您有可用的额外本职技能" "您没有可用的额外本职技能")
-             :isMulti true
-             :onChange (fn [res]
-                         (let [current-selected (map (fn [x] {:value (.-value x)
-                                                              :group (.-group x)}) res)
-                               previous-selected-set (set @addition-occupation-skills)
-                               current-selected-set (set current-selected)
-                               added (filter #(not (contains? previous-selected-set %)) current-selected)
-                               removed (filter #(not (contains? current-selected-set %)) previous-selected-set)
-                               groups (get-coc-attr @ref-avatar :occupation-skills)
-                               handled-add (reduce (fn [a {group :group
-                                                           value :value}]
-                                                     (assoc-in a [:attributes :coc :attrs :occupation-skills group] (concat (nth groups group) [value])))
-                                                   @ref-avatar added)
-                               handled-remove (reduce (fn [a {group :group
-                                                              value :value}]
-                                                        (let [current-group-value (filter #(not= value %) (nth (get-coc-attr a :occupation-skills) group))]
-                                                          (assoc-in (remove-coc-skill a value) [:attributes :coc :attrs :occupation-skills group] current-group-value)))
-                                                      handled-add removed)]
-                           (reset! addition-occupation-skills current-selected)
-                           (reset! ref-avatar (complete-coc-avatar-attributes @ref-avatar handled-remove))))
-             :options options}]))]]]]
+       (let [options (gen-new-occupation-skill-options @ref-avatar)
+             current-selected (let [groups (get-coc-attr @ref-avatar :occupation-skills)
+                                    selected-skills (map-indexed (fn [i [some-vec can-select & selected]]
+                                                                   (if (and (vector? some-vec) (pos-int? can-select))
+                                                                     (when (seq selected)
+                                                                       (map (fn [x] {:value x
+                                                                                     :label (translate-skill-name-to-ch x)
+                                                                                     :group i}) selected))
+                                                                     nil)) groups)]
+                                (reduce into [] (filter #(not (nil? %)) selected-skills)))]
+         [:> react-select
+          {:placeholder (if (seq options) "您有可用的额外本职技能" "您没有可用的额外本职技能")
+           :isMulti true
+           :onChange (fn [res]
+                       (let [changed (map (fn [x] {:value (.-value x)
+                                                            :label (.-label x)
+                                                            :group (.-group x)}) res)
+                             previous-selected-set (set current-selected)
+                             current-selected-set (set changed)
+                             added (filter #(not (contains? previous-selected-set %)) changed)
+                             removed (filter #(not (contains? current-selected-set %)) previous-selected-set)
+                             groups (get-coc-attr @ref-avatar :occupation-skills)
+                             handled-add (reduce (fn [a {group :group
+                                                         value :value}]
+                                                   (assoc-in a [:attributes :coc :attrs :occupation-skills group] (concat (nth groups group) [value])))
+                                                 @ref-avatar added)
+                             handled-remove (reduce (fn [a {group :group
+                                                            value :value}]
+                                                      (let [current-group-value (filter #(not= value %) (nth (get-coc-attr a :occupation-skills) group))]
+                                                        (assoc-in (remove-coc-skill a value) [:attributes :coc :attrs :occupation-skills group] current-group-value)))
+                                                    handled-add removed)]
+                         (js/console.log "ADD" added)
+                         (js/console.log "REMOVE" removed)
+                         (js/console.log handled-remove)
+                         (reset! ref-avatar (complete-coc-avatar-attributes @ref-avatar handled-remove))))
+           :options options
+           :value current-selected}])]]]]
    [:div.column.is-two-fifths
     {:style {:padding-left "0"}}
     [:p.is-title {:style {:width "100%" :text-align "center"}} "个人特长"

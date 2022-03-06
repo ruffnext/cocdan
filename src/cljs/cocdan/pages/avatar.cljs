@@ -1,7 +1,7 @@
 (ns cocdan.pages.avatar 
   (:require
    [cocdan.db :refer [db]]
-   [cocdan.core.avatar :refer [default-avatar]]
+   [cocdan.core.avatar :refer [default-avatar get-avatar-attr]]
    [cocdan.core.coc :refer [complete-coc-avatar-attributes
                             get-coc-attr]]
    [reagent.core :as r]
@@ -13,7 +13,8 @@
    [cocdan.components.coc.equipment-editor :refer [coc-equipment-editor]]
    [cocdan.components.coc.avatar-skill-edit :refer [coc-skill-editor]]
    [cocdan.components.coc.avatar-basic-info-edit :refer [coc-avatar-basic-info-editor]]
-   [cocdan.components.coc.avatar-basic-attr-edit :refer [coc-avatar-basic-attr-edit]]))
+   [cocdan.components.coc.avatar-basic-attr-edit :refer [coc-avatar-basic-attr-edit]]
+   [cocdan.components.click-upload-img :refer [click-upload-img]]))
 
 (defn page
   [{id :id}]
@@ -49,8 +50,8 @@
           (if (and (nil? eid) avatar-id)
             (go (let [res (<! (http/get (str "/api/avatar/a" avatar-id)))]
                   (when (= (:status res) 200)
-                    (reset! avatar (complete-coc-avatar-attributes {} (:body res))))))
-            (reset! avatar (-> (d/pull @db '[*] eid) remove-db-perfix (#(complete-coc-avatar-attributes  {} %)))))
+                    (reset! avatar (complete-coc-avatar-attributes (:body res) (:body res))))))
+            (reset! avatar (-> (d/pull @db '[*] eid) remove-db-perfix (#(complete-coc-avatar-attributes  % %)))))
           (when (not (d/q '[:find ?skill-name .
                             :where [?eid :coc-skill/skill-name ?skill-name]]
                           @db))
@@ -62,7 +63,6 @@
 
       :reagent-render
       (fn [{_id :id}]
-        (js/console.log @avatar)
         [:div.container>div.section>div.card
          [:div.container
           {:style {:padding-top "2em"
@@ -75,7 +75,9 @@
            [:div.column.has-text-centered.nested-column.is-one-third
             [coc-avatar-basic-attr-edit avatar]]
            [:div.column.has-text-centered.sketch {:style {:width "20%"}}
-            [:img {:src (:header @avatar)}]]]
+            [click-upload-img {:style {:width "100%"
+                                       :height "100%"}} (:header @avatar)
+             {:on-uploaded #(swap! avatar (fn [x] (assoc x :header %)))}]]]
           [:div.columns.is-horizontal
            [:div.column.is-one-third.has-text-centered>div.sketch
             {:style {:height "4em"}}
@@ -117,7 +119,8 @@
             [:div.control
              [:textarea.textarea 
               {:onBlur #(swap! avatar (fn [a] (assoc-in a [:attributes :background-story] (-> % .-target .-value))) )
-               :placeholder "请填写角色的背景故事"}]]]]
+               :placeholder "请填写角色的背景故事"
+               :defaultValue (get-avatar-attr @avatar [:background-story])}]]]]
           [:hr]
           [:p.title.is-4.has-text-centered "携带的物品"]
           [coc-equipment-editor {:on-change (fn [loc-key items]

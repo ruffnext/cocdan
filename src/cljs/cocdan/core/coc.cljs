@@ -97,14 +97,14 @@
   (cond
     (str/includes? skill-name "个人或时代特长")
     (let [n (chinese-n-to-int (nth skill-name 2))]
-      (list #{"any"} n))
+      (list ["any"] n))
 
     (str/includes? skill-name "社交技能")
     (let [n (chinese-n-to-int (nth skill-name 0))]
-      (list (set (map translate-skill-name-to-eng ["魅惑" "话术" "说服" "恐吓"])) n))
+      (list (vec (map translate-skill-name-to-eng ["魅惑" "话术" "说服" "恐吓"])) n))
 
     (str/includes? skill-name "或")
-    (list (set (map handle-skill-item (str/split skill-name #"或"))) 1)
+    (list (vec (map handle-skill-item (str/split skill-name #"或"))) 1)
 
     :else (let [skills (str/split skill-name #"[（）]")]
             (map translate-skill-name-to-eng skills))))
@@ -284,7 +284,7 @@
     (-> (reduce (fn [a [skill-name _ & res]]
                   (cond
                     (string? skill-name) (conj a skill-name)
-                    (and (set? skill-name) (seq res)) (concat a res)
+                    (and (vector? skill-name) (seq res)) (concat a res)
                     :else a))
                 []
                 occupation-skills)
@@ -414,7 +414,6 @@
 
 (defn complete-coc-avatar-attributes
   [avatar-before avatar-now]
-  (reset! test-avatar avatar-now)
   (-> (complete-avatar-attributes avatar-before avatar-now)
       coc-default-avatar
       (#(clear-coc-skills-when-occupation-change avatar-before %))
