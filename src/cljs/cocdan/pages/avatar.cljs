@@ -1,198 +1,23 @@
 (ns cocdan.pages.avatar 
   (:require
    [cocdan.db :refer [db]]
-   [cocdan.core.avatar :refer [default-avatar get-avatar-attr]]
-   [cocdan.core.coc :refer [complete-coc-avatar-attributes 
-                            get-coc-attr
-                            set-coc-attr
-                            query-skill-by-name
-                            translate-skill-name-to-ch
-                            posh-occupation-name-list
-                            set-avatar-skill-success-rate
-                            calc-coc-skill-success-rate 
-                            calc-coc-used-occupation-skill-points
-                            calc-coc-used-interest-skill-points
-                            remove-coc-skill
-                            list-occupation-skills-from-avatar
-                            posh-skill-name-list
-                            list-avatar-all-coc-skills avatar-add-coc-interest-skill]]
+   [cocdan.core.avatar :refer [default-avatar]]
+   [cocdan.core.coc :refer [complete-coc-avatar-attributes
+                            get-coc-attr]]
    [reagent.core :as r]
-   ["react-select" :refer (default) :rename {default react-select}]
    [datascript.core :as d]
    [clojure.core.async :refer [go <!]]
    [cljs-http.client :as http]
    [cocdan.auxiliary :refer [remove-db-perfix]]
    [re-frame.core :as rf]
-   [clojure.string :as str]))
-
-(defn- input-int-with-addon
-  [attr path path-addon]
-  (let [value (reduce (fn [a f]
-                        (f a)) @attr path)
-        addon-value (reduce (fn [a f]
-                              (f a)) @attr path-addon)]
-    [:div.field.has-addons
-     [:div.control
-      [:input.input.table-input-centered
-       {:style {:padding 0}
-        :on-change (fn [event]
-                     (let [new-avatar (assoc-in @attr path (let [res (-> event .-target .-value js/parseInt)]
-                                                             (if (js/isNaN res)
-                                                               0
-                                                               res)))]
-                       (reset! attr (complete-coc-avatar-attributes @attr new-avatar))))
-        :type "tel"
-        :value value}]]
-     [:div.control
-      [:a.button.is-static.table-input-addons
-       {:style {:margin-left "2px"}}
-       (cond
-         (= 0 addon-value)  "±0"
-         (pos-int? addon-value) (str "+" addon-value)
-         (neg-int? addon-value) (str addon-value)
-         :else "±0")]]]))
-
-(defn- input-str
-  ([attr _check-msg path default-val]
-   (let [current-val (reduce (fn [a f] (f a)) @attr path)]
-     (when-not current-val (swap! attr #(assoc-in % path default-val)))
-     [:input.input.table-input
-      {:on-change (fn [event]
-                    (let [new-avatar (assoc-in @attr path (-> event .-target .-value))]
-                      (reset! attr (complete-coc-avatar-attributes @attr new-avatar))))
-       :type "text"
-       :value current-val}]))
-  ([attr check-msg path]
-   (input-str attr check-msg path "")))
-
-(defn- input-date
-  ([attr _check-msg path default-val]
-   (let [current-val (reduce (fn [a f] (f a)) @attr path)]
-     (when-not current-val (swap! attr #(assoc-in % path (. (new js/Date default-val) getTime))))
-     [:input.input.table-input
-      {:type "date"
-       :on-change (fn [event]
-                    (let [new-avatar (assoc-in @attr path
-                                               (. (new js/Date (-> event .-target .-value)) getTime))]
-                      (reset! attr (complete-coc-avatar-attributes @attr new-avatar))))
-       :value (if current-val
-                (-> (. (new js/Date current-val) toISOString)
-                    (str/split "T")
-                    first)
-                "")}]))
-  ([attr check-msg path]
-   (input-date attr check-msg path "1970-01-01")))
-
-(defn- select-str
-  [attr _check-avatar path candidates k]
-  (let [current-val (reduce (fn [a f] (f a)) @attr path)]
-    (if (and (nil? current-val) (seq candidates))
-      (do
-        (reset! attr (complete-coc-avatar-attributes @attr (assoc-in @attr path (first candidates))))
-        nil)
-      [:select.select.table-select
-       {:on-change (fn [event]
-                     (let [new-avatar (assoc-in @attr path (-> event .-target .-value))]
-                       (reset! attr (complete-coc-avatar-attributes @attr new-avatar))))
-        :value (or current-val "")
-        :style {:height "3em"}}
-       (doall (for [candidate candidates]
-                ^{:key (str "ss-" k "-" candidate)} [:option (str candidate)]))])))
-
-(defn- sum-skill-values
-  [avatar skill-name]
-  (let [base (or (get-coc-attr avatar (keyword (str skill-name "-base"))) 0)
-        occupation (or (get-coc-attr avatar (keyword (str skill-name "-occupation"))) 0)
-        interest (or (get-coc-attr avatar (keyword (str skill-name "-interest"))) 0)]
-    (set-coc-attr avatar (keyword skill-name) (+ base occupation interest))))
-
-(defn- skill-int-input
-  [attr {initial-value :initial
-         skill-name :skill-name} input-type]
-  (let [item-keyword (keyword (str/join "-" [skill-name input-type]))
-        current-val (get-coc-attr @attr item-keyword)
-        on-change (fn [event]
-                    (let [new-avatar (-> @attr
-                                         (set-coc-attr item-keyword (let [res (-> event .-target .-value js/parseInt)] (if (js/isNaN res) 0 res)))
-                                         (sum-skill-values skill-name))]
-                      (reset! attr (complete-coc-avatar-attributes @attr new-avatar))))]
-    (if (nil? current-val)
-      (do
-        (cond
-          (and (= input-type "base") initial-value) (swap! attr #(-> % 
-                                                                     (set-coc-attr item-keyword initial-value)
-                                                                     (sum-skill-values skill-name)))
-          :else (swap! attr #(set-coc-attr % item-keyword 0)))
-        nil)
-      [:input.input.table-input
-       (merge {:on-change on-change
-               :type "number"
-               :value current-val
-               :min 0
-               :max 100}
-              (case input-type
-                "base" {:disabled true}
-                {}))])))
-
-(defn- gen-occupation-skill-table
-  [attr skill-name]
-  (let [{skill-name-eng :skill-name
-        description :description :as skill} (query-skill-by-name skill-name)
-        keyword-skill-name (keyword skill-name-eng)
-        skill-all (get-coc-attr @attr keyword-skill-name)]
-    (when (not= skill-all (calc-coc-skill-success-rate @attr skill-name-eng "occupation"))
-      (swap! attr #(set-avatar-skill-success-rate % keyword-skill-name "occupation")))
-    [:tr
-     [:th {:title description} (translate-skill-name-to-ch skill-name)]
-     [:td.no-padding (skill-int-input attr skill "base")]
-     [:td.no-padding (skill-int-input attr skill "occupation")]
-     [:td.no-padding (skill-int-input attr skill "interest")]
-     [:td.no-padding (str skill-all)]]))
-
-(defn- gen-interest-skill-table
-  [attr skill-name]
-  (let [{skill-name-eng :skill-name 
-         description :description :as skill} (query-skill-by-name skill-name)
-        keyword-skill-name (keyword skill-name-eng)
-        skill-all (or (get-coc-attr @attr keyword-skill-name) 0)]
-    (when (not= skill-all (calc-coc-skill-success-rate @attr skill-name-eng "interest"))
-      (swap! attr #(set-avatar-skill-success-rate % skill-name-eng "interest")))
-    [:tr
-     [:th {:title description} (translate-skill-name-to-ch skill-name)]
-     [:td.no-padding (skill-int-input attr skill "base")]
-     [:td.no-padding (skill-int-input attr skill "interest")]
-     [:td.no-padding (str skill-all)]]))
-
-(defn- gen-new-occupation-skill-options
-  [avatar]
-  (let [avatar-skills (set (list-avatar-all-coc-skills avatar))]
-    (->>
-     (get-coc-attr avatar :occupation-skills)
-     (map-indexed (fn [i [v can-select & current-selected]]
-                    (cond
-                      (and (set? v) (not (contains? v "any")) (not= (count current-selected) can-select))
-                      {:label (str "组" (inc i) " - 任选其" can-select) :options (reduce (fn [a skill-name]
-                                                                                       (if (contains? avatar-skills skill-name)
-                                                                                         a
-                                                                                         (conj a {:label (translate-skill-name-to-ch skill-name)
-                                                                                                  :value skill-name
-                                                                                                  :group i}))) [] v)}
-
-                      (and (set? v) (contains? v "any") (not= (count current-selected) can-select))
-                      {:label (str "组" (inc i) " - 任选" can-select "项时代或个人特长") :options (reduce (fn [a skill-name]
-                                                                                                 (if (contains? avatar-skills skill-name)
-                                                                                                   a
-                                                                                                   (conj a {:label (translate-skill-name-to-ch skill-name)
-                                                                                                            :value skill-name
-                                                                                                            :group i}))) [] @(posh-skill-name-list))}
-
-                      :else nil)))
-     (filter #(not (nil? %))))))
+   [cocdan.components.coc.equipment-editor :refer [coc-equipment-editor]]
+   [cocdan.components.coc.avatar-skill-edit :refer [coc-skill-editor]]
+   [cocdan.components.coc.avatar-basic-info-edit :refer [coc-avatar-basic-info-editor]]
+   [cocdan.components.coc.avatar-basic-attr-edit :refer [coc-avatar-basic-attr-edit]]))
 
 (defn page
   [{id :id}]
   (r/with-let [avatar (r/atom default-avatar)
-               addition-occupation-skills (r/atom [])
                check-avatar (r/atom {})
                submit (fn [avatar]
                         (case (:id avatar)
@@ -237,78 +62,18 @@
 
       :reagent-render
       (fn [{_id :id}]
+        (js/console.log @avatar)
         [:div.container>div.section>div.card
          [:div.container
           {:style {:padding-top "2em"
-                   :padding-bottom "2em"
+                   :padding-bottom "0em"
                    :padding-left "1em"
                    :padding-right "2em"}}
           [:div.columns.is-horizontal
            [:div.column.has-text-centered.nested-column.is-half
-            [:table.table.is-bordered
-             {:style {:max-width "100%"
-                      :margin-left "0.5em"
-                      :margin-right "0.5em"}}
-             [:thead
-              [:tr>td {:style {:width "100%"} :col-span 4} "基础信息"]]
-             [:tbody
-              [:tr
-               [:th.nested-th {:style {:width "20%"}} "姓名"]
-               [:td.no-padding {:style {:width "80%"} :col-span 3} (input-str avatar check-avatar [:name])]]
-              [:tr
-               [:th.nested-th {:style {:width "20%"}} "性别"]
-               [:td.no-padding {:style {:width "30%"}} (select-str avatar check-avatar [:attributes :gender] ["其他" "男" "女"] "gender")]
-               [:th.nested-th {:style {:width "20%"}} "生日"]
-               [:td.no-padding {:style {:width "30%"}} (input-date avatar check-avatar [:attributes :birthday])]]
-              [:tr
-               [:th.nested-th {:style {:width "20%"}} "年龄"]
-               [:td.no-padding {:style {:width "30%"}} [:input.input.table-input {:disabled true :value (let [res (get-avatar-attr @avatar [:age])]
-                                                                                                          (if (pos-int? res)
-                                                                                                            res
-                                                                                                            ""))}]]
-               [:th.nested-th {:style {:width "20%"}} "现时间"]
-               [:td.no-padding {:style {:width "30%"}} (input-date avatar check-avatar [:attributes :current-date])]]
-              [:tr
-               [:th.nested-th {:style {:width "20%"}} "故乡"]
-               [:td.no-padding {:style {:width "30%"}} (input-str avatar check-avatar [:attributes :homeland])]
-               [:th.nested-th {:style {:width "20%"}} "职业"]
-               [:td.no-padding {:style {:width "30%"}} (select-str avatar check-avatar [:attributes :coc :attrs :occupation-name] (sort @(posh-occupation-name-list)) "选择职业")]]
-              [:tr
-               [:th.nested-th {:style {:width "20%"}} "住址"]
-               [:td.no-padding {:style {:width "80%"} :col-span 3} [:input.input.table-input]]]]]]
+            [coc-avatar-basic-info-editor avatar check-avatar]]
            [:div.column.has-text-centered.nested-column.is-one-third
-            [:table.table.is-bordered
-             {:style {:max-width "100%"
-                      :margin-left "0.5em"
-                      :margin-right "0.5em"}}
-             [:thead
-              [:tr>td {:style {:width "100%"} :col-span 6} "属性"]]
-             [:tbody
-              [:tr
-               [:th.nested-th {:style {:width "20%"}} "力量"]
-               [:td.no-padding {:style {:width "30%"}} (input-int-with-addon avatar [:attributes :coc :attrs :str] [:attributes :coc :attrs :str-correction])]
-               [:th.nested-th {:style {:width "20%"}} "敏捷"]
-               [:td.no-padding {:style {:width "30%"}} (input-int-with-addon avatar [:attributes :coc :attrs :dex] [:attributes :coc :attrs :dex-correction])]]
-              [:tr
-               [:th.nested-th {:style {:width "20%"}} "意志"]
-               [:td.no-padding {:style {:width "30%"}} (input-int-with-addon avatar [:attributes :coc :attrs :pow] [:attributes :coc :attrs :dex-correction])]
-               [:th.nested-th {:style {:width "20%"}} "体质"]
-               [:td.no-padding {:style {:width "30%"}} (input-int-with-addon avatar [:attributes :coc :attrs :con] [:attributes :coc :attrs :con-correction])]]
-              [:tr
-               [:th.nested-th {:style {:width "20%"}} "外貌"]
-               [:td.no-padding {:style {:width "30%"}} (input-int-with-addon avatar [:attributes :coc :attrs :app] [:attributes :coc :attrs :app-correction])]
-               [:th.nested-th {:style {:width "20%"}} "教育"]
-               [:td.no-padding {:style {:width "30%"}} (input-int-with-addon avatar [:attributes :coc :attrs :edu] [:attributes :coc :attrs :edu-correction])]]
-              [:tr
-               [:th.nested-th {:style {:width "20%"}} "体型"]
-               [:td.no-padding {:style {:width "30%"}} (input-int-with-addon avatar [:attributes :coc :attrs :siz] [:attributes :coc :attrs :siz-correction])]
-               [:th.nested-th {:style {:width "20%"}} "智力"]
-               [:td.no-padding {:style {:width "30%"}} (input-int-with-addon avatar [:attributes :coc :attrs :int] [:attributes :coc :attrs :int-correction])]]
-              [:tr
-               [:th.nested-th {:style {:width "20%"}} "移动"]
-               [:td.no-padding {:style {:width "30%"}} (input-int-with-addon avatar [:attributes :coc :attrs :mov] [:attributes :coc :attrs :mov-correction])]
-               [:th.nested-th {:style {:width "20%"}} "幸运"]
-               [:td.no-padding {:style {:width "30%"}} (input-int-with-addon avatar [:attributes :coc :attrs :luck] [:attributes :coc :attrs :luck-correction])]]]]]
+            [coc-avatar-basic-attr-edit avatar]]
            [:div.column.has-text-centered.sketch {:style {:width "20%"}}
             [:img {:src (:header @avatar)}]]]
           [:div.columns.is-horizontal
@@ -342,98 +107,31 @@
                         :width "100%"
                         :line-height "1.8em"}}
                [:span {:style {:padding-left "0.75em"}} (str "MP " (get-coc-attr @avatar :mp) " / " (get-coc-attr @avatar :max-mp))]])]]
-          [:div.columns.is-horizontal
-           [:div.column.is-three-fifths
-            {:style {:padding-right "2em"}}
-            (let [remain-points (- (or (get-coc-attr @avatar :occupation-skill-points) 0) (calc-coc-used-occupation-skill-points @avatar))]
-              (when (not= 0 remain-points)
-                [:p.is-title {:style {:width "100%" :text-align "center"}} "本职技能"
-                 [:span "〔剩余本职技能点数 "]
-                 [:span.has-text-danger (str remain-points)]
-                 [:span "〕"]]))
-            [:table.table.is-bordered.has-text-centered
-             [:thead
-              [:tr
-               [:td {:style {:width "27%"}} "技能名称"]
-               [:td {:style {:width "17%"}} "基础"]
-               [:td {:style {:width "17%"}} "本职"]
-               [:td {:style {:width "17%"}} "兴趣"]
-               [:td {:style {:width "22%"}} "成功率"]]]
-             [:tbody
-              (doall (for [skill-name (list-occupation-skills-from-avatar @avatar)]
-                       (with-meta (gen-occupation-skill-table avatar skill-name) {:key (str "o-skill-" skill-name)})))
-              [:tr>td.no-padding {:col-span 5}
-               (let [options (gen-new-occupation-skill-options @avatar)]
-                 [:> react-select
-                  {:placeholder (if (seq options) "您有可用的额外本职技能" "您没有可用的额外本职技能")
-                   :isMulti true
-                   :onChange (fn [res]
-                               (let [current-selected (map (fn [x] {:value (.-value x)
-                                                                    :group (.-group x)}) res)
-                                     previous-selected-set (set @addition-occupation-skills)
-                                     current-selected-set (set current-selected)
-                                     added (filter #(not (contains? previous-selected-set %)) current-selected)
-                                     removed (filter #(not (contains? current-selected-set %)) previous-selected-set)
-                                     groups (get-coc-attr @avatar :occupation-skills)
-                                     handled-add (reduce (fn [a {group :group
-                                                                 value :value}]
-                                                           (assoc-in a [:attributes :coc :attrs :occupation-skills group] (concat (nth groups group) [value])))
-                                                         @avatar added)
-                                     handled-remove (reduce (fn [a {group :group
-                                                                    value :value}]
-                                                              (let [current-group-value (filter #(not= value %) (nth (get-coc-attr a :occupation-skills) group))]
-                                                                (assoc-in (remove-coc-skill a value) [:attributes :coc :attrs :occupation-skills group] current-group-value)))
-                                                            handled-add removed)]
-                                 (reset! addition-occupation-skills current-selected)
-                                 (reset! avatar (complete-coc-avatar-attributes @avatar handled-remove))))
-                   :options options}])]]]]
-           [:div.column.is-two-fifths
-            {:style {:padding-left "0"}}
-            [:p.is-title {:style {:width "100%" :text-align "center"}} "个人特长"
-             (let [remain-points (- (or (get-coc-attr @avatar :interest-skill-points) 0) (calc-coc-used-interest-skill-points @avatar))]
-               (when (not= 0 remain-points)
-                 [:span
-                  [:span "〔剩余兴趣技能点数 "]
-                  [:span.has-text-danger (str remain-points)]
-                  [:span "〕"]]))]
-            [:table.table.is-bordered.has-text-centered
-             {:style {:width "100%"}}
-             [:thead
-              [:tr
-               [:td {:style {:width "31%"}} "技能名称"]
-               [:td {:style {:width "22%"}} "基础"]
-               [:td {:style {:width "22%"}} "兴趣"]
-               [:td {:style {:width "25%"}} "成功率"]]]
-             [:tbody
-              (doall (for [vs (get-coc-attr @avatar :interest-skills)]
-                       (cond
-                         (set? vs) nil
-                         (= (first vs) "any") nil
-                         :else (let [[skill-name _sub-skill] vs]
-                                 (with-meta (gen-interest-skill-table avatar skill-name) {:key (str "i-skill-" skill-name)})))))
-              [:tr
-               [:td.no-padding {:col-span 4}
-                (let [avatar-all-skills (set (list-avatar-all-coc-skills @avatar))
-                      all-skills @(posh-skill-name-list)
-                      options (map (fn [skill-name]
-                                     {:value skill-name
-                                      :label (translate-skill-name-to-ch skill-name)})
-                                   (sort (filter #(not (contains? avatar-all-skills %)) all-skills)))]
-                  [:> react-select
-                   {:placeholder "新增个人特长"
-                    :style {:width "100%"}
-                    :on-change (fn [event]
-                                 (let [skill-name-eng (.-value event)]
-                                   (swap! avatar #(complete-coc-avatar-attributes @avatar (avatar-add-coc-interest-skill % skill-name-eng)))))
-                    :value ""
-                    :options options}])]]]]]
-           [:div.column.is-half]]
-          ; new-skills (use react-select)
-          ; background-story (markdown editor)
-          ; equipments (copy from modal-avatar-editor)
-          [:div
-           [:button.submit {:on-click #(submit @avatar)} "提交"]]]])})))
-
-(comment
-  (conj [1] 2)
-  )
+          [:hr]
+          [:p.title.is-4.has-text-centered "角色技能"]
+          [coc-skill-editor avatar]
+          [:hr]
+          [:p.title.is-4.has-text-centered "背景故事"]
+          [:div.column
+           [:div.field
+            [:div.control
+             [:textarea.textarea 
+              {:onBlur #(swap! avatar (fn [a] (assoc-in a [:attributes :background-story] (-> % .-target .-value))) )
+               :placeholder "请填写角色的背景故事"}]]]]
+          [:hr]
+          [:p.title.is-4.has-text-centered "携带的物品"]
+          [coc-equipment-editor {:on-change (fn [loc-key items]
+                                              (swap! avatar (fn [x]  (assoc-in x [:attributes :coc :items loc-key]
+                                                                               items))))} @avatar]
+          [:footer.card-footer
+           {:style {:margin-top "2em"
+                    :padding-top "1em"
+                    :padding-bottom "1em"}}
+           [:a.card-footer-item.title.is-4.has-text-info
+            {:on-click #(submit @avatar)
+             :style {:margin-bottom "0px"}}
+            "Save"]
+           [:a.card-footer-item.title.is-4.has-text-danger
+            {:title "这个按钮的逻辑还没有写"
+             :on-click #()}
+            "Delete"]]]])})))
