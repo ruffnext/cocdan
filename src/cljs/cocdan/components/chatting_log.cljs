@@ -4,7 +4,7 @@
    [reagent.core :as r]
    [reagent.dom :as d]
    [clojure.string :as str]
-   [cocdan.core.log :refer [posh-avatar-latest-message-time query-latest-messages-by-avatar-id get-avatar-from-ctx]]
+   [cocdan.core.log :refer [posh-avatar-latest-message-time query-latest-messages-by-avatar-id get-avatar-from-ctx query-lazy-load-earliest-order check-missing-history-actions! query-stage-latest-action-order]]
    [cocdan.db :as gdb]))
 
 (defn- log-item
@@ -113,13 +113,19 @@
             (set! (.-scrollTop p-node) (.-scrollHeight p-node)))))
 
       :reagent-render
-      (fn [_stage current-use-avatar-id _my-avatars]
+      (fn [{stage-id :id} current-use-avatar-id _my-avatars]
         (let [_latest-time @(posh-avatar-latest-message-time gdb/db current-use-avatar-id)] ;; trigger re-rendering
           [:div
            {:style {:width "100%"
                     :padding-bottom "1em"}}
            [:p {:style {:padding-top "1em" :padding-bottom "1em"}
                 :class "has-text-centered"
-                :on-click #(swap! limit (fn [x] (+ x 40)))} [:i "加载更多消息"]]
+                :on-click #(do
+                             (let [earliest-action-order (query-lazy-load-earliest-order @gdb/db stage-id)
+                                   current-order (query-stage-latest-action-order @gdb/db stage-id)]
+                               (rp/dispatch-sync [:rpevent/upsert :stage {:id stage-id :lazy-load-stage-action-order (max (- earliest-action-order 20) 0)}])
+                               (check-missing-history-actions! @gdb/db stage-id current-order))
+                             (swap! limit (fn [x] (+ x 40)))
+                             )} [:i "加载更多消息"]]
            (doall (for [msg (query-latest-messages-by-avatar-id gdb/db current-use-avatar-id @limit)]
                     (with-meta (log-item msg current-use-avatar-id) {:key (str "log-" (:time msg) (:receiver msg))})))]))})))

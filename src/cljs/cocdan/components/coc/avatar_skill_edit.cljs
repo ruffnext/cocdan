@@ -1,6 +1,5 @@
 (ns cocdan.components.coc.avatar-skill-edit
   (:require
-   [reagent.core :as r]
    ["react-select" :refer (default) :rename {default react-select}]
    [cocdan.core.coc :refer [get-coc-attr
                             calc-coc-used-occupation-skill-points

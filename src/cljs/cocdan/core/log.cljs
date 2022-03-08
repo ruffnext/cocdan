@@ -286,9 +286,34 @@
                       (js/console.log action)
                       [])))))
 
-(defn- check-missing-history-actions!
+
+(comment
+  (d/q '[:find (max ?order) .
+         :in $ ?stage-id
+         :where
+         [?e :action/order ?order]
+         [?e :action/stage ?stage-id]]
+       @gdb/db 2)
+  )
+
+(def lazy-load-initial-action-count 20)
+
+(defn query-lazy-load-earliest-order
+  [ds stage-id]
+  (d/q '[:find ?order .
+         :in $ ?stage-id
+         :where
+         [?e :stage/id ?stage-id]
+         [?e :stage/lazy-load-stage-action-order ?order]]
+       ds stage-id))
+
+(defn check-missing-history-actions!
   [ds stage-id current-order]
-  (let [res (->> (d/q '[:find (?order ...)
+  (let [is-stage-inited?  (query-lazy-load-earliest-order ds stage-id)
+        lazy-load-stage-action-order (cond
+                                      (not (nil? is-stage-inited?)) is-stage-inited?
+                                      :else (max (- current-order lazy-load-initial-action-count) 0))
+        res (->> (d/q '[:find (?order ...)
                         :in $ ?stage-id ?current-order
                         :where
                         [?eid :action/stage ?stage-id]
@@ -301,8 +326,14 @@
                  set)
         missing-actions (->> (reduce (fn [a x]
                                        (if (contains? res x) a (conj a x)))
-                                     [] (reverse (range 1 current-order)))
-                             (take 20))]
+                                     [] (reverse (range lazy-load-stage-action-order current-order)))
+                             (take 20)
+                             reverse)]
+    (js/console.log "Max Load Until " lazy-load-stage-action-order)
+    (js/console.log "is-stage-inited?" is-stage-inited?)
+    (when (nil? is-stage-inited?)
+      (js/console.log "Init Stage Lazy Load")
+      (rp/dispatch [:rpevent/upsert :stage {:id stage-id :lazy-load-stage-action-order lazy-load-stage-action-order}]))
     (when (seq missing-actions)
       (go
         (let [{body :body status :status} (<! (http/get (str "/api/stage/s" stage-id "/history-actions") {:query-params {:orders (str/join "," missing-actions)}}))]
@@ -319,13 +350,14 @@
                (:fact transact-map) ;; render this action
                (when-let [ctx (query-action-ctx? (:db-after report) (:stage transact-map) (:order transact-map))]
                  (parse-action ctx (conj 
-                                    (or (query-following-actions (:db-after report) (:stage transact-map) (:order transact-map)) [])
+                                    (or (vec (map remove-db-perfix (query-following-actions (:db-after report) (:stage transact-map) (:order transact-map)))) [])
                                     (remove-db-perfix transact-map)) ))
 
                :else [])]
     (doseq [{receiver :receiver
+             sender :sender
              log-time :time :as log-item} logs]
-      (when (and receiver log-time (not (query-log-by-receiver-and-time @gdb/db receiver log-time)))
+      (when (and receiver sender log-time (not (query-log-by-receiver-and-time @gdb/db receiver log-time)))
         (append-log gdb/db log-item)))))
 
 (defn action-to-log-listener
@@ -335,8 +367,9 @@
         stage-ids (set (map :stage transact-maps))]
     (doseq [transact-map transact-maps]
       (action-to-log! report transact-map))
-    (doseq [stage-id stage-ids]
-      (check-missing-history-actions! (:db-after report) stage-id (query-stage-latest-action-order (:db-after report) stage-id)))))
+    (when (seq stage-ids)
+      (doseq [stage-id stage-ids]
+        (check-missing-history-actions! (:db-after report) stage-id (query-stage-latest-action-order (:db-after report) stage-id))))))
 
 (comment
   [(reduce (fn [a [k v]] (assoc a (keyword (str "action/" (name k))) v)) {} {:order 1 :time 2})]
