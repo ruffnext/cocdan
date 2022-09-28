@@ -1,18 +1,14 @@
 {:nrepl {:port 7002}
  :builds
- {:app
-  {:target     :browser
-   :compiler-options {:output-feature-set :es-next}
-   :output-dir "target/cljsbuild/public/js"
-   :asset-path "/js"
-   :modules    {:app {:entries [cocdan.app]}}
-   :devtools   {:watch-dir "resources/public"
-                :preloads  [re-frisk.preload]}
-   :dev        {:closure-defines {"re_frame.trace.trace_enabled_QMARK_" true
-                                  cocdan.core.chat/ws-host "localhost"
-                                  cocdan.core.chat/ws-port 3000}}
-   :release    {:closure-defines {cocdan.core.chat/ws-host "localhost"
-                                  cocdan.core.chat/ws-port 80}}}
-  :test {:target  :node-test, :output-to "target/test/test.js"
-         :autorun true}}
- :lein  {:profile "+dev"}}
+        {:app
+               {:target     :browser
+                :output-dir "target/cljsbuild/public/js"
+                :asset-path "/js"
+                :modules    {:app {:entries [cocdan.app]
+                                   :init-fn cocdan.core/init!}}
+                
+                :release    {}}
+         :test {:target  :node-test, :output-to "target/test/test.js"
+                :autorun true}}
+ :lein  {:profile "+dev"}
+ :compiler-options {:externs ["datascript/externs.js"]}}

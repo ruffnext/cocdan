@@ -4,8 +4,7 @@
     [cprop.source :as source]
     [mount.core :refer [args defstate]]))
 
-(declare env)
-
+#_{:clj-kondo/ignore [:unresolved-symbol]}
 (defstate env
   :start
   (load-config

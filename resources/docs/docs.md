@@ -14,7 +14,9 @@ request is made to the `/` URI using the `GET` method.
    {:middleware [middleware/wrap-csrf
                  middleware/wrap-formats]}
    ["/" {:get home-page}]
-   ["/about" {:get about-page}]])
+   ["/docs" {:get (fn [request]
+                    (-> (response/ok (-> "docs/docs.md" io/resource slurp))
+                        (response/header "Content-Type" "text/plain; charset=utf-8")))}]])
 ```
 
 The `home-page` function will in turn call the `cocdan.layout/render` function
@@ -22,24 +24,16 @@ to render the HTML content:
 
 ```
 (defn home-page [request]
-  (layout/render
-    request 
-    "home.html" {:docs (-> "docs/docs.md" io/resource slurp)}))
+  (layout/render request "home.html"))
 ```
 
-The `render` function will render the `home.html` template found in the `resources/html`
-folder using a parameter map containing the `:docs` key. This key points to the
-contents of the `resources/docs/docs.md` file containing these instructions.
-
-The HTML templates are written using [Selmer](https://github.com/yogthos/Selmer) templating engine.
+The page contains a link to the compiled ClojureScript found in the `target/cljsbuild/public` folder:
 
 ```
-<div class="content">
-  {{docs|markdown}}
-</div>
+{% script "/js/app.js" %}
 ```
 
-<a class="level-item button" href="https://luminusweb.com/docs/html_templating.html">learn more about HTML templating »</a>
+The rest of this page is rendered by ClojureScript found in the `src/cljs/cocdan/core.cljs` file.
 
 
 
@@ -93,6 +87,8 @@ the `env/dev/clj/` source path.
 
 If you haven't already, then please follow the steps below to configure your database connection and run the necessary migrations.
 
+* Create the database for your application.
+* Update the connection URL in the `dev-config.edn` and `test-config.edn` files with your database name and login credentials.
 * Run `lein run migrate` in the root of the project to create the tables.
 * Let `mount` know to start the database connection by `require`-ing `cocdan.db.core` in some other namespace.
 * Restart the application.
@@ -105,5 +101,5 @@ If you haven't already, then please follow the steps below to configure your dat
 
 <p class="title is-5">Need some help?</p>
 
-Visit the [official documentation](https://luminusweb.com/docs/cocdan) for examples
+Visit the [official documentation](https://luminusweb.com/docs/guestbook) for examples
 on how to accomplish common tasks with Luminus. The `#luminus` channel on the [Clojurians Slack](http://clojurians.net/) and [Google Group](https://groups.google.com/forum/#!forum/luminusweb) are both great places to seek help and discuss projects with other users.

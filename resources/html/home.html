@@ -6,7 +6,7 @@
       <title>Welcome to cocdan</title>
   </head>
   <body>
-    
+    <div id="navbar"></div>
     <div id="app">
       <section class="section">
         <div class="container is-fluid">
@@ -30,12 +30,10 @@
 
     <!-- scripts and styles -->
     {% style "/assets/bulma/css/bulma.min.css" %}
-    {% style "/assets/material-icons/css/material-icons.min.css" %}
-    {% style "/assets/fortawesome__fontawesome-free/css/all.min.css" %}
+    <!-- {% style "/assets/material-icons/css/material-icons.min.css" %} -->
     {% style "/css/screen.css" %}
-    {% style "/css/components.css" %}
-    {% style "/css/page-stage.css" %}
-    {% style "/css/console.css" %}
+    {% style "/css/antd.css" %}
+    {% style "/css/site.css" %}
 
     <script type="text/javascript">
         var csrfToken = "{{csrf-token}}";

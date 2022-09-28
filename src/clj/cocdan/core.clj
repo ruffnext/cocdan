@@ -4,11 +4,12 @@
    [cocdan.nrepl :as nrepl]
    [luminus.http-server :as http]
    [luminus-migrations.core :as migrations]
-   [cocdan.shell.core]
    [cocdan.config :refer [env]]
    [clojure.tools.cli :refer [parse-opts]]
    [clojure.tools.logging :as log]
-   [mount.core :as mount])
+   [mount.core :as mount]
+   [cocdan.data.stage :as stage]
+   [cocdan.data.core :as data-core]) 
   (:gen-class))
 
 (declare http-server repl-server)
@@ -29,10 +30,8 @@
   :start
   (http/start
     (-> env
-        (update :io-threads #(or % (* 2 (.availableProcessors (Runtime/getRuntime))))) 
         (assoc  :handler (handler/app))
         (update :port #(or (-> env :options :port) %))
-        (update :host #(or (-> env :options :host) %))
         (select-keys [:handler :host :port])))
   :stop
   (http/stop http-server))
@@ -78,5 +77,4 @@
       (migrations/migrate args (select-keys env [:database-url]))
       (System/exit 0))
     :else
-    (start-app args)))
-  
+    (start-app args))) 

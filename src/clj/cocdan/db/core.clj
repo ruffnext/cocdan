@@ -1,19 +1,18 @@
 (ns cocdan.db.core
   (:require
-   [next.jdbc.date-time]
-   [next.jdbc.result-set]
-   [conman.core :as conman]
-   [mount.core :refer [defstate]]
-   [cocdan.config :refer [env]]))
+    [next.jdbc.date-time]
+    [next.jdbc.result-set]
+    [conman.core :as conman]
+    [mount.core :refer [defstate]]
+    [cocdan.config :refer [env]]))
 
-#_{:clj-kondo/ignore [:unresolved-symbol]}
+(declare ^:dynamic *db*)
+
 (defstate ^:dynamic *db*
           :start (conman/connect! {:jdbc-url (env :database-url)})
           :stop (conman/disconnect! *db*))
 
-#_{:clj-kondo/ignore [:unresolved-symbol]}
 (conman/bind-connection *db* "sql/queries.sql")
-(declare save-message! get-messages)
 
 (extend-protocol next.jdbc.result-set/ReadableColumn
   java.sql.Timestamp
