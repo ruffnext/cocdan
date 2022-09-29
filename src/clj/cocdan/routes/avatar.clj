@@ -30,13 +30,23 @@
                                 (update-avatar-by-id avatar-id avatar user-id))))}
             :delete {:summary "删除角色"
                      :parameters {:path {:id pos-int?}}
-                     :handler (fn [_] ())}}]
+                     :handler (wrap-restricted
+                               (wrap-monad
+                                (fn [{{{avatar-id :id} :path} :parameters
+                                      {user-id :identity} :session}]
+                                  (delete-avatar! avatar-id user-id))))}}]
    ["/list"
     ["/u:id" {:get {:summary "列出用户的所有角色信息"
                     :parameters {:path {:id pos-int?}}
                     :responses {:200 {:body [Avatar]}}
-                    :handler (fn [_] ())}}]
+                    :handler (wrap-restricted
+                              (wrap-monad
+                               (fn [{{{user-id :id} :path} :parameters}]
+                                 (get-avatars-by-user-id user-id))))}}]
     ["/s:id" {:get {:summary "列出舞台上所有角色的信息"
-                    :parameters {:path {:id pos-int?}}
+                    :parameters {:path {:id int?}}
                     :responses {:200 {:body [Avatar]}}
-                    :handler (fn [_] ())}}]]])
+                    :handler (wrap-restricted
+                              (wrap-monad
+                               (fn [{{{stage-id :id} :path} :parameters}]
+                                 (get-avatars-by-stage-id stage-id))))}}]]])

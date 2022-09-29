@@ -8,7 +8,7 @@
 
 (defn- fetch-stage-db
   [stage-id]
-  (let [stage-key (keyword stage-id)
+  (let [stage-key (keyword (str stage-id))
         stage-db (stage-key @db)] 
     (if stage-db
       stage-db

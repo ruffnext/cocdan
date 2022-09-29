@@ -26,7 +26,8 @@ CREATE TABLE stages
  image VARCHAR(120),
  substages BLOB,  -- 一个列表，存 id
  avatars BLOB,  -- 一个列表，存 id
- controlled_by INTEGER);
+ controlled_by INTEGER -- 由 user 控制
+ );
 --;;
 CREATE TABLE substages
 (id VARCHAR(120),

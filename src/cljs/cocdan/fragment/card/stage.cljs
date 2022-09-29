@@ -6,13 +6,12 @@
 
 (defn card
   [stage-id] 
-  (let [stage-id (str stage-id)
-        {image :image
+  (let [{image :image
          _stage-id :id
          stage-name :name
          intro :introduction
          _substages :substages
-         controller :controller} (:stage/props @(p/pull db '[:stage/props] [:stage/id stage-id]))]
+         controlled_by :controlled_by} (:stage/props @(p/pull db '[:stage/props] [:stage/id stage-id]))]
     [:div.card.stage-card
      [:div.card-image
       [:figure.image.is-4by3
@@ -21,7 +20,7 @@
       [:div.content
        [:p
         [:span.title {:style {:margin-right "0.5em"}} stage-name]
-        [:span.tag.is-primary controller]]
+        [:span.tag.is-primary controlled_by]]
        [:p intro]]]
      [:div.card-footer
       [:a.card-footer-item

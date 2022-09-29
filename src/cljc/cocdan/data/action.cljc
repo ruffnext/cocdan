@@ -1,6 +1,8 @@
 (ns cocdan.data.action 
   (:require [cocdan.core.aux :refer [query-ctx]]
-            [cocdan.data.core :refer [get-substage-id ITerritorialMixIn]]
+            [cocdan.data.core :refer [get-substage-id to-ds
+                                      ITerritorialMixIn
+                                      IDsRecord]]
             [datascript.core :as d]))
 
 (defprotocol IAction
@@ -13,11 +15,17 @@
   IAction
   (get-type [_this] "speak")
   (get-id [_this] id)
-  (get-time [_this] time) 
+  (get-time [_this] time)
   (get-ctx [_this ds] (:context/props (d/pull ds '[:context/props] [:context/id ctx-id])))
-  
+
   ITerritorialMixIn
-  (get-substage-id [_this] substage))
+  (get-substage-id [_this] substage)
+
+  IDsRecord
+  (to-ds [this]
+    {:transaction/id id
+     :transaction/type (get-type this)
+     :transaction/props this}))
 
 (defn new-speak
   [id time ctx-id avatar-id substage-id {:keys [message props]}]
@@ -33,6 +41,4 @@
                 (case type
                   :speak [(new-speak id time ctx-id avatar (get-substage-id avatar-record) payload)]
                   [])))]
-    (vec (map (fn [x] {:transaction/id id
-                       :transaction/type (get-type x)
-                       :transaction/props x}) res))))
+    (vec (map to-ds res))))

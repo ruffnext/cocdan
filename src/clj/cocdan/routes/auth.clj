@@ -30,12 +30,12 @@
                                             :nickname string?}}
                         :handler (wrap-monad
                                   (fn [{{{:keys [username nickname]} :body} :parameters}]
-                                    (auth/register username nickname)))}}]
+                                    (auth/register! username nickname)))}}]
    ["/unregister" {:post {:summary "注销帐号"
                           :parameters {:body {:username string?}}
                           :handler (wrap-monad
                                     (fn [{{{:keys [username]} :body} :parameters}]
-                                      (auth/unregister username)))}}]
+                                      (auth/unregister! username)))}}]
    ["" {:get {:summary "判断是否登录"
               :handler (wrap-restricted
                         (wrap-monad

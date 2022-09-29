@@ -47,6 +47,7 @@
                  [funcool/cats "2.4.2"]
                  [prismatic/schema "1.4.0"]
                  [com.taoensso/nippy "3.2.0"]
+                 [cljs-http "0.1.46"]
                  [thheller/shadow-cljs "2.19.9" :scope "provided"]]
 
   :min-lein-version "2.0.0"

@@ -18,6 +18,10 @@
     [before diffs]
     "按顺序将 diffs 应用到当前对象上，并返回修改后的对象"))
 
+(defprotocol IDsRecord
+  "可以保存到 datascript 中的数据"
+  (to-ds [this]))
+
 (defn- calc-value-diff
   [k before after]
   (cond

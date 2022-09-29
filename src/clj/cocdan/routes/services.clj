@@ -12,7 +12,8 @@
    [clojure.java.io :as io]
    [cocdan.routes.auth :as auth-service]
    [cocdan.routes.stage :as stage-service]
-   [cocdan.routes.avatar :as avatar-service]))
+   [cocdan.routes.avatar :as avatar-service]
+   [cocdan.routes.test :as test-service]))
 
 (defn service-routes []
   ["/api"
@@ -50,4 +51,5 @@
              :config {:validator-url nil}})}]] 
    auth-service/routes
    stage-service/routes
-   avatar-service/routes])
+   avatar-service/routes
+   test-service/routes])

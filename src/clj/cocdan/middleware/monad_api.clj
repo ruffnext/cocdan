@@ -12,10 +12,13 @@
        (response/bad-request {:error (str left)}))
      (fn [right] 
        (cond
-         (map? right)
+         (map? right) 
          (if (contains? right :body)
            (if (contains? right :status)
              right
              (assoc right :status 200))
            {:body right :status 200})
+         
+         (vector? right) {:status 200 :body right}
+
          :else {:body {:result right} :status 200})))))

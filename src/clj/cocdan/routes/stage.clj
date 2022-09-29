@@ -2,8 +2,8 @@
   (:require [cocdan.middleware :refer [wrap-restricted]]
             [cocdan.middleware.monad-api :refer [wrap-monad]]
             [cocdan.schema :refer [Stage]]
-            [cocdan.services.stage :refer [create-stage delete-stage!
-                                           query-stage-by-id update-stage!]]))
+            [cocdan.services.stage :refer :all]
+            [cocdan.db.monad-db :as monad-db]))
 
 (def routes
   ["/stage"
@@ -14,7 +14,7 @@
                          (wrap-monad
                           (fn [{{stage :body} :parameters
                                 {user-id :identity} :session}]
-                            (create-stage stage user-id))))}}]
+                            (create-stage! stage user-id))))}}]
    ["/:id" {:get {:summary "获得舞台的信息"
                   :parameters {:path {:id int?}}
                   :responses {:200 Stage}
@@ -39,9 +39,9 @@
                                 (fn [{{{stage-id :id} :path} :parameters
                                       {user-id :identity} :session}]
                                   (delete-stage! stage-id user-id))))}}]
-   ["/list"
-    ["/joined" {:get {:summary "获得已加入的舞台的信息"
-                      :handler (fn [_] ())
-                      :responses {:200 {:body [Stage]}}}}]
-    ["/admined" {:get {:summary "获得你所控制的舞台"
-                       :handler (fn [_] ())}}]]])
+   ["/list/" {:get {:summary "获得已加入的舞台的信息"
+                    :handler (wrap-restricted
+                              (wrap-monad
+                               (fn [{{user-id :identity} :session}]
+                                 (get-stages-by-user-id user-id))))
+                    :responses {:200 {:body [Stage]}}}}]])

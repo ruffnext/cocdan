@@ -5,13 +5,13 @@
             [cocdan.db.core :as db]
             [cocdan.db.monad-db :as monad-db]))
 
-(defn register
+(defn register!
   [username nickname]
   (m/mlet [res (either/try-either
                 (db/create-user! {:username username :nickname nickname}))]
           (monad-db/get-user-by-id (get-last-insert-id res))))
 
-(defn unregister
+(defn unregister!
   [username]
   (m/mlet [{:keys [id]} (monad-db/get-user-by-username username)
            _ (either/try-either

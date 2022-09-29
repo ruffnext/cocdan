@@ -1,21 +1,20 @@
 (ns cocdan.page.main.play-room 
   (:require [cocdan.core.aux :refer [query-latest-ctx]]
             [cocdan.core.ops :as core-ops]
-            [cocdan.core.play-room :as p-core] 
+            [cocdan.core.play-room :as p-core]
+            [cocdan.database.main :refer [db]]
             [cocdan.fragment.chat-log :as chat-log]
-            [cocdan.fragment.input :as fragment-input] 
+            [cocdan.fragment.input :as fragment-input]
+            [datascript.core :as d]
             [re-frame.core :as rf]
             [reagent.core :as r]))
 
 (defn init-testing-data
   [stage-id]
   (let [avatars [{:id "avatar-1" :name "avatar-name" :image nil :description "description" :substage "lobby" :controlled_by "user-1" :props {:str 100}}
-                 {:id "avatar-2" :name "ruff" :image nil :description "description" :substage "lobby" :controlled_by "user-1" :props {:str 100}}]
-        substages [{:id "lobby" :name "substage-name" :adjacencies [] :props {}}]
-        stage {:id "1" :name "stage-name" :introduction "intro" :image nil
-               :substages substages :avatars avatars :controller "user-a"}
+                 {:id "avatar-2" :name "ruff" :image nil :description "description" :substage "lobby" :controlled_by "user-1" :props {:str 100}}] 
 
-        op1 (core-ops/make-op 1 0 1 core-ops/OP-SNAPSHOT stage)
+        op1 (core-ops/make-op 1 0 1 core-ops/OP-SNAPSHOT (-> (d/pull @db '[:stage/props] [:stage/id stage-id] ) :stage/props (assoc :avatars avatars)))
         op3 (core-ops/make-op 2 1 2 core-ops/OP-PLAY {:type :speak :avatar "avatar-1" :payload {:message "hello" :props {}}})
         op2 (core-ops/make-op 3 1 3 core-ops/OP-TRANSACTION [[:avatars.avatar-1.name "avatar-name" "avatar-name-modified"]])
         op4 (core-ops/make-op 4 3 4 core-ops/OP-PLAY {:type :speak :avatar "avatar-1" :payload {:message "very very very very very very very very very very very very very very very very very very very very very very very very long hello world again" :props {}}})
@@ -25,7 +24,7 @@
 (defn page
   []
   (r/with-let
-    [stage-id (or @(rf/subscribe [:sub/stage-performing]) "1")
+    [stage-id (or @(rf/subscribe [:sub/stage-performing]) 1)
      substage-id (r/atom "lobby")
      avatar-id (r/atom nil)
      _ (init-testing-data stage-id)]

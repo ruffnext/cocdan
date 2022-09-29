@@ -37,12 +37,15 @@ INSERT INTO transactions
 (id, stage, type, props)
 VALUES (:id, :stage, :type :props)
 
--- :name get-avatars-by-stage-id :? :n
+-- :name get-avatars-by-user-id :? :*
+-- :doc 获得用户所有的 avatars
+SELECT * FROM avatars
+WHERE controlled_by = :id
+
+-- :name get-avatars-by-stage-id :? :*
 -- :doc 获得参加舞台的所有 avatars
 SELECT * FROM avatars
-WHERE stage = :stage
-
-
+WHERE stage = :id
 
 -- :name general-delete :! :n
 -- :doc 简单的删除器

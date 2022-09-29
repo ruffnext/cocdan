@@ -7,12 +7,11 @@
    [re-frame.core :as rf]
    [reitit.core :as reitit]
    [cocdan.event] 
+   [cocdan.core.auth :as core-auth]
    [cocdan.data.visualizable]
    [cocdan.database.main :refer [init-testing-data]]
    [cocdan.page.login :as login]
    [cocdan.page.main :as main]))
-
-(defonce this-page (r/atom nil))
 
 ;; 网站内的路径跳转，例如 http://localhost:3000/#/webui 跳转到 main/page 中
 (def router
@@ -48,10 +47,11 @@
   (let [^js/ReactDOMRoot r-root @root]
     (.render r-root (r/as-element [#'page]))))
 
-(defn init! 
+(defn init!
   "整个网页 app 入口，在 shadow-cljs.edn 中指定。这个函数仅运行一次"
-  [] 
-  (init-testing-data)
+  []
+  ;; (init-testing-data)
+  (core-auth/try-session-login)
   (start-router!)
   (when (nil? @root)
     (reset! root (createRoot (gdom/getElement "app"))))
