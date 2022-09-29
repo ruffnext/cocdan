@@ -21,7 +21,6 @@ profiles.clj
 output.calva-repl
 .lsp
 img-uploaded
-test
 yarn-error.log
 .clj-kondo/config.edn
 out

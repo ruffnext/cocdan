@@ -12,7 +12,7 @@
          stage-name :name
          intro :introduction
          _substages :substages
-         controller :controller} (:stage/props @(p/pull db '[:stage/props] stage-id))]
+         controller :controller} (:stage/props @(p/pull db '[:stage/props] [:stage/id stage-id]))]
     [:div.card.stage-card
      [:div.card-image
       [:figure.image.is-4by3

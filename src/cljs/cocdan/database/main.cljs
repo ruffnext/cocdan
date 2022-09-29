@@ -14,7 +14,7 @@
         substages {:lobby (SubStage. "substage-1" "substage name" [] {})}]
     (d/transact!
      db
-     [{:stage/id 1
+     [{:stage/id "1"
        :stage/props (Stage.
                      "stage-1"
                      "stage name"

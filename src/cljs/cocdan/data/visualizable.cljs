@@ -8,10 +8,10 @@
 
 (extend-type action/Speak
   IVisualizable
-  (to-hiccup [{:keys [avatar] :as this} ds {:keys [pos] :or {pos :left}}]
+  (to-hiccup [{:keys [avatar] :as this} ds {:keys [viewpoint]}] 
     (let [ctx (action/get-ctx this ds)
-          avatar (get-in ctx [:avatars (keyword (str avatar))])] 
-      (speak/speak this avatar pos))))
+          avatar-record (get-in ctx [:avatars (keyword (str avatar))])] 
+      (speak/speak this avatar-record (if (= viewpoint avatar) :right :left)))))
 
 (extend-type Transact
   IVisualizable

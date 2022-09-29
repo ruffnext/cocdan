@@ -32,3 +32,8 @@
  :common/route
  (fn [db _]
    (-> db :common/route)))
+
+(rf/reg-sub
+ :common/user-id
+ (fn [_db _]
+   "user-1"))
