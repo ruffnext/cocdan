@@ -2,7 +2,7 @@
   (:require [cocdan.data.core :as data-core]
             [cocdan.data.performer :as performer]))
 
-(defrecord Avatar [id name image description substage controlled-by props]
+(defrecord Avatar [id name image description substage controlled_by props]
 
   #?(:cljs INamed)
   #?(:cljs (-name [_this] name))
@@ -27,5 +27,5 @@
   (get-substage-id [_this] substage))
 
 (defn new-avatar
-  [{:keys [id name image description substage controlled-by props]}]
-  (Avatar. id name image description substage controlled-by props))
+  [{:keys [id name image description substage controlled_by props]}]
+  (Avatar. id name image description substage controlled_by props))

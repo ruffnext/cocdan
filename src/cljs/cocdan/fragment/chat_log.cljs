@@ -6,10 +6,10 @@
 
 (defn chat-log
   [{:keys [substage ctx-ds viewpoint limit] :or {limit 10}}]
-  (let [plays (->> (d/datoms ctx-ds :avet :transact/id)
+  (let [plays (->> (d/datoms ctx-ds :avet :transaction/id)
                    reverse (map first)
-                   (d/pull-many ctx-ds [:transact/props])
-                   (map :transact/props)
+                   (d/pull-many ctx-ds [:transaction/props])
+                   (map :transaction/props)
                    (filter (fn [x]
                              (and
                               (implements? IVisualizable x)

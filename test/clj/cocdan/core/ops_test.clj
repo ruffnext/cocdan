@@ -6,8 +6,8 @@
             [datascript.core :as d]))
 
 (deftest ops-test
-  (let [avatars [{:id "avatar-1" :name "avatar-name" :image nil :description "description" :controlled-by "user-1"}]
-        substages [{:id "lobby" :name "substage-name" :connected-substages [] :performers ["avatar-1"] :props {}}]
+  (let [avatars [{:id "avatar-1" :name "avatar-name" :image nil :description "description" :controlled_by "user-1"}]
+        substages [{:id "lobby" :name "substage-name" :adjacencies [] :performers ["avatar-1"] :props {}}]
         stage {:id "stage-1" :name "stage-name" :introduction "intro" :image nil
                :substages substages :avatars avatars :controller "user-a"}
         db (d/create-conn play-room-database-schema)

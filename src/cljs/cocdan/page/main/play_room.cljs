@@ -9,9 +9,9 @@
 
 (defn init-testing-data
   [stage-id]
-  (let [avatars [{:id "avatar-1" :name "avatar-name" :image nil :description "description" :substage "lobby" :controlled-by "user-1" :props {:str 100}}
-                 {:id "avatar-2" :name "ruff" :image nil :description "description" :substage "lobby" :controlled-by "user-1" :props {:str 100}}]
-        substages [{:id "lobby" :name "substage-name" :connected-substages [] :props {}}]
+  (let [avatars [{:id "avatar-1" :name "avatar-name" :image nil :description "description" :substage "lobby" :controlled_by "user-1" :props {:str 100}}
+                 {:id "avatar-2" :name "ruff" :image nil :description "description" :substage "lobby" :controlled_by "user-1" :props {:str 100}}]
+        substages [{:id "lobby" :name "substage-name" :adjacencies [] :props {}}]
         stage {:id "1" :name "stage-name" :introduction "intro" :image nil
                :substages substages :avatars avatars :controller "user-a"}
 

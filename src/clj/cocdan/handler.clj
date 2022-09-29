@@ -3,6 +3,7 @@
     [cocdan.middleware :as middleware]
     [cocdan.layout :refer [error-page]]
     [cocdan.routes.home :refer [home-routes]]
+   [cocdan.services.auth :as auth-service]
     [cocdan.routes.services :refer [service-routes]]
     [reitit.swagger-ui :as swagger-ui]
     [reitit.ring :as ring]
@@ -21,7 +22,7 @@
   :start
   (ring/ring-handler
     (ring/router
-      [(home-routes)
+      [(home-routes) 
        (service-routes)])
     (ring/routes
       (swagger-ui/create-swagger-ui-handler

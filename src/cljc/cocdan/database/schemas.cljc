@@ -8,5 +8,5 @@
 
 (def play-room-database-schema
   {:play/id {:db/unique :db.unique/identity}
-   :transact/id {:db/unique :db.unique/identity}
+   :transaction/id {:db/unique :db.unique/identity}
    :context/id {:db/unique :db.unique/identity}})

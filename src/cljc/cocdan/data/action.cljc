@@ -6,12 +6,12 @@
 (defprotocol IAction
   (get-id [this] "返回该动作的索引")
   (get-time [this] "返回动作执行的时间") 
-  (get-type [this] "返回该动作的类型")
+  (get-type [this] "返回该动作的类型（小写字符串）")
   (get-ctx [this ds] "返回该动作执行时的上下文"))
 
 (defrecord Speak [id time ctx-id avatar substage message props]
   IAction
-  (get-type [_this] :speak)
+  (get-type [_this] "speak")
   (get-id [_this] id)
   (get-time [_this] time) 
   (get-ctx [_this ds] (:context/props (d/pull ds '[:context/props] [:context/id ctx-id])))
@@ -33,6 +33,6 @@
                 (case type
                   :speak [(new-speak id time ctx-id avatar (get-substage-id avatar-record) payload)]
                   [])))]
-    (vec (map (fn [x] {:transact/id id
-                       :transact/type (get-type x)
-                       :transact/props x}) res))))
+    (vec (map (fn [x] {:transaction/id id
+                       :transaction/type (get-type x)
+                       :transaction/props x}) res))))

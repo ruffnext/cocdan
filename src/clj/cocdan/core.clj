@@ -7,9 +7,7 @@
    [cocdan.config :refer [env]]
    [clojure.tools.cli :refer [parse-opts]]
    [clojure.tools.logging :as log]
-   [mount.core :as mount]
-   [cocdan.data.stage :as stage]
-   [cocdan.data.core :as data-core]) 
+   [mount.core :as mount]) 
   (:gen-class))
 
 (declare http-server repl-server)

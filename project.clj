@@ -44,6 +44,9 @@
                  [datascript "1.3.15"]
                  [re-posh "0.3.3"] 
                  [re-frame "1.3.0"]
+                 [funcool/cats "2.4.2"]
+                 [prismatic/schema "1.4.0"]
+                 [com.taoensso/nippy "3.2.0"]
                  [thheller/shadow-cljs "2.19.9" :scope "provided"]]
 
   :min-lein-version "2.0.0"

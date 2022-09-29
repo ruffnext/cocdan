@@ -19,19 +19,25 @@
          res (case op-type
                :snapshot [{:context/id op-id
                            :context/props (new-stage op-payload)
+                           :context/time op-time
                            :context/ack ack}
-                          {:transact/id op-id
-                           :transact/type :snapshot
-                           :transact/ack ack
-                           :transact/props (new-stage op-payload)}]
+                          {:transaction/id op-id
+                           :transaction/type "snapshot"
+                           :transaction/time op-time
+                           :transaction/ack ack
+                           :transaction/props (new-stage op-payload)}]
                :transact [{:context/id op-id
                            :context/props (data-core/update' (query-ctx ds ctx-id) op-payload)
+                           :context/time op-time
                            :context/ack ack}
-                          {:transact/id op-id
-                           :transact/type :transact
-                           :transact/props (new-transact op-id ctx-id op-time op-payload)}]
+                          {:transaction/id op-id
+                           :transaction/type "transact"
+                           :transaction/time op-time
+                           :transaction/props (new-transact op-id ctx-id op-time op-payload)}]
                :PLAY (->> (new-play op-id ctx-id ds op-time op-payload)
-                          (map (fn [x] (assoc x :transact/ack ack)))
+                          (map (fn [x] (assoc x
+                                              :transaction/ack ack
+                                              :transaction/time op-time)))
                           vec)
                [])]
      (if (seq res)

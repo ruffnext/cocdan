@@ -17,8 +17,8 @@
     (let [last-transact-id @(rf/subscribe [:play/latest-transact-id stage-id])
           all-avatars (map second (:avatars stage-ctx))
           same-substage-avatars (filter #(= (get-substage-id %) substage-id) all-avatars)
-          controllable-avatars (->> (filter (fn [{:keys [controlled-by]}]
-                                              (= controlled-by user-id))
+          controllable-avatars (->> (filter (fn [{:keys [controlled_by]}]
+                                              (= controlled_by user-id))
                                          same-substage-avatars)
                                  (map (fn [{:keys [id name]}] [id name])))
           mentionable-avatars (filter #(not= (:id %) @avatar-id) same-substage-avatars)
