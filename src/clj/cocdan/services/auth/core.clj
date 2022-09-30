@@ -1,7 +1,7 @@
-(ns cocdan.services.auth 
+(ns cocdan.services.auth.core
   (:require [cats.core :as m]
             [cats.monad.either :as either]
-            [cocdan.auxiliary :refer [get-last-insert-id]]
+            [cocdan.auxiliary :refer [get-db-action-return]]
             [cocdan.db.core :as db]
             [cocdan.db.monad-db :as monad-db]))
 
@@ -9,7 +9,7 @@
   [username nickname]
   (m/mlet [res (either/try-either
                 (db/create-user! {:username username :nickname nickname}))]
-          (monad-db/get-user-by-id (get-last-insert-id res))))
+          (monad-db/get-user-by-id (get-db-action-return res))))
 
 (defn unregister!
   [username]

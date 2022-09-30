@@ -30,6 +30,7 @@
 ;; ===========================================================================================
 
 (defonce root (r/atom nil))
+(defonce login-flag (r/atom false))
 
 (defn navigate! [match _]
   (rf/dispatch [:common/navigate match]))
@@ -51,10 +52,12 @@
   "整个网页 app 入口，在 shadow-cljs.edn 中指定。这个函数仅运行一次"
   []
   ;; (init-testing-data)
-  (core-auth/try-session-login)
-  (start-router!)
   (when (nil? @root)
     (reset! root (createRoot (gdom/getElement "app"))))
+  (when (not @login-flag)  ; 避免测试的时候登录两次
+    (core-auth/try-session-login)
+    (swap! login-flag not))
+  (start-router!)
   (render-page))
 
 (comment 

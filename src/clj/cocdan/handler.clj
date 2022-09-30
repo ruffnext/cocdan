@@ -1,16 +1,16 @@
 (ns cocdan.handler
   (:require
-    [cocdan.middleware :as middleware]
-    [cocdan.layout :refer [error-page]]
-    [cocdan.routes.home :refer [home-routes]]
-   [cocdan.services.auth :as auth-service]
-    [cocdan.routes.services :refer [service-routes]]
-    [reitit.swagger-ui :as swagger-ui]
-    [reitit.ring :as ring]
-    [ring.middleware.content-type :refer [wrap-content-type]]
-    [ring.middleware.webjars :refer [wrap-webjars]]
-    [cocdan.env :refer [defaults]]
-    [mount.core :as mount]))
+   [cocdan.middleware :as middleware]
+   [cocdan.layout :refer [error-page]]
+   [cocdan.routes.home :refer [home-routes]] 
+   [cocdan.routes.services :refer [service-routes]]
+   [cocdan.services.ws.route :refer [ws-routes]]
+   [reitit.swagger-ui :as swagger-ui]
+   [reitit.ring :as ring]
+   [ring.middleware.content-type :refer [wrap-content-type]]
+   [ring.middleware.webjars :refer [wrap-webjars]]
+   [cocdan.env :refer [defaults]]
+   [mount.core :as mount]))
 
 (declare init-app app-routes)
 
@@ -23,7 +23,8 @@
   (ring/ring-handler
     (ring/router
       [(home-routes) 
-       (service-routes)])
+       (service-routes)
+       (ws-routes)])
     (ring/routes
       (swagger-ui/create-swagger-ui-handler
         {:path   "/swagger-ui"

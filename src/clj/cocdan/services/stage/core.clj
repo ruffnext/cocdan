@@ -1,10 +1,12 @@
-(ns cocdan.services.stage
+(ns cocdan.services.stage.core
   (:require [cats.core :as m]
             [cats.monad.either :as either]
             [clojure.tools.logging :as log]
-            [cocdan.auxiliary :refer [get-last-insert-id]]
+            [cocdan.auxiliary :refer [get-db-action-return]]
+            [cocdan.data.stage :refer [new-stage]]
             [cocdan.db.core :as db]
             [cocdan.db.monad-db :as monad-db :refer [get-user-by-id]]
+            [cocdan.hooks :as hooks]
             [taoensso.nippy :as nippy]))
 
 (defn create-stage!
@@ -16,8 +18,11 @@
                   :image image
                   :substages (nippy/freeze (or substages []))
                   :avatars (nippy/freeze [])
-                  :controlled_by controlled_by}))]
-          (monad-db/get-stage-by-id (get-last-insert-id ret))))
+                  :controlled_by controlled_by}))
+           stage (monad-db/get-stage-by-id (get-db-action-return ret))
+           _insert-initial-operation (monad-db/make-stage-snapshot! (new-stage stage))]
+          (hooks/dispatch! :event/after-stage-created stage)
+          (either/right stage)))
 
 (defn query-stage-by-id
   [stage-id]
@@ -39,11 +44,11 @@
   (m/mlet
    [stage (monad-db/get-stage-by-id stage-id)
     _check-user-access (check-user-stage-access stage access-user-id)
-    _check-user-vaildate (if controlled_by
+    _check-user-validate (if controlled_by
                            (get-user-by-id controlled_by)
                            (either/right))
     _work (either/try-either
-           (db/general-updator {:table "stages"
+           (db/general-updater {:table "stages"
                                 :updates (->> {:name name
                                                :introduction introduction
                                                :image image
@@ -64,7 +69,7 @@
                          (either/left (str "用户 user-id=" access-user-id " 没有权限删除 stage-id=" stage-id)))
     avatars (monad-db/get-avatars-by-stage-id stage-id)
     _work (m/for [{id :id} avatars] (either/try-either
-                                     (db/general-updator
+                                     (db/general-updater
                                       {:table "avatars"
                                        :updates {:stage 0}
                                        :id id})))]
@@ -74,7 +79,7 @@
                          :id stage-id}))
     (fn [_left]   ; 一旦删除失败，简单回滚操作
       (m/for [{id :id} avatars] (either/try-either
-                                 (db/general-updator
+                                 (db/general-updater
                                   {:table "avatars"
                                    :updates {:stage stage-id}
                                    :id id})))))))

@@ -1,8 +1,8 @@
 (ns cocdan.fragment.input
   (:require ["antd" :refer [Cascader Mentions]]
-            [cocdan.core.aux :refer [query-latest-ctx-id]]
-            [cocdan.core.ops :refer [make-op OP-PLAY]]
-            [cocdan.core.play-room :refer [query-stage-db]]
+            [cocdan.database.ctx-db.core :refer [query-ds-latest-ctx-id]]
+            [cocdan.core.ops.core :refer [make-op OP-PLAY]]
+            [cocdan.core.play-room :refer [query-stage-ds]]
             [cocdan.data.core :refer [get-substage-id]]
             [re-frame.core :as rf]
             [reagent.core :as r]))
@@ -28,7 +28,7 @@
                              (when hook-avatar-change (hook-avatar-change v)))
           on-textarea-enter (fn [x]
                               (let [value (-> x .-target .-value)
-                                    last-ctx-id (query-latest-ctx-id (query-stage-db stage-id))
+                                    last-ctx-id (query-ds-latest-ctx-id (query-stage-ds stage-id))
                                     next-transact-id (inc last-transact-id)
                                     this-op (make-op next-transact-id last-ctx-id 4 OP-PLAY {:type :speak :avatar @avatar-id :payload {:message value :props {}}})]
                                 (rf/dispatch [:play/execute stage-id [this-op]])

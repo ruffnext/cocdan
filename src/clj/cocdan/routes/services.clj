@@ -7,12 +7,12 @@
    [reitit.ring.middleware.muuntaja :as muuntaja]
    [reitit.ring.middleware.multipart :as multipart]
    [reitit.ring.middleware.parameters :as parameters]
-   [cocdan.middleware.formats :as formats] 
+   [cocdan.middleware.formats :as formats]
    [ring.util.http-response :refer :all]
-   [clojure.java.io :as io]
-   [cocdan.routes.auth :as auth-service]
-   [cocdan.routes.stage :as stage-service]
-   [cocdan.routes.avatar :as avatar-service]
+   [cocdan.services.auth.route :as auth-service]
+   [cocdan.services.stage.route :as stage-service]
+   [cocdan.services.avatar.route :as avatar-service]
+   [cocdan.services.journal.route :as journal-service]
    [cocdan.routes.test :as test-service]))
 
 (defn service-routes []
@@ -48,8 +48,9 @@
     ["/api-docs/*"
      {:get (swagger-ui/create-swagger-ui-handler
             {:url "/api/swagger.json"
-             :config {:validator-url nil}})}]] 
+             :config {:validator-url nil}})}]]
    auth-service/routes
    stage-service/routes
    avatar-service/routes
+   journal-service/routes
    test-service/routes])

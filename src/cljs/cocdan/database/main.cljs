@@ -10,7 +10,7 @@
 (p/posh! db)
 
 (rf/reg-event-fx
- :event/transact-records
+ :ds/transact-records
  (fn [_ [_ records]]
    (js/console.log records)
    (d/transact! db records)
@@ -32,6 +32,12 @@
                      avatars
                      "user-1")}])))
 
+(defn posh-stage-ids
+  [] 
+  (p/q '[:find [?id ...]
+         :where [?e :stage/id ?id]]
+       db))
+
 (comment
-  (d/pull @db '[*] [:stage/id 1])
+  @(posh-stage-ids)
   )

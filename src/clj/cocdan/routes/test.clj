@@ -1,9 +1,9 @@
 (ns cocdan.routes.test 
-  (:require [cocdan.services.stage :as stage]
+  (:require [cocdan.services.stage.core :as stage]
             [cocdan.middleware :refer [wrap-restricted]]
             [cocdan.middleware.monad-api :refer [wrap-monad]]
-            [cocdan.services.auth :as auth]
-            [cocdan.services.avatar :as avatar]
+            [cocdan.services.auth.core :as auth]
+            [cocdan.services.avatar.core :as avatar]
             [cats.monad.either :as either]))
 
 ;; 导入测试的数据集

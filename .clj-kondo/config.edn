@@ -1,5 +1,6 @@
 {:lint-as {reagent.core/with-let clojure.core/let
-           cats.core/mlet clojure.core/let}
+           cats.core/mlet clojure.core/let
+           cats.core/mfor clojure.core/for}
  :linters {:unused-namespace {:exclude [clojure.tools.logging]}
            :unresolved-var {:exclude [cocdan.db.core
                                       posh.reagent/pull-many

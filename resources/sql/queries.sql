@@ -34,8 +34,45 @@ WHERE id = :id AND stage = :stage
 -- :name insert-transaction! :insert :1
 -- :doc 创建一个 transaction
 INSERT INTO transactions
-(id, stage, type, props)
-VALUES (:id, :stage, :type :props)
+(id, ctx_id, stage, type, props)
+VALUES (:id, :ctx-id, :stage, :type :props)
+
+-- :name list-transactions-recent :? :*
+-- :doc 获得最近的 limit 个 transaction
+SELECT * FROM transactions
+WHERE stage = :stage-id
+ORDER BY id DESC LIMIT :limit
+
+-- :name list-transactions-after-n :? :*
+-- :doc 获得从 n 之后的 transaction （包含）
+SELECT * FROM transactions
+WHERE stage = :stage-id AND id >= :n
+ORDER BY id DESC LIMIT :limit
+
+-- :name get-stage-latest-context-id :? :1
+-- :doc 获取上一个 context 的 id
+SELECT max(id) FROM contexts
+WHERE stage = :stage-id 
+
+-- :name get-stage-latest-context :? :1
+-- :doc 获得舞台最新的 context
+SELECT * FROM contexts
+WHERE stage = :stage-id AND id = (SELECT max(id) FROM contexts WHERE stage = :stage-id)
+
+-- :name get-stage-context-by-id :? :1
+-- :doc 获得舞台的 context 
+SELECT * FROM contexts
+WHERE stage = :stage-id AND id = :id
+
+-- :name get-stage-latest-transaction-id :? :1
+-- :doc 获取最新的 transaction 的 id
+SELECT max(id) FROM transactions
+WHERE stage = :stage-id
+
+-- :name get-stage-latest-transaction :? :1
+-- :doc 获取舞台最新的 transaction
+SELECT * FROM transactions
+WHERE stage = :stage-id AND id = (SELECT max(id) FROM transactions WHERE stage = :stage-id)
 
 -- :name get-avatars-by-user-id :? :*
 -- :doc 获得用户所有的 avatars
@@ -57,7 +94,7 @@ WHERE id = :id
 SELECT * FROM :i:table
 WHERE id = :id
 
--- :name general-updator :! :n
+-- :name general-updater :! :n
 /* :require [clojure.string :as string]
             [hugsql.parameters :refer [identifier-param-quote]] */
 UPDATE :i:table SET

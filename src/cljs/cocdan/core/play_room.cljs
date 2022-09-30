@@ -1,30 +1,19 @@
 (ns cocdan.core.play-room
-  (:require [cocdan.core.ops :as core-ops]
-            [cocdan.database.schemas :refer [play-room-database-schema]]
-            [datascript.core :as d]
+  (:require [cocdan.core.ops.core :as core-ops]
+            [cocdan.database.ctx-db.core :as ctx-db] 
             [re-frame.core :as rf]))
 
-(defonce db (atom {}))
+;; 聊天室的核心
 
-(defn- fetch-stage-db
+(defn query-stage-ds
   [stage-id]
-  (let [stage-key (keyword (str stage-id))
-        stage-db (stage-key @db)] 
-    (if stage-db
-      stage-db
-      (let [new-db (d/create-conn play-room-database-schema)]
-        (swap! db (fn [x] (assoc x stage-key new-db)))
-        new-db))))
-
-(defn query-stage-db
-  [stage-id]
-  @(fetch-stage-db stage-id))
+  @(ctx-db/query-stage-db stage-id))
 
 (rf/reg-event-fx
  :play/execute
  (fn [{:keys [db]} [_ stage-id ops] ack]
    (let [stage-key (keyword (str stage-id))
-         ds-db (fetch-stage-db stage-id)
+         ds-db (ctx-db/query-stage-db stage-id)
          max-transact-id-path [:stage stage-key :max-transact-id]
          rf-max-transact-id (or (get-in db max-transact-id-path) 0)
          ops (sort-by first ops)

@@ -1,6 +1,6 @@
 (ns cocdan.core.ops-test 
   (:require [clojure.test :refer [deftest is testing]]
-            [cocdan.core.ops :as core-ops]
+            [cocdan.core.ops.core :as core-ops]
             [cocdan.data.stage :refer [new-stage]]
             [cocdan.database.schemas :refer [play-room-database-schema]]
             [datascript.core :as d]))
@@ -18,7 +18,7 @@
                    :context/props (new-stage stage)} 
 
         op2-diffs [[:avatars.avatar-1.name "avatar-name" "avatar-name-modified"]]
-        op2 (core-ops/op 2 1 1 core-ops/OP-TRANSACTION op2-diffs)
+        op2 (core-ops/op 2 1 1 core-ops/OP-UPDATE op2-diffs)
         ctx2 (core-ops/ctx-run! db op2)
         ctx2-real {:context/id 2
                    :context/props (assoc-in (:context/props ctx1-real) [:avatars :avatar-1 :name] "avatar-name-modified")} 

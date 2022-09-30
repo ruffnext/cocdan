@@ -1,6 +1,6 @@
 (ns cocdan.core.ops-test
   (:require [clojure.test :refer [deftest is testing]]
-            [cocdan.core.ops :as core-ops]
+            [cocdan.core.ops.core :as core-ops]
             [cocdan.data.stage :refer [new-stage]]))
 
 ;; (deftest ops-test

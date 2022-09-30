@@ -1,6 +1,6 @@
-(ns cocdan.routes.auth
+(ns cocdan.services.auth.route
   (:require [cats.monad.either :as either]
-            [cocdan.services.auth :as auth]
+            [cocdan.services.auth.core :refer :all]
             [cocdan.middleware :refer [wrap-restricted]]
             [cocdan.middleware.monad-api :refer [wrap-monad]]
             [cocdan.db.monad-db :refer [get-user-by-id
@@ -30,12 +30,12 @@
                                             :nickname string?}}
                         :handler (wrap-monad
                                   (fn [{{{:keys [username nickname]} :body} :parameters}]
-                                    (auth/register! username nickname)))}}]
+                                    (register! username nickname)))}}]
    ["/unregister" {:post {:summary "注销帐号"
                           :parameters {:body {:username string?}}
                           :handler (wrap-monad
                                     (fn [{{{:keys [username]} :body} :parameters}]
-                                      (auth/unregister! username)))}}]
+                                      (unregister! username)))}}]
    ["" {:get {:summary "判断是否登录"
               :handler (wrap-restricted
                         (wrap-monad

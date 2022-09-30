@@ -1,6 +1,6 @@
 (ns cocdan.page.main.play-room 
-  (:require [cocdan.core.aux :refer [query-latest-ctx]]
-            [cocdan.core.ops :as core-ops]
+  (:require [cocdan.database.ctx-db.core :refer [query-ds-latest-ctx]]
+            [cocdan.core.ops.core :as core-ops]
             [cocdan.core.play-room :as p-core]
             [cocdan.database.main :refer [db]]
             [cocdan.fragment.chat-log :as chat-log]
@@ -16,7 +16,7 @@
 
         op1 (core-ops/make-op 1 0 1 core-ops/OP-SNAPSHOT (-> (d/pull @db '[:stage/props] [:stage/id stage-id] ) :stage/props (assoc :avatars avatars)))
         op3 (core-ops/make-op 2 1 2 core-ops/OP-PLAY {:type :speak :avatar "avatar-1" :payload {:message "hello" :props {}}})
-        op2 (core-ops/make-op 3 1 3 core-ops/OP-TRANSACTION [[:avatars.avatar-1.name "avatar-name" "avatar-name-modified"]])
+        op2 (core-ops/make-op 3 1 3 core-ops/OP-UPDATE [[:avatars.avatar-1.name "avatar-name" "avatar-name-modified"]])
         op4 (core-ops/make-op 4 3 4 core-ops/OP-PLAY {:type :speak :avatar "avatar-1" :payload {:message "very very very very very very very very very very very very very very very very very very very very very very very very long hello world again" :props {}}})
         op5 (core-ops/make-op 5 3 5 core-ops/OP-PLAY {:type :speak :avatar "avatar-1" :payload {:message "hello again" :props {}}})]
     (rf/dispatch-sync [:play/execute stage-id [op1 op2 op3 op4 op5]])))
@@ -29,8 +29,8 @@
      avatar-id (r/atom nil)
      _ (init-testing-data stage-id)]
     (let [_refresh @(rf/subscribe [:play/refresh stage-id]) 
-          ds (p-core/query-stage-db stage-id)
-          latest-ctx (query-latest-ctx ds)] 
+          ds (p-core/query-stage-ds stage-id)
+          latest-ctx (query-ds-latest-ctx ds)] 
       [:div.container
        {:style {:padding-top "1em"
                 :padding-left "3em"

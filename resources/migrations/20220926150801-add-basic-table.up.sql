@@ -5,9 +5,17 @@ CREATE TABLE users
 --;;
 CREATE TABLE transactions
 (id INTEGER,
+ ctx_id INTEGER,
  stage INTEGER,
- type VARCHAR(30),
- props TEXT);
+ time DATE,
+ type VARCHAR(60),
+ props BLOB);
+--;;
+CREATE TABLE contexts
+(id INTEGER,
+ stage INTEGER,
+ time DATE,
+ props BLOB);
 --;;
 CREATE TABLE avatars
 (id INTEGER PRIMARY KEY AUTOINCREMENT,

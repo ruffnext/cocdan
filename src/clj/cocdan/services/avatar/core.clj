@@ -1,4 +1,4 @@
-(ns cocdan.services.avatar
+(ns cocdan.services.avatar.core
   (:require [cats.core :as m]
             [cats.monad.either :as either]
             [cocdan.db.core :as db]
@@ -36,7 +36,7 @@
                          (either/right) (either/left (str "用户 id=" access-user-id " 无权修改角色 id=" avatar-id)))
     _check-stage (check-stage stage)
     _check-new-controller (if controlled_by (monad-db/get-user-by-id controlled_by) (either/right))
-    _work (either/try-either (db/general-updator
+    _work (either/try-either (db/general-updater
                               {:id avatar-id
                                :updates (->> {:name name
                                               :image image

@@ -24,7 +24,11 @@
   (status [_this] nil)
 
   data-core/ITerritorialMixIn
-  (get-substage-id [_this] substage))
+  (get-substage-id [_this] substage)
+  
+  data-core/IDsRecord
+  (to-ds [this] {:avatar/id id
+                 :avatar/props this}))
 
 (defn new-avatar
   [{:keys [id name image description substage controlled_by props]}]

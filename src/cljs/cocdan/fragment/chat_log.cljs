@@ -1,7 +1,7 @@
 (ns cocdan.fragment.chat-log 
   (:require [cocdan.data.action :as action]
             [cocdan.data.core :refer [get-substage-id ITerritorialMixIn]]
-            [cocdan.data.visualizable :as visualizable :refer [IVisualizable]]
+            [cocdan.data.visualizable :refer [IVisualizable to-hiccup]]
             [datascript.core :as d]))
 
 (defn chat-log
@@ -20,4 +20,4 @@
                    (take limit))] 
     [:div.chat-log
      (for [p plays] 
-       (with-meta (visualizable/to-hiccup p ctx-ds {:viewpoint viewpoint}) {:key (action/get-id p)}))]))
+       (with-meta (to-hiccup p ctx-ds {:viewpoint viewpoint}) {:key (action/get-id p)}))]))

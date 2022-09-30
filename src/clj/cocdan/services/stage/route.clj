@@ -1,9 +1,8 @@
-(ns cocdan.routes.stage
+(ns cocdan.services.stage.route
   (:require [cocdan.middleware :refer [wrap-restricted]]
             [cocdan.middleware.monad-api :refer [wrap-monad]]
             [cocdan.schema :refer [Stage]]
-            [cocdan.services.stage :refer :all]
-            [cocdan.db.monad-db :as monad-db]))
+            [cocdan.services.stage.core :refer :all]))
 
 (def routes
   ["/stage"

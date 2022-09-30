@@ -1,8 +1,8 @@
-(ns cocdan.routes.avatar
+(ns cocdan.services.avatar.route
   (:require [cocdan.middleware :refer [wrap-restricted]]
             [cocdan.middleware.monad-api :refer [wrap-monad]]
             [cocdan.schema :refer [Avatar]]
-            [cocdan.services.avatar :refer :all]))
+            [cocdan.services.avatar.core :refer :all]))
 
 (def routes
   ["/avatar"

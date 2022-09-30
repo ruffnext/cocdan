@@ -1,5 +1,6 @@
 (ns cocdan.data.stage
   (:require [cocdan.data.avatar :refer [new-avatar]]
+            [cocdan.data.action :refer [IAction]]
             [cocdan.data.core :as data-core]))
 
 (defrecord Stage [id name introduction image substages avatars controlled_by]
@@ -18,7 +19,10 @@
 
   data-core/IDsRecord
   (to-ds [this] {:stage/id id
-                 :stage/props this}))
+                 :stage/props this})
+  
+  IAction
+  (get-ctx [this _ds] this))
 
 (defrecord SubStage [id name adjacencies props]
   #?(:cljs INamed)
@@ -40,7 +44,7 @@
 (defn new-substage
   [{:keys [id name adjacencies props]}]
   (SubStage. id name adjacencies (or props {})))
-name
+
 (defn new-stage
   [{:keys [id name introduction image substages avatars controlled_by]}]
   (let [substages (->> (map (fn [[k v]] (new-substage (assoc v :id (clojure.core/name k)))) substages)

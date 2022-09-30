@@ -1,5 +1,5 @@
 (ns cocdan.data.action 
-  (:require [cocdan.core.aux :refer [query-ctx]]
+  (:require [cocdan.database.ctx-db.core :refer [query-ds-ctx-by-id]]
             [cocdan.data.core :refer [get-substage-id to-ds
                                       ITerritorialMixIn
                                       IDsRecord]]
@@ -33,12 +33,8 @@
 
 (defn new-play
   "play 指的是那些不造成状态变化的行为，或者说 transact/type 不等于 :transact 的类型"
-  [id ctx-id ds time {:keys [type avatar payload]}]
-  (let [res (case type
-              :no-ctx-needed []
-              (let [ctx (query-ctx ds ctx-id)
-                    avatar-record (get-in ctx [:avatars (keyword (str avatar))])] ;; 这部分类型需要取得当前的上下文后才能解析 
-                (case type
-                  :speak [(new-speak id time ctx-id avatar (get-substage-id avatar-record) payload)]
-                  [])))]
+  [id ctx-id ctx time {:keys [type avatar payload]}]
+  (let [res (case type 
+              :speak [(new-speak id time ctx-id avatar (get-substage-id (get-in ctx [:avatars (keyword (str avatar))])) payload)]
+              [])]
     (vec (map to-ds res))))
