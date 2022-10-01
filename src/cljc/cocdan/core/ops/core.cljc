@@ -1,6 +1,6 @@
 (ns cocdan.core.ops.core
   (:require [cocdan.data.core :as data-core]
-            [cocdan.data.aux :as data-aux]
+            [cocdan.aux :as data-aux]
             [malli.core :as spec]
             [cats.monad.either :as either]))
 
@@ -83,8 +83,8 @@
          t-item (-> op
                     (#(if handler
                         (assoc % :props (handler ctx op)) %))
-                    (assoc :ctx_id (or ctx_id-from-ctx ctx_id) :stage stage-id)
-                    (op-to-transaction-ds ack))]
+                    (#(assoc % :ctx_id (or ctx_id-from-ctx ctx_id) :stage stage-id)) 
+                    (op-to-transaction-ds (or ack false)))] 
      (if (contains? #{"snapshot" "update"} type)
        (let [new-context-props (@context-handler (generate-new-context (:context/props ctx) op))]
          [t-item (context-to-context-ds {:id id :time time :props new-context-props} ack)])

@@ -1,7 +1,6 @@
 (ns cocdan.services.auth.core
   (:require [cats.core :as m]
-            [cats.monad.either :as either]
-            [cocdan.auxiliary :refer [get-db-action-return]]
+            [cats.monad.either :as either] 
             [cocdan.db.core :as db]
             [cocdan.db.monad-db :as monad-db]))
 
@@ -9,7 +8,7 @@
   [username nickname]
   (m/mlet [res (either/try-either
                 (db/create-user! {:username username :nickname nickname}))]
-          (monad-db/get-user-by-id (get-db-action-return res))))
+          (monad-db/get-user-by-id (monad-db/get-db-action-return res))))
 
 (defn unregister!
   [username]

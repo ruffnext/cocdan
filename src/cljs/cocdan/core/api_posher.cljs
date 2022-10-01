@@ -1,7 +1,7 @@
 (ns cocdan.core.api-posher
   (:require [cljs-http.client :as http]
             [clojure.core.async :refer [<! go]]
-            [cocdan.data.avatar :refer [new-avatar]]
+            [cocdan.data.performer.avatar :refer [new-avatar]]
             [cocdan.data.client-ds :refer [to-ds]]
             [cocdan.data.stage :refer [new-stage]]
             [cocdan.database.main :refer [db]]

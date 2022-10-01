@@ -1,6 +1,8 @@
-(ns cocdan.data.aux
+(ns cocdan.aux
   (:require [clojure.string :as s]
             #?(:clj [jsonista.core :as json])))
+
+;; 全局辅助函数
 
 (def separator ".")
 (def separator-reg #"\.")

@@ -7,7 +7,7 @@
             [datascript.core :as d]
             [immutant.web.async :as async]
             [cocdan.services.journal.core :as journal]
-            [cocdan.data.aux :as data-aux]))
+            [cocdan.aux :as data-aux]))
 
 
 (defonce current-channel (atom nil)) ; 测试用
@@ -50,7 +50,7 @@
        (partial dispatch-transaction (ws-db/query-all-ws-by-stage-id stage-id))))
     (log/info "connection close code:" code "reason:" reason " stage:" stage-id)))
 
-(defn on-message [channel msg-raw]
+(defn on-message [channel _msg-raw]
   (reset! current-channel channel))
 
 ;"WebSocket callback functions"

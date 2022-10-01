@@ -1,11 +1,10 @@
 (ns cocdan.services.journal.core
   (:require [cats.core :as m]
             [cats.monad.either :as either]
-            [clojure.core.async :refer [<! go]]
+            [clojure.core.async :refer [go]]
             [clojure.tools.logging :as log]
-            [cocdan.auxiliary :refer [get-current-time-string]]
             [cocdan.core.ops.core :as op-core]
-            [cocdan.data.aux :as data-aux]
+            [cocdan.aux :as data-aux :refer [get-current-time-string]]
             [cocdan.data.core :refer [default-diff']]
             [cocdan.db.monad-db :as monad-db]
             [cocdan.hooks :as hooks]
@@ -74,22 +73,29 @@
                          (either/left "你无权控制该角色"))] 
    (m-transact! stage "speak" (assoc props :avatar avatar-id))))
 
+(defn- query-stage-contexts
+  [stage-id ctx_ids]
+  (log/debug ctx_ids)
+  (->> ctx_ids
+       (map (partial monad-db/get-stage-context-by-id stage-id))
+       (either/rights)
+       (map m/extract)
+       (map data-aux/remove-db-prefix)
+       (map #(assoc % :ack true))))
+
 (defn list-transactions
-  [stage-id begin-id limit with-context]
+  [stage-id offset limit with-context order]
   (m/mlet
    [_stage (monad-db/get-stage-by-id stage-id)
-    transactions (monad-db/list-stage-transactions-after-n stage-id begin-id limit)]
-   (let [transactions (map #(assoc % :ack true) transactions)
+    transactions (monad-db/list-stage-transactions stage-id order limit offset)]
+   (let [transactions (map #(assoc % :ack true) transactions) 
+         ctx_ids (->> transactions
+                      (map :ctx_id transactions)
+                      (filter pos-int?) set)
+         min-ctx_ids (apply min ctx_ids)
          contexts (if with-context
-                    (->> transactions
-                         (map :ctx_id transactions)
-                         (filter pos-int?) set
-                         (map (partial monad-db/get-stage-context-by-id stage-id))
-                         (either/rights)
-                         (map m/extract)
-                         (map data-aux/remove-db-prefix)
-                         (map #(assoc % :ack true)))
-                    [])]
+                    (query-stage-contexts stage-id ctx_ids)
+                    (query-stage-contexts stage-id (if (= min-ctx_ids 0) [1] [min-ctx_ids])))]
      (either/right
       {:transaction (sort-by :id transactions)
        :context (sort-by :id contexts)}))))
@@ -104,6 +110,7 @@
     (either/right (str stage-id " 没有变化，不生成 update 指令"))
     (m-transact-inner! stage-id op-core/OP-UPDATE diffs)))
 
+#_{:clj-kondo/ignore [:unused-private-var]}
 (defn- make-stage-snapshot-by-id
   [stage-id]
   (m/mlet

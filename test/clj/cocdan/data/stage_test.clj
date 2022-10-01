@@ -1,7 +1,2 @@
-(ns cocdan.data.stage-test
-  (:require [cocdan.data.stage :as stage-data]))
+(ns cocdan.data.stage-test)
 
-(comment
-  (let [a (stage-data/Stage. "id" "name" "introduction" "image" "substages" "controller")]
-    a)
-  )

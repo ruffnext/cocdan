@@ -1,4 +1,5 @@
 (ns cocdan.services.avatar.route
+  #_{:clj-kondo/ignore [:refer-all]}
   (:require [cocdan.middleware :refer [wrap-restricted]]
             [cocdan.middleware.monad-api :refer [wrap-monad]]
             [cocdan.schema :refer [Avatar]]

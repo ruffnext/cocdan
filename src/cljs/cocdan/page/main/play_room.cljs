@@ -43,11 +43,12 @@
           latest-ctx (ctx-db/query-ds-latest-ctx ds)] 
       (if latest-ctx
         (let [channel @(rf/subscribe [:ws/channel stage-id])]
-          (js/console.log (str "CHANNEL " channel))
           (cond
-           (= :unset channel) (ws-core/init-ws! stage-id)
-           (= :loading channel) (js/console.log "正在载入中")
-            :else (js/console.log (str "ws 载入完成" channel)))
+            (= :unset channel) (do
+                                 (js/console.log "初始化 WebSocket")
+                                 (ws-core/init-ws! stage-id))
+            (= :loading channel) (js/console.log "WebSocket 正在载入中")
+            :else (js/console.log "WebSocket 已经载入完成"))
           [:div.container
            {:style {:padding-top "1em"
                     :padding-left "3em"

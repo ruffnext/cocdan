@@ -16,24 +16,21 @@
                avatar-id (r/atom nil)
                is-clear (r/atom false)
                user-id @(rf/subscribe [:common/user-id])]
-    (let [last-transact-id @(rf/subscribe [:play/latest-transact-id stage-id])
-          all-avatars (map second (:avatars stage-ctx))
+    (let [all-avatars (map second (:avatars stage-ctx))
           same-substage-avatars (filter #(= (get-substage-id %) substage-id) all-avatars)
           controllable-avatars (->> (filter (fn [{:keys [controlled_by]}]
                                               (= controlled_by user-id))
-                                         same-substage-avatars)
-                                 (map (fn [{:keys [id name]}] [id name])))
+                                            same-substage-avatars)
+                                    (map (fn [{:keys [id name]}] [id name])))
           mentionable-avatars (filter #(not= (:id %) @avatar-id) same-substage-avatars)
           on-cascader-change (fn [v _] (reset! action-value v))
           on-avatar-change (fn [[v] _]
                              (reset! avatar-id v)
                              (when hook-avatar-change (hook-avatar-change v)))
           on-textarea-enter (fn [x]
-                              (let [value (-> x .-target .-value)
-                                    last-ctx_id (query-ds-latest-ctx_id (query-stage-ds stage-id))
-                                    next-transact-id (inc last-transact-id)
-                                    this-op (make-transaction next-transact-id last-ctx_id 4 "speak" {:avatar @avatar-id :payload {:message value :props {}}})]
-                                (rf/dispatch [:play/execute stage-id [this-op]])
+                              (let [value (-> x .-target .-value) 
+                                    this-op (make-transaction nil nil 4 "speak" {:avatar @avatar-id :message value :props {}})]
+                                (rf/dispatch [:play/execute-one-remotly! stage-id this-op])
                                 (reset! input-value "")
                                 (reset! is-clear true)))
           _ (when (nil? @avatar-id) (on-avatar-change [(-> controllable-avatars first first)] nil))] 

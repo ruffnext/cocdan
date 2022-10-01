@@ -3,7 +3,7 @@
             [cocdan.data.stage :refer [new-stage]]
             [cocdan.database.schemas :refer [play-room-database-schema]]
             [datascript.core :as d]
-            [cocdan.data.aux :as data-aux]))
+            [cocdan.aux :as data-aux]))
 
 ;; 注意：这是缓存数据库，可能存在不一致的情况
 

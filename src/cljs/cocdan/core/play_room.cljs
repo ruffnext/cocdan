@@ -1,7 +1,8 @@
 (ns cocdan.core.play-room
-  (:require [cocdan.core.ops.core :as core-ops :refer [register-transaction-handler]]
-            [cocdan.data.action :refer [handler-speak]]
-            [cocdan.data.patch-op :refer [handle-patch-op]]
+  (:require [cocdan.aux :refer [remove-db-prefix]]
+            [cocdan.core.ops.core :as core-ops :refer [register-transaction-handler]]
+            [cocdan.data.transaction.patch :refer [handle-patch-op]]
+            [cocdan.data.transaction.speak :refer [handler-speak]]
             [cocdan.database.ctx-db.core :as ctx-db]
             [datascript.core :as d]
             [re-frame.core :as rf]))
@@ -31,6 +32,7 @@
 (rf/reg-event-fx
  :fx/refresh-stage-signal
  (fn [{:keys [db]} [_ stage-id]]
+   (js/console.log "REFRESH!")
    {:db (update-in db [:stage (keyword (str stage-id)) :refresh] #(if % (inc %) 1))}))
 
 (rf/reg-event-fx
@@ -57,12 +59,21 @@
            {:db (assoc-in new-db max-transact-id-path last-transact-id)}
            {:db new-db}))))))
 
+(rf/reg-event-fx
+ :play/execute-one-remotly!
+ (fn [{:keys [db]} [_ stage-id transaction]]
+   (let [stage-key (keyword (str stage-id))
+         ds-db (ctx-db/query-stage-db stage-id)
+         context  (ctx-db/query-ds-latest-ctx @ds-db)
+         next-transaction-id (inc (ctx-db/query-ds-latest-transaction-id @ds-db))
+         ds-records (core-ops/ctx-generate-ds stage-id (assoc transaction :id next-transaction-id) context)
+         max-transact-id-path [:stage stage-key :max-transact-id]] 
+     (d/transact! ds-db ds-records)
+     {:db (assoc-in db max-transact-id-path next-transaction-id)
+      :fx [[:dispatch [:fx/refresh-stage-signal stage-id]]]})))
+
 (rf/reg-sub
  :play/refresh
  (fn [db [_ stage-id]]
    (or (get-in db [:stage (keyword (str stage-id)) :refresh]) 0)))
 
-(rf/reg-sub
- :play/latest-transact-id
- (fn [db [_ stage-id]] 
-   (or (get-in db [:stage (keyword (str stage-id)) :max-transact-id]) 0)))

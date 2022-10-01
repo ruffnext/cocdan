@@ -1,13 +1,7 @@
 (ns cocdan.data.core
   (:require [clojure.set :as cs]
-            [cocdan.data.aux :as data-aux]
+            [cocdan.aux :as data-aux]
             [clojure.string :as s]))
-
-;; 由 Transaction 得到的，或者具有 Transaction ID 的类型
-(defprotocol ITransaction
-  (get-tid [this] "取得在事件的编号，一般用于判断先后顺序")
-  (get-time [this] "取得事件发生的时间") 
-  (get-ctx_id [this] "取得事件上下文的编号，通常用于取得其上下文"))
 
 "diffs  --> [paths before after]
  paths  --> a.b.c.d.e

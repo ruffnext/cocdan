@@ -1,6 +1,6 @@
-(ns cocdan.data.avatar 
+(ns cocdan.data.performer.avatar
   (:require [cocdan.data.core :as data-core]
-            [cocdan.data.performer :as performer]
+            [cocdan.data.performer.core :refer [IPerformer]]
             [cocdan.data.territorial :refer [ITerritorialMixIn]]))
 
 (defrecord Avatar [id name image description substage controlled_by props]
@@ -17,7 +17,7 @@
   (data-core/diff' [this before] (data-core/default-diff' this before))
   (data-core/update' [this ops] (data-core/default-update' this ops))
 
-  performer/IPerformer
+  IPerformer
   (props [_this prop-name] ((keyword prop-name) props))
   (header [_this _mood] "/img/warning_clojure.png")
   (image [_this] "/img/warning_clojure.png")

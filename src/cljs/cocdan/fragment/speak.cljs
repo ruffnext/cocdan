@@ -1,12 +1,12 @@
 (ns cocdan.fragment.speak 
-  (:require [cocdan.data.performer :as performer]
+  (:require [cocdan.data.performer.core :as performer]
             ["antd" :refer [Avatar]]))
 
 "仅针对 NPC、 Avatar 和 KP 能调用 Speak"
 
 (defn speak
   "生成 speak 组件的 HTML 代码"
-  [{:keys [message mood]} avatar pos]
+  [{:keys [message mood]} avatar pos ack?] 
   (let [header (performer/header avatar mood)
         speaker-name (:name avatar)
         name-item [:div
@@ -15,7 +15,8 @@
         text-item [:div
                    {:class (str "chat-content-outer " (case pos :left "chat-content-left" "chat-content-right"))}
                    [:div.chat-content
-                    [:span (str message)]]]
+                    [:span (str message)]
+                    [:span (if ack? " ACK" " WAIT")]]]
         header-item [:> Avatar {:src header}]]
     (case pos
       :right

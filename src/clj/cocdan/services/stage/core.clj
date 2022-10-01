@@ -2,10 +2,10 @@
   (:require [cats.core :as m]
             [cats.monad.either :as either]
             [clojure.tools.logging :as log]
-            [cocdan.auxiliary :refer [get-db-action-return]]
             [cocdan.data.stage :refer [new-stage]]
             [cocdan.db.core :as db]
-            [cocdan.db.monad-db :as monad-db :refer [get-user-by-id]]
+            [cocdan.db.monad-db :as monad-db :refer [get-db-action-return
+                                                     get-user-by-id]]
             [cocdan.hooks :as hooks]
             [taoensso.nippy :as nippy]))
 

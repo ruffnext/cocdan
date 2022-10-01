@@ -41,7 +41,7 @@
       ;; since they're not compatible with this middleware
       ((if (:websocket? request) handler wrapped) request))))
 
-(defn on-error [request response]
+(defn on-error [request _response]
   (error-page
     {:status 403
      :title (str "Access to " (:uri request) " is not authorized")}))

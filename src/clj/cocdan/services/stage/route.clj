@@ -1,4 +1,5 @@
 (ns cocdan.services.stage.route
+  #_{:clj-kondo/ignore [:refer-all]}
   (:require [cocdan.middleware :refer [wrap-restricted]]
             [cocdan.middleware.monad-api :refer [wrap-monad]]
             [cocdan.schema :refer [Stage StageNew]]

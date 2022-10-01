@@ -2,7 +2,7 @@
   (:require
    [re-frame.core :as rf]
    [cats.monad.either :as either]
-   [cocdan.data.aux :as data-aux]))
+   [cocdan.aux :as data-aux]))
 
 (goog-define ws-host "localhost")
 (goog-define ws-port 3001)
@@ -27,6 +27,7 @@
 (defn- on-message
   [stage-id event]
   (let [transaction (data-aux/<-json (.-data event))]
+    (js/console.log transaction)
     (rf/dispatch [:play/execute stage-id [transaction]])))
 
 (defn- on-close

@@ -5,9 +5,10 @@
             [cocdan.schema :refer [Speak Transact]]
             [cocdan.services.journal.core :as journal]))
 
-(s/def ::begin int?)
+(s/def ::offset int?)
 (s/def ::limit int?)
 (s/def ::with-context boolean?)
+(s/def ::desc boolean?)
 
 (def routes
   ["/journal/s:id"
@@ -15,13 +16,13 @@
    ["" {:get {:summary "查询舞台的日志"
               :parameters {:path {:id int?}
                            :query (s/keys
-                                   :opt-un [::begin ::limit ::with-context])}
+                                   :opt-un [::offset ::limit ::with-context ::desc])}
               :handler (wrap-restricted
                         (wrap-monad
                          (fn [{{{stage-id :id} :path
-                                {:keys [begin limit with-context] :or {limit 10 begin 0 with-context false}} :query} :parameters
+                                {:keys [offset limit with-context desc] :or {limit 10 offset 0 with-context false desc true}} :query} :parameters
                                {_user-id :identity} :session}]
-                           (journal/list-transactions stage-id begin limit with-context))))}}]])
+                           (journal/list-transactions stage-id offset limit with-context (if desc :desc :asce)))))}}]])
 
 (def action-routes
   ["/action/a:id"

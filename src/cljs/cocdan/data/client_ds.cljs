@@ -1,5 +1,5 @@
 (ns cocdan.data.client-ds 
-  (:require [cocdan.data.avatar :refer [Avatar]]
+  (:require [cocdan.data.performer.avatar :refer [Avatar]]
             [cocdan.data.stage :refer [Stage]]))
 
 (defprotocol IClientDsRecord

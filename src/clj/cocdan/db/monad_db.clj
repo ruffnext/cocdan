@@ -2,17 +2,21 @@
   (:require [cats.context :as c]
             [cats.core :as m]
             [cats.monad.either :as either]
-            [clojure.tools.logging :as log]
-            [cocdan.auxiliary :refer [get-db-action-return]]
-            [cocdan.data.aux :as data-aux]
-            [cocdan.data.stage :refer [new-stage]]
+            [clojure.tools.logging :as log] 
+            [cocdan.aux :as data-aux]
+            [cocdan.data.stage :refer [new-context]]
             [cocdan.db.core :as db]
             [taoensso.nippy :as nippy]))
+
+(defn get-db-action-return
+  [ret-val]
+  (-> ret-val first last))
+
 
 (defn get-user-by-username
   [username]
   (let [res (db/get-user-by-username {:username username})]
-    (if res 
+    (if res
       (either/right res)
       (either/left (str "用户 " username " 不存在")))))
 
@@ -33,7 +37,7 @@
   [avatar-id]
   (m/mlet
    [res (either/try-either
-         (db/general-get-by-id {:table "avatars" :id avatar-id}))] 
+         (db/general-get-by-id {:table "avatars" :id avatar-id}))]
    (if res
      (m-extra-avatar-info res)
      (either/left (str "角色 " avatar-id " 不存在")))))
@@ -77,7 +81,7 @@
 
 (defn get-stage-latest-ctx_id-by-stage-id
   [stage-id]
-  (m/mlet 
+  (m/mlet
    [latest-ctx_id (either/try-either
                    (-> (db/get-stage-latest-context-id {:stage-id stage-id})
                        get-db-action-return))]
@@ -86,10 +90,10 @@
      (either/left (str "舞台 " stage-id " 在后端数据库中尚未初始化")))))
 
 (defn- m-extra-stage-context
-  [stage-context] 
+  [stage-context]
   (either/try-either
    (-> stage-context
-       (update :props #(-> % nippy/thaw new-stage))
+       (update :props #(-> % nippy/thaw new-context))
        (#(data-aux/add-db-prefix :context %)))))
 
 (defn get-stage-latest-ctx-by-stage-id
@@ -99,13 +103,13 @@
     (m/->=
      (get-stage-latest-ctx_id-by-stage-id stage-id)
      (#(either/try-either
-        (db/get-stage-context-by-id {:stage-id stage-id :id %}))) 
+        (db/get-stage-context-by-id {:stage-id stage-id :id %})))
      m-extra-stage-context)))
 
 (comment
   (log/debug
    (get-stage-latest-ctx-by-stage-id 1))
-  
+
   (log/debug
    (-> (db/get-stage-context-by-id {:stage-id 1 :id 4})
        m-extra-stage-context)))
@@ -114,8 +118,8 @@
   [stage-id]
   (m/mlet
    [latest-id (either/try-either
-                   (-> (db/get-stage-latest-transaction-id {:stage-id stage-id})
-                       get-db-action-return))]
+               (-> (db/get-stage-latest-transaction-id {:stage-id stage-id})
+                   get-db-action-return))]
    (if latest-id
      (either/right latest-id)
      (either/left (str "舞台 " stage-id " 在后端数据库中尚未初始化")))))
@@ -126,22 +130,21 @@
    (-> transaction
        (update :props nippy/thaw))))
 
-(defn list-stage-transactions-after-n
-  "取出的数据中包含 begin-id"
-  ([stage-id begin-id limit]
-   (m/mlet
-    [raw-results (either/try-either
-                  (db/list-transactions-after-n {:stage-id stage-id
-                                                 :limit limit
-                                                 :n begin-id}))]
-    (either/right
-     (->> raw-results
-          (map m-extra-transaction)
-          (either/rights)
-          (map m/extract)
-          reverse vec))))
-  ([stage-id begin-id]
-   (list-stage-transactions-after-n stage-id begin-id 100)))
+(defn list-stage-transactions
+  [stage-id order limit offset]
+  (let [func (if (= order :desc)
+               db/list-transactions-desc
+               db/list-transactions)]
+    (m/mlet
+     [raw-results (either/try-either
+                   (func {:stage stage-id :limit limit :offset offset}))]
+     (log/debug {:stage stage-id :limit limit :offset offset})
+     (either/right
+      (->> raw-results
+           (map m-extra-transaction)
+           (either/rights)
+           (map m/extract)
+           reverse vec)))))
 
 (defn get-stage-context-by-id
   [stage-id ctx_id]
@@ -153,7 +156,7 @@
      m-extra-stage-context)))
 
 (defn persistence-transaction!
-  [transaction] 
+  [transaction]
   (let [to-be-insert (-> transaction (update :props nippy/freeze))]
     (db/insert-transaction!
      to-be-insert)))

@@ -1,6 +1,6 @@
 (ns cocdan.data.stage
   (:require [cocdan.core.ops.core :refer [register-context-handler]]
-            [cocdan.data.avatar :refer [new-avatar]]
+            [cocdan.data.performer.avatar :refer [new-avatar]]
             [cocdan.data.core :as data-core]))
 
 (defrecord Stage [id name introduction image substages avatars controlled_by]
@@ -43,5 +43,9 @@
                      (map (fn [x] [(keyword (str (:id x))) x]))
                      (into {}))]
     (Stage. id name introduction image substages avatars controlled_by)))
+
+(defn new-context
+  [context-props]
+  (new-stage context-props))
 
 (register-context-handler new-stage)
