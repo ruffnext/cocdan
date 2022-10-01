@@ -39,8 +39,7 @@
                            (= 1000 close-code) "gracefully close"
                            (= 1005 close-code) "need reconnect"
                            (= 1006 close-code) "server reject ws connect"
-                           :else (js/console.log (str "cannot handle ws close code " (.-code event))))]
-    (js/console.log (str "ws closed : " reconnect-status))
+                           :else (js/console.log (str "cannot handle ws close code " (.-code event))))] 
     (rf/dispatch-sync [:ws/change-channel! stage-id :failed])))
 
 (defn init-ws!

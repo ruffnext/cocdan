@@ -14,6 +14,10 @@
             [card-stage/card id]
             {:key id})))]]]))
 
-(defn page-joined
+(defn page-search
   []
-  [:p "我参加的舞台"])
+  [:p "检索舞台"])
+
+(defn page-edit
+  []
+  [:p "编辑舞台"])

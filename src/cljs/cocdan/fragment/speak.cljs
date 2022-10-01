@@ -8,7 +8,7 @@
 
 (defn speak
   "生成 speak 组件的 HTML 代码"
-  [{:keys [message mood]} avatar pos ack?] 
+  [{:keys [message mood]} avatar pos {:keys [ack time id]}] 
   (let [header (performer/header avatar mood)
         speaker-name (:name avatar)
         name-item [:div
@@ -18,8 +18,8 @@
                    {:class (str "chat-content-outer " (case pos :left "chat-content-left" "chat-content-right"))}
                    [:div.chat-content
                     [:span (str message)]]]
-        header-item (if ack?
-                      [:> Badge {:dot true :status "success" :title (str "服务器已确认")}
+        header-item (if ack
+                      [:> Badge {:dot true :status "success" :title (str "消息送达时间 : " time)}
                        [:> Avatar {:src header}]]
                       [:> Badge {:dot "载入中" :title "等待服务器返回确认"}
                        [:> Avatar {:src header}]])]
@@ -42,4 +42,4 @@
   IVisualizable
   (to-hiccup [{:keys [avatar] :as this} ctx {:keys [viewpoint transaction]}]
     (let [avatar-record (get-in (:context/props ctx) [:avatars (keyword (str avatar))])]
-      (speak this avatar-record (if (= viewpoint avatar) :right :left) (:ack transaction)))))
+      (speak this avatar-record (if (= viewpoint avatar) :right :left) transaction))))

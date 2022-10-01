@@ -17,7 +17,9 @@
         [:div.card.stage-card
          [:div.card-image
           [:figure.image.is-4by3
-           [:img {:src image}]]]
+           [:img {:src (if (empty? image )
+                         "/img/warning_clojure.png"
+                         image)}]]]
          [:div.card-content
           [:div.content
            [:p
