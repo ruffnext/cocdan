@@ -6,7 +6,7 @@
             [cocdan.database.ctx-db.core :as ctx-db]))
 
 (defn chat-log
-  [{:keys [substage ctx-ds viewpoint limit] :or {limit 10}}]
+  [{:keys [substage ctx-ds viewpoint limit] :or {limit 10}}] 
   (let [transactions (->> (d/datoms ctx-ds :avet :transaction/id)
                           reverse (map first)
                           (d/pull-many ctx-ds '[*])
@@ -18,8 +18,9 @@
                                       (not (implements? ITerritorialMixIn x))
                                       (let [substage-id (get-substage-id x)]
                                         (= substage-id substage))))))
-                          (take limit))]
+                          (take limit))] 
     [:div.chat-log
+     [:p.chat-anchor "-- end --"]
      (for [{:keys [ctx_id props id] :as transaction} transactions]
        (let [ctx (ctx-db/query-ds-ctx-by-id ctx-ds ctx_id)]
          (with-meta (visualizable/to-hiccup props ctx {:viewpoint viewpoint

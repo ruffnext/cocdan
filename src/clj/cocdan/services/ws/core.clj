@@ -16,11 +16,9 @@
   "一旦缓存数据库发生变动，则将该消息分发到对应的 channel 中"
   [channels _register-key _stage-id transact _ctx]
   (doseq [channel channels]
-    (async/send! channel (data-aux/>-json (data-aux/remove-db-prefix transact))))
-  (log/debug "dispatch transaction transact"))
+    (async/send! channel (data-aux/>-json (data-aux/remove-db-prefix transact)))))
 
-(defn connect! [channel]
-  (log/debug "CONNECTING!")
+(defn connect! [channel] 
   (either/branch
    (m/mlet
     [{{user-id :identity} :session

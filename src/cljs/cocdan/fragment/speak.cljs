@@ -1,6 +1,8 @@
 (ns cocdan.fragment.speak 
-  (:require [cocdan.data.performer.core :as performer]
-            ["antd" :refer [Avatar]]))
+  (:require ["antd" :refer [Avatar Badge]]
+            [cocdan.data.performer.core :as performer]
+            [cocdan.data.transaction.speak :refer [Speak]]
+            [cocdan.data.visualizable :refer [IVisualizable]]))
 
 "仅针对 NPC、 Avatar 和 KP 能调用 Speak"
 
@@ -15,9 +17,12 @@
         text-item [:div
                    {:class (str "chat-content-outer " (case pos :left "chat-content-left" "chat-content-right"))}
                    [:div.chat-content
-                    [:span (str message)]
-                    [:span (if ack? " ACK" " WAIT")]]]
-        header-item [:> Avatar {:src header}]]
+                    [:span (str message)]]]
+        header-item (if ack?
+                      [:> Badge {:dot true :status "success" :title (str "服务器已确认")}
+                       [:> Avatar {:src header}]]
+                      [:> Badge {:dot "载入中" :title "等待服务器返回确认"}
+                       [:> Avatar {:src header}]])]
     (case pos
       :right
       [:div.chat-content-line
@@ -32,3 +37,9 @@
        [:div {:style {:display "flex"}}
         header-item
         text-item]])))
+
+(extend-type Speak
+  IVisualizable
+  (to-hiccup [{:keys [avatar] :as this} ctx {:keys [viewpoint transaction]}]
+    (let [avatar-record (get-in (:context/props ctx) [:avatars (keyword (str avatar))])]
+      (speak this avatar-record (if (= viewpoint avatar) :right :left) (:ack transaction)))))

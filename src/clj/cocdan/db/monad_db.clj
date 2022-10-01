@@ -131,14 +131,13 @@
        (update :props nippy/thaw))))
 
 (defn list-stage-transactions
-  [stage-id order limit offset]
+  [stage-id order limit begin offset]
   (let [func (if (= order :desc)
                db/list-transactions-desc
                db/list-transactions)]
     (m/mlet
      [raw-results (either/try-either
-                   (func {:stage stage-id :limit limit :offset offset}))]
-     (log/debug {:stage stage-id :limit limit :offset offset})
+                   (func {:stage stage-id :begin begin :limit limit :offset offset}))]
      (either/right
       (->> raw-results
            (map m-extra-transaction)

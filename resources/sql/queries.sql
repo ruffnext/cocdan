@@ -58,14 +58,14 @@ ORDER BY id DESC LIMIT :limit
 -- :name list-transactions-desc :? :*
 -- :doc 倒序获得 transaction
 SELECT * FROM transactions
-WHERE stage = :stage 
+WHERE stage = :stage AND id > :begin
 ORDER BY id DESC LIMIT :limit OFFSET :offset
 
 -- :name list-transactions :? :*
 -- :doc 顺序获得 transaction
 SELECT * FROM transactions
-WHERE stage = :stage
-ORDER BY ID LIMIT :limit OFFSET :offset
+WHERE stage = :stage AND id > :begin
+ORDER BY id LIMIT :limit OFFSET :offset
 
 -- :name get-stage-latest-context-id :? :1
 -- :doc 获取上一个 context 的 id

@@ -1,5 +1,6 @@
 (ns cocdan.core.play-room
-  (:require [cocdan.aux :refer [remove-db-prefix]]
+  (:require [cljs-http.client :as http]
+            [clojure.core.async :refer [go]]
             [cocdan.core.ops.core :as core-ops :refer [register-transaction-handler]]
             [cocdan.data.transaction.patch :refer [handle-patch-op]]
             [cocdan.data.transaction.speak :refer [handler-speak]]
@@ -67,8 +68,10 @@
          context  (ctx-db/query-ds-latest-ctx @ds-db)
          next-transaction-id (inc (ctx-db/query-ds-latest-transaction-id @ds-db))
          ds-records (core-ops/ctx-generate-ds stage-id (assoc transaction :id next-transaction-id) context)
-         max-transact-id-path [:stage stage-key :max-transact-id]] 
+         max-transact-id-path [:stage stage-key :max-transact-id]]
      (d/transact! ds-db ds-records)
+     (go (http/post (str "/api/action/a" stage-id "/transact")
+                    {:json-params transaction}))
      {:db (assoc-in db max-transact-id-path next-transaction-id)
       :fx [[:dispatch [:fx/refresh-stage-signal stage-id]]]})))
 

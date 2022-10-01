@@ -79,8 +79,16 @@ div.chat-content-outer {
 .chat-log {
   border: 1px solid;
   height: 60vh;
-  overflow-y: overlay;
-  padding: 1em;
+  overflow: auto;
+  padding-left: 1em;
+  padding-right: 1em;
+  padding-top: 1em;
   display: flex;
   flex-direction: column-reverse;
+}
+
+.chat-anchor {
+  overflow-anchor: auto ;
+  font-size: 9px;
+  text-align: center;
 }

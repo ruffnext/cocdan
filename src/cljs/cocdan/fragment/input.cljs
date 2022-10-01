@@ -1,9 +1,7 @@
 (ns cocdan.fragment.input
   (:require ["antd" :refer [Cascader Mentions]]
-            [cocdan.core.ops.core :refer [make-transaction]]
-            [cocdan.core.play-room :refer [query-stage-ds]]
-            [cocdan.data.territorial :refer [get-substage-id]]
-            [cocdan.database.ctx-db.core :refer [query-ds-latest-ctx_id]]
+            [cocdan.core.ops.core :refer [make-transaction]] 
+            [cocdan.data.territorial :refer [get-substage-id]] 
             [re-frame.core :as rf]
             [reagent.core :as r]))
 

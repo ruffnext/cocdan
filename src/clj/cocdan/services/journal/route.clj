@@ -9,6 +9,7 @@
 (s/def ::limit int?)
 (s/def ::with-context boolean?)
 (s/def ::desc boolean?)
+(s/def ::begin int?)
 
 (def routes
   ["/journal/s:id"
@@ -16,13 +17,14 @@
    ["" {:get {:summary "查询舞台的日志"
               :parameters {:path {:id int?}
                            :query (s/keys
-                                   :opt-un [::offset ::limit ::with-context ::desc])}
+                                   :opt-un [::offset ::limit ::with-context ::desc ::begin])}
               :handler (wrap-restricted
                         (wrap-monad
                          (fn [{{{stage-id :id} :path
-                                {:keys [offset limit with-context desc] :or {limit 10 offset 0 with-context false desc true}} :query} :parameters
+                                {:keys [offset limit with-context desc begin] 
+                                 :or {begin 0 limit 10 offset 0 with-context false desc true}} :query} :parameters
                                {_user-id :identity} :session}]
-                           (journal/list-transactions stage-id offset limit with-context (if desc :desc :asce)))))}}]])
+                           (journal/list-transactions stage-id begin offset limit with-context (if desc :desc :asce)))))}}]])
 
 (def action-routes
   ["/action/a:id"

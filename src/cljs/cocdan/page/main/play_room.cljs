@@ -48,7 +48,7 @@
                                  (js/console.log "初始化 WebSocket")
                                  (ws-core/init-ws! stage-id))
             (= :loading channel) (js/console.log "WebSocket 正在载入中")
-            :else (js/console.log "WebSocket 已经载入完成"))
+            :else (js/console.log "WebSocket 已经完成初始化"))
           [:div.container
            {:style {:padding-top "1em"
                     :padding-left "3em"

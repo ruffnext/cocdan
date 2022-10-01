@@ -20,9 +20,8 @@
 
 "注册日志处理函数，输入参数为
    [register-key stage-id transact, ctx]"
-(defn register-journal-hook 
-  [stage-id register-key handler-fn] 
-  (log/debug (str "HOOK" register-key handler-fn))
+(defn register-journal-hook
+  [stage-id register-key handler-fn]
   (swap! transaction-dispatcher #(assoc-in % [(keyword (str stage-id)) register-key] handler-fn)))
 
 (defn- m-transact-inner!
@@ -74,8 +73,7 @@
    (m-transact! stage "speak" (assoc props :avatar avatar-id))))
 
 (defn- query-stage-contexts
-  [stage-id ctx_ids]
-  (log/debug ctx_ids)
+  [stage-id ctx_ids] 
   (->> ctx_ids
        (map (partial monad-db/get-stage-context-by-id stage-id))
        (either/rights)
@@ -84,10 +82,10 @@
        (map #(assoc % :ack true))))
 
 (defn list-transactions
-  [stage-id offset limit with-context order]
+  [stage-id begin offset limit with-context order]
   (m/mlet
    [_stage (monad-db/get-stage-by-id stage-id)
-    transactions (monad-db/list-stage-transactions stage-id order limit offset)]
+    transactions (monad-db/list-stage-transactions stage-id order limit begin offset)]
    (let [transactions (map #(assoc % :ack true) transactions) 
          ctx_ids (->> transactions
                       (map :ctx_id transactions)
