@@ -1,6 +1,6 @@
 (ns cocdan.services.auth.route
   (:require [cats.monad.either :as either]
-            [cocdan.services.auth.core :refer :all]
+            [cocdan.services.auth.core :refer [register! unregister!]]
             [cocdan.middleware :refer [wrap-restricted]]
             [cocdan.middleware.monad-api :refer [wrap-monad]]
             [cocdan.db.monad-db :refer [get-user-by-id

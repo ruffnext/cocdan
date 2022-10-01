@@ -1,11 +1,13 @@
 (ns cocdan.db.monad-db
-  (:require [cats.core :as m]
+  (:require [cats.context :as c]
+            [cats.core :as m]
             [cats.monad.either :as either]
             [clojure.tools.logging :as log]
             [cocdan.auxiliary :refer [get-db-action-return]]
+            [cocdan.data.aux :as data-aux]
+            [cocdan.data.stage :refer [new-stage]]
             [cocdan.db.core :as db]
-            [taoensso.nippy :as nippy]
-            [cocdan.core.ops.core :as op-core]))
+            [taoensso.nippy :as nippy]))
 
 (defn get-user-by-username
   [username]
@@ -54,7 +56,7 @@
    (either/right
     (->> (map m-extra-avatar-info res)
          (either/rights)
-         (map m/extract) vec))))
+         (map #(->> % m/extract (into {}))) vec))))
 
 (defn- m-extra-stage-info
   [stage]
@@ -73,29 +75,40 @@
      (either/left (str "舞台 stage-id = " stage-id " 不存在"))
      (m-extra-stage-info raw))))
 
-(defn get-stage-latest-ctx-id-by-stage-id
+(defn get-stage-latest-ctx_id-by-stage-id
   [stage-id]
   (m/mlet 
-   [latest-ctx-id (either/try-either
+   [latest-ctx_id (either/try-either
                    (-> (db/get-stage-latest-context-id {:stage-id stage-id})
                        get-db-action-return))]
-   (when latest-ctx-id
-     (either/right latest-ctx-id)
+   (if latest-ctx_id
+     (either/right latest-ctx_id)
      (either/left (str "舞台 " stage-id " 在后端数据库中尚未初始化")))))
 
 (defn- m-extra-stage-context
-  [stage-context]
+  [stage-context] 
   (either/try-either
    (-> stage-context
-       (update :props nippy/thaw))))
+       (update :props #(-> % nippy/thaw new-stage))
+       (#(data-aux/add-db-prefix :context %)))))
 
 (defn get-stage-latest-ctx-by-stage-id
   [stage-id]
-  (m/mlet 
-   [ctx-id (get-stage-latest-ctx-id-by-stage-id stage-id)]
-   (either/try-either
-    (-> (db/get-stage-context-by-id {:stage-id stage-id :id ctx-id})
-        m-extra-stage-context))))
+  (c/with-context
+    either/context
+    (m/->=
+     (get-stage-latest-ctx_id-by-stage-id stage-id)
+     (#(either/try-either
+        (db/get-stage-context-by-id {:stage-id stage-id :id %}))) 
+     m-extra-stage-context)))
+
+(comment
+  (log/debug
+   (get-stage-latest-ctx-by-stage-id 1))
+  
+  (log/debug
+   (-> (db/get-stage-context-by-id {:stage-id 1 :id 4})
+       m-extra-stage-context)))
 
 (defn get-latest-transaction-id-by-stage-id
   [stage-id]
@@ -103,7 +116,7 @@
    [latest-id (either/try-either
                    (-> (db/get-stage-latest-transaction-id {:stage-id stage-id})
                        get-db-action-return))]
-   (when latest-id
+   (if latest-id
      (either/right latest-id)
      (either/left (str "舞台 " stage-id " 在后端数据库中尚未初始化")))))
 
@@ -125,15 +138,29 @@
      (->> raw-results
           (map m-extra-transaction)
           (either/rights)
-          (map m/extract) vec))))
+          (map m/extract)
+          reverse vec))))
   ([stage-id begin-id]
    (list-stage-transactions-after-n stage-id begin-id 100)))
 
+(defn get-stage-context-by-id
+  [stage-id ctx_id]
+  (c/with-context
+    either/context
+    (m/->=
+     (either/try-either
+      (db/get-stage-context-by-id {:stage-id stage-id :id ctx_id}))
+     m-extra-stage-context)))
 
-(defn make-stage-snapshot!
-  [{stage-id :id :as stage-record}]
-  (either/try-either
-   (db/insert-transaction! {:id 1
-                            :stage stage-id
-                            :type op-core/OP-SNAPSHOT
-                            :props stage-record})))
+(defn persistence-transaction!
+  [transaction] 
+  (let [to-be-insert (-> transaction (update :props nippy/freeze))]
+    (db/insert-transaction!
+     to-be-insert)))
+
+(defn persistence-context!
+  [transaction]
+  (let [to-be-insert (-> transaction (update :props nippy/freeze))]
+    (db/insert-context!
+     to-be-insert)))
+

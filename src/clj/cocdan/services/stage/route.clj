@@ -1,14 +1,14 @@
 (ns cocdan.services.stage.route
   (:require [cocdan.middleware :refer [wrap-restricted]]
             [cocdan.middleware.monad-api :refer [wrap-monad]]
-            [cocdan.schema :refer [Stage]]
+            [cocdan.schema :refer [Stage StageNew]]
             [cocdan.services.stage.core :refer :all]))
 
 (def routes
   ["/stage"
    {:swagger {:tags ["stage"]}}
    ["" {:post {:summary "新建舞台"
-               :parameters {:body Stage}
+               :parameters {:body StageNew}
                :handler (wrap-restricted
                          (wrap-monad
                           (fn [{{stage :body} :parameters
@@ -16,13 +16,13 @@
                             (create-stage! stage user-id))))}}]
    ["/:id" {:get {:summary "获得舞台的信息"
                   :parameters {:path {:id int?}}
-                  :responses {:200 Stage}
+                  :responses {:200 {:body Stage}}
                   :handler (wrap-restricted
                             (wrap-monad
                              (fn [{{{id :id} :path} :parameters}]
                                (query-stage-by-id id))))}
             :post {:summary "更新舞台的信息"
-                   :parameters {:body Stage
+                   :parameters {:body StageNew
                                 :path {:id int?}}
                    :responses {:200 Stage}
                    :handler (wrap-restricted

@@ -2,7 +2,7 @@
   (:require [cljs-http.client :as http]
             [clojure.core.async :refer [<! go]]
             [cocdan.data.avatar :refer [new-avatar]]
-            [cocdan.data.core :refer [to-ds]]
+            [cocdan.data.client-ds :refer [to-ds]]
             [cocdan.data.stage :refer [new-stage]]
             [cocdan.database.main :refer [db]]
             [datascript.core :as d]
@@ -46,3 +46,5 @@
     (when (nil? (:db/id record))
       (rf/dispatch [:api/refresh-stage-by-id stage-id]))
     avatar))
+
+

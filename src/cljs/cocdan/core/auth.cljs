@@ -1,10 +1,9 @@
 (ns cocdan.core.auth 
   (:require [cljs-http.client :as http]
             [clojure.core.async :refer [<! go]]
-            [cocdan.data.core :as data-core]
-            [cocdan.data.stage :refer [new-stage]] 
-            [re-frame.core :as rf]
-            [datascript.core :as d]))
+            [cocdan.data.client-ds :refer [to-ds]]
+            [cocdan.data.stage :refer [new-stage]]
+            [re-frame.core :as rf]))
 
 (defn- init-login-data
   []
@@ -13,7 +12,7 @@
            stages :body} (<! (http/get "/api/stage/list/"))]
       (when (= stages-status 200)
         (let [res (->> stages (map new-stage))]
-          (rf/dispatch [:ds/transact-records (map data-core/to-ds res)]))))))
+          (rf/dispatch [:ds/transact-records (map to-ds res)]))))))
 
 (rf/reg-fx
  :after-login
@@ -31,6 +30,11 @@
       :after-login nil}
      {:db (-> db
               (assoc :auth/status false))})))
+
+(rf/reg-sub
+ :common/user-id
+ (fn [db _]
+   (:id (:auth/user db))))
 
 (rf/reg-sub
  :sub/auth-user

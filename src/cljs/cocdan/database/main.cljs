@@ -11,8 +11,7 @@
 
 (rf/reg-event-fx
  :ds/transact-records
- (fn [_ [_ records]]
-   (js/console.log records)
+ (fn [_ [_ records]] 
    (d/transact! db records)
    {}))
 
@@ -37,7 +36,3 @@
   (p/q '[:find [?id ...]
          :where [?e :stage/id ?id]]
        db))
-
-(comment
-  @(posh-stage-ids)
-  )

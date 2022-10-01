@@ -9,6 +9,7 @@
     (either/branch
      (handler request)
      (fn [left]
+       (log/error left)
        (response/bad-request {:error (str left)}))
      (fn [right] 
        (cond

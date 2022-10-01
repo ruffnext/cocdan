@@ -8,10 +8,10 @@
    [reitit.core :as reitit]
    [cocdan.event] 
    [cocdan.core.auth :as core-auth]
-   [cocdan.data.visualizable]
-   [cocdan.database.main :refer [init-testing-data]]
+   [cocdan.data.visualizable] 
    [cocdan.page.login :as login]
-   [cocdan.page.main :as main]))
+   [cocdan.page.main :as main]
+   [cocdan.core.play-room :as play-room]))
 
 ;; 网站内的路径跳转，例如 http://localhost:3000/#/webui 跳转到 main/page 中
 (def router
@@ -41,6 +41,10 @@
    navigate!
    {}))
 
+(defn- work-after-inited
+  []
+  (play-room/register-transaction-transformers))
+
 (defn ^:dev/after-load render-page
   "重新渲染整个页面"
   []
@@ -58,6 +62,7 @@
     (core-auth/try-session-login)
     (swap! login-flag not))
   (start-router!)
+  (work-after-inited)
   (render-page))
 
 (comment 

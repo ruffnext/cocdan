@@ -4,6 +4,5 @@
             [immutant.web.async :as async]))
 
 (defn ws-routes []
-  ["/ws/:stage" (wrap-restricted
-                 (fn [request]
-                   (async/as-channel request websocket-callbacks)))])
+  ["/ws/:stage" (fn [request]
+                  (async/as-channel request websocket-callbacks))])

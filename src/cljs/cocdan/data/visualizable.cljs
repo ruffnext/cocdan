@@ -1,19 +1,22 @@
 (ns cocdan.data.visualizable 
-  (:require [cocdan.data.action :as action]
-            [cocdan.data.transact :refer [Transact]]
+  (:require [cocdan.data.action :refer [Speak]]
+            [cocdan.data.core :refer [get-ctx_id]]
+            [cocdan.data.patch-op :refer [PatchOP]]
+            [cocdan.database.ctx-db.core :refer [query-ds-ctx-by-id]]
             [cocdan.fragment.speak :as speak]))
 
 (defprotocol IVisualizable
   (to-hiccup [this ds kwargs]))
 
-(extend-type action/Speak
+(extend-type Speak
   IVisualizable
-  (to-hiccup [{:keys [avatar] :as this} ds {:keys [viewpoint]}] 
-    (let [ctx (action/get-ctx this ds)
-          avatar-record (get-in ctx [:avatars (keyword (str avatar))])] 
+  (to-hiccup [{:keys [avatar] :as this} ds {:keys [viewpoint]}]
+    (let [ctx_id (get-ctx_id this)
+          ctx (query-ds-ctx-by-id ds ctx_id)
+          avatar-record (get-in (:context/props ctx) [:avatars (keyword (str avatar))])] 
       (speak/speak this avatar-record (if (= viewpoint avatar) :right :left)))))
 
-(extend-type Transact
+(extend-type PatchOP
   IVisualizable
   (to-hiccup [{:keys [ops]} _ds _kwargs]
     [:div

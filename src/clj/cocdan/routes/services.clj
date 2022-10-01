@@ -8,7 +8,7 @@
    [reitit.ring.middleware.multipart :as multipart]
    [reitit.ring.middleware.parameters :as parameters]
    [cocdan.middleware.formats :as formats]
-   [ring.util.http-response :refer :all]
+  ;;  [ring.util.http-response :refer :all]
    [cocdan.services.auth.route :as auth-service]
    [cocdan.services.stage.route :as stage-service]
    [cocdan.services.avatar.route :as avatar-service]
@@ -53,4 +53,5 @@
    stage-service/routes
    avatar-service/routes
    journal-service/routes
+   journal-service/action-routes
    test-service/routes])

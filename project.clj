@@ -16,8 +16,8 @@
                  [cprop "0.1.19"]
                  [expound "0.9.0"]
                  [funcool/struct "1.4.0"]
-                 [json-html "0.4.7"]
-                 [luminus-http-kit "0.1.9"]
+                 [json-html "0.4.7"] 
+                 [luminus-immutant "0.2.5"]
                  [luminus-migrations "0.7.5"]
                  [luminus-transit "0.1.5"]
                  [luminus/ring-ttl-session "0.3.3"]
@@ -47,8 +47,8 @@
                  [funcool/cats "2.4.2"]
                  [prismatic/schema "1.4.0"]
                  [com.taoensso/nippy "3.2.0"]
-                 [cljs-http "0.1.46"]
-                 [luminus-immutant "0.2.5"]
+                 [cljs-http "0.1.46"] 
+                 [metosin/malli "0.8.9"]
                  [thheller/shadow-cljs "2.19.9" :scope "provided"]]
 
   :min-lein-version "2.0.0"
@@ -59,7 +59,7 @@
   :target-path "target/%s/"
   :main ^:skip-aot cocdan.core
 
-  :plugins [] 
+  :plugins [[lein-immutant "2.1.0"]]
   :clean-targets ^{:protect false}
   [:target-path "target/cljsbuild"]
   

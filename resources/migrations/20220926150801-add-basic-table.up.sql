@@ -7,14 +7,14 @@ CREATE TABLE transactions
 (id INTEGER,
  ctx_id INTEGER,
  stage INTEGER,
- time DATE,
+ time VARCHAR(32),
  type VARCHAR(60),
  props BLOB);
 --;;
 CREATE TABLE contexts
 (id INTEGER,
  stage INTEGER,
- time DATE,
+ time VARCHAR(32),
  props BLOB);
 --;;
 CREATE TABLE avatars

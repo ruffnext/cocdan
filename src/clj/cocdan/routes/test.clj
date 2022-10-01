@@ -1,6 +1,5 @@
 (ns cocdan.routes.test 
-  (:require [cocdan.services.stage.core :as stage]
-            [cocdan.middleware :refer [wrap-restricted]]
+  (:require [cocdan.services.stage.core :as stage] 
             [cocdan.middleware.monad-api :refer [wrap-monad]]
             [cocdan.services.auth.core :as auth]
             [cocdan.services.avatar.core :as avatar]
@@ -18,7 +17,7 @@
    {:id 3 :name "第三个角色" :image "" :description "由 2 控制" :stage 1 :substage "lobby" :controlled_by 2 :props {:str 200}}])
 
 (def test-stages
-  [{:id 1 :name "测试舞台" :introduction "舞台介绍" :image "" :substages {:lobby {:name "大厅"}} :avatars [1 2 3] :controlled_by 1}])
+  [{:id 1 :name "测试舞台" :introduction "舞台介绍" :image "" :substages {:lobby {:name "大厅"}} :avatars {} :controlled_by 1}])
 
 (def routes
   ["/test"

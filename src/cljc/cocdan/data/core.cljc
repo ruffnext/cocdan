@@ -3,24 +3,26 @@
             [cocdan.data.aux :as data-aux]
             [clojure.string :as s]))
 
+;; 由 Transaction 得到的，或者具有 Transaction ID 的类型
+(defprotocol ITransaction
+  (get-tid [this] "取得在事件的编号，一般用于判断先后顺序")
+  (get-time [this] "取得事件发生的时间") 
+  (get-ctx_id [this] "取得事件上下文的编号，通常用于取得其上下文"))
+
 "diffs  --> [paths before after]
  paths  --> a.b.c.d.e
  before --> value or :unset
  after  --> value or :unset"
 
 (defprotocol IIncrementalUpdate
-  "可以增量更新的类型"
-
+  "可以增量更新的类型" 
+  
   (diff'
     [before after]
     "计量两者的差，并返回 diffs 列表")
   (update'
     [before diffs]
     "按顺序将 diffs 应用到当前对象上，并返回修改后的对象"))
-
-(defprotocol IDsRecord
-  "可以保存到 datascript 中的数据"
-  (to-ds [this]))
 
 (defn- calc-value-diff
   [k before after]
@@ -37,9 +39,6 @@
       :else [[k before after]])
 
     :else [[k before after]]))
-
-(defprotocol ITerritorialMixIn
-  (get-substage-id [this] "返回该发生的地点"))
 
 (defn default-diff'
   [before after]

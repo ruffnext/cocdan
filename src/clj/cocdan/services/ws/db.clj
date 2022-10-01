@@ -1,6 +1,6 @@
 (ns cocdan.services.ws.db 
-  (:require [datascript.core :as d]
-            [cocdan.services.ws.aux :as ws-aux]))
+  (:require [cocdan.data.aux :refer [add-db-prefix]]
+            [datascript.core :as d]))
 
 
 ; [db/id   :attr              :value                ...]
@@ -22,19 +22,19 @@
 
 (defonce db (d/create-conn db-schema))
 
-(defn upsert!
+(defn upsert-one!
   [table-key ds-records]
-  (d/transact! db (ws-aux/add-db-prefix table-key ds-records)))
+  (d/transact! db [(add-db-prefix table-key ds-records)]))
 
 (defn query-all-ws-by-stage-id
   "请求舞台上所有的频道"
-  [channel]
+  [stage-id]
   (->> (d/q '[:find [?ws ...]
               :in $ ?stage-id
               :where
               [?e :channel/stage ?stage-id]
               [?e :channel/ws ?ws]]
-            @db channel)))
+            @db stage-id)))
 
 (defn
   query-channels-by-channel

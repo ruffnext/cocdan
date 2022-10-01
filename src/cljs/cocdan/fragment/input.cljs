@@ -1,14 +1,16 @@
 (ns cocdan.fragment.input
   (:require ["antd" :refer [Cascader Mentions]]
-            [cocdan.database.ctx-db.core :refer [query-ds-latest-ctx-id]]
-            [cocdan.core.ops.core :refer [make-op OP-PLAY]]
+            [cocdan.core.ops.core :refer [make-transaction]]
             [cocdan.core.play-room :refer [query-stage-ds]]
-            [cocdan.data.core :refer [get-substage-id]]
+            [cocdan.data.territorial :refer [get-substage-id]]
+            [cocdan.database.ctx-db.core :refer [query-ds-latest-ctx_id]]
             [re-frame.core :as rf]
             [reagent.core :as r]))
 
 (defn input
-  [{{stage-id :id :as stage-ctx} :context substage-id :substage hook-avatar-change :hook-avatar-change}]
+  [{{{stage-id :id :as stage-ctx} :context/props} :context
+    substage-id :substage
+    hook-avatar-change :hook-avatar-change}]
   (r/with-let [input-value (r/atom "")
                action-value (r/atom nil)
                avatar-id (r/atom nil)
@@ -28,13 +30,13 @@
                              (when hook-avatar-change (hook-avatar-change v)))
           on-textarea-enter (fn [x]
                               (let [value (-> x .-target .-value)
-                                    last-ctx-id (query-ds-latest-ctx-id (query-stage-ds stage-id))
+                                    last-ctx_id (query-ds-latest-ctx_id (query-stage-ds stage-id))
                                     next-transact-id (inc last-transact-id)
-                                    this-op (make-op next-transact-id last-ctx-id 4 OP-PLAY {:type :speak :avatar @avatar-id :payload {:message value :props {}}})]
+                                    this-op (make-transaction next-transact-id last-ctx_id 4 "speak" {:avatar @avatar-id :payload {:message value :props {}}})]
                                 (rf/dispatch [:play/execute stage-id [this-op]])
                                 (reset! input-value "")
                                 (reset! is-clear true)))
-          _ (when (nil? @avatar-id) (on-avatar-change [(-> controllable-avatars first first)] nil))]
+          _ (when (nil? @avatar-id) (on-avatar-change [(-> controllable-avatars first first)] nil))] 
       (if @avatar-id
         [:div
          [:> Cascader
@@ -68,5 +70,6 @@
            :onPressEnter on-textarea-enter}
           (doall
            (for [a mentionable-avatars]
-             (with-meta [:> (.-Option Mentions) {:value (:id a)} (:name a)] {:key (:id a)})))]]
+             (with-meta [:> (.-Option Mentions) {:value (str (:id a))} (:name a)] {:key (:id a)})))]
+         ]
         [:p "在这个舞台上你没有可操作的角色"]))))

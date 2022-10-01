@@ -1,7 +1,6 @@
 (ns cocdan.routes.home
   (:require
-   [cocdan.layout :as layout]
-   [cocdan.db.core :as db]
+   [cocdan.layout :as layout] 
    [clojure.java.io :as io]
    [cocdan.middleware :as middleware]
    [ring.util.response]

@@ -1,46 +1,66 @@
 (ns cocdan.page.main.play-room 
-  (:require [cocdan.database.ctx-db.core :refer [query-ds-latest-ctx]]
-            [cocdan.core.ops.core :as core-ops]
-            [cocdan.core.play-room :as p-core]
-            [cocdan.database.main :refer [db]]
+  (:require [cljs-http.client :as http]
+            [clojure.core.async :refer [<! go]]
+            [cocdan.core.ops.core :as op-core]
+            [cocdan.core.play-room :as p-core] 
+            [cocdan.database.ctx-db.core :as ctx-db]
             [cocdan.fragment.chat-log :as chat-log]
             [cocdan.fragment.input :as fragment-input]
+            [cocdan.core.ws :as ws-core]
             [datascript.core :as d]
             [re-frame.core :as rf]
             [reagent.core :as r]))
 
-(defn init-testing-data
+(defn- init-play-room
   [stage-id]
-  (let [avatars [{:id "avatar-1" :name "avatar-name" :image nil :description "description" :substage "lobby" :controlled_by "user-1" :props {:str 100}}
-                 {:id "avatar-2" :name "ruff" :image nil :description "description" :substage "lobby" :controlled_by "user-1" :props {:str 100}}] 
-
-        op1 (core-ops/make-op 1 0 1 core-ops/OP-SNAPSHOT (-> (d/pull @db '[:stage/props] [:stage/id stage-id] ) :stage/props (assoc :avatars avatars)))
-        op3 (core-ops/make-op 2 1 2 core-ops/OP-PLAY {:type :speak :avatar "avatar-1" :payload {:message "hello" :props {}}})
-        op2 (core-ops/make-op 3 1 3 core-ops/OP-UPDATE [[:avatars.avatar-1.name "avatar-name" "avatar-name-modified"]])
-        op4 (core-ops/make-op 4 3 4 core-ops/OP-PLAY {:type :speak :avatar "avatar-1" :payload {:message "very very very very very very very very very very very very very very very very very very very very very very very very long hello world again" :props {}}})
-        op5 (core-ops/make-op 5 3 5 core-ops/OP-PLAY {:type :speak :avatar "avatar-1" :payload {:message "hello again" :props {}}})]
-    (rf/dispatch-sync [:play/execute stage-id [op1 op2 op3 op4 op5]])))
+  (go
+    (let [{:keys [status body]} (<! (http/get (str "/api/journal/s" stage-id)
+                                              {:query-params {:with-context true}}))]
+      (case status
+        200 (let [{:keys [context transaction]} body
+                  db (ctx-db/query-stage-db stage-id)
+                  _ (ctx-db/import-stage-context! db context)
+                  ds @db
+                  latest-ctx (atom nil)
+                  ds-records (reduce (fn [a {:keys [ctx_id] :as t}]
+                                       (let [latest-ctx-val @latest-ctx
+                                             latest-ctx-val (if (= (:context/id latest-ctx-val) ctx_id)
+                                                              latest-ctx-val (reset! latest-ctx (ctx-db/query-ds-ctx-by-id ds ctx_id)))] 
+                                         (concat a (op-core/ctx-generate-ds stage-id t latest-ctx-val))))
+                                     [] transaction)]
+              (d/transact! db (filter (fn [x] (not (contains? x :context/id))) ds-records))
+              (rf/dispatch [:fx/refresh-stage-signal stage-id]))
+        nil))))
 
 (defn page
   []
   (r/with-let
     [stage-id (or @(rf/subscribe [:sub/stage-performing]) 1)
      substage-id (r/atom "lobby")
-     avatar-id (r/atom nil)
-     _ (init-testing-data stage-id)]
+     avatar-id (r/atom nil)]
     (let [_refresh @(rf/subscribe [:play/refresh stage-id]) 
-          ds (p-core/query-stage-ds stage-id)
-          latest-ctx (query-ds-latest-ctx ds)] 
-      [:div.container
-       {:style {:padding-top "1em"
-                :padding-left "3em"
-                :padding-right "3em"}}
-       [:p.has-text-centered @substage-id]
-       [chat-log/chat-log 
-        {:ctx-ds ds
-         :substage @substage-id
-         :viewpoint @avatar-id}]
-       [fragment-input/input 
-        {:context latest-ctx 
-         :substage @substage-id
-         :hook-avatar-change (fn [x] (reset! avatar-id x))}]])))
+          ds (p-core/query-stage-ds stage-id) 
+          latest-ctx (ctx-db/query-ds-latest-ctx ds)] 
+      (if latest-ctx
+        (let [channel @(rf/subscribe [:ws/channel stage-id])]
+          (js/console.log (str "CHANNEL " channel))
+          (cond
+           (= :unset channel) (ws-core/init-ws! stage-id)
+           (= :loading channel) (js/console.log "正在载入中")
+            :else (js/console.log (str "ws 载入完成" channel)))
+          [:div.container
+           {:style {:padding-top "1em"
+                    :padding-left "3em"
+                    :padding-right "3em"}}
+           [:p.has-text-centered @substage-id]
+           [chat-log/chat-log
+            {:ctx-ds ds
+             :substage @substage-id
+             :viewpoint @avatar-id}]
+           [fragment-input/input
+            {:context latest-ctx
+             :substage @substage-id
+             :hook-avatar-change (fn [x] (reset! avatar-id x))}]])
+        (do
+          (init-play-room stage-id)
+          [:p "舞台尚未初始化"])))))

@@ -1,6 +1,7 @@
 (ns cocdan.data.avatar 
   (:require [cocdan.data.core :as data-core]
-            [cocdan.data.performer :as performer]))
+            [cocdan.data.performer :as performer]
+            [cocdan.data.territorial :refer [ITerritorialMixIn]]))
 
 (defrecord Avatar [id name image description substage controlled_by props]
 
@@ -23,12 +24,8 @@
   (description [_this] description)
   (status [_this] nil)
 
-  data-core/ITerritorialMixIn
-  (get-substage-id [_this] substage)
-  
-  data-core/IDsRecord
-  (to-ds [this] {:avatar/id id
-                 :avatar/props this}))
+  ITerritorialMixIn
+  (get-substage-id [_this] substage))
 
 (defn new-avatar
   [{:keys [id name image description substage controlled_by props]}]

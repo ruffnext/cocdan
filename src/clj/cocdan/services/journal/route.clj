@@ -1,34 +1,47 @@
 (ns cocdan.services.journal.route 
-  (:require [clojure.spec.alpha :as s] 
-            [cocdan.services.journal.core :as journal]
+  (:require [clojure.spec.alpha :as s]
             [cocdan.middleware :refer [wrap-restricted]]
-            [cocdan.middleware.monad-api :refer [wrap-monad]]))
+            [cocdan.middleware.monad-api :refer [wrap-monad]]
+            [cocdan.schema :refer [Speak Transact]]
+            [cocdan.services.journal.core :as journal]))
 
 (s/def ::begin int?)
 (s/def ::limit int?)
-(s/def ::recursed boolean?)
+(s/def ::with-context boolean?)
 
 (def routes
-  ["/journal"
+  ["/journal/s:id"
    {:swagger {:tags ["journal"]}}
-   ["/stage/:id" {:get {:summary "查询舞台的日志"
-                        :parameters {:path {:id int?}
-                                     :query (s/keys
-                                             :opt-un [::begin ::limit ::recursed])}
+   ["" {:get {:summary "查询舞台的日志"
+              :parameters {:path {:id int?}
+                           :query (s/keys
+                                   :opt-un [::begin ::limit ::with-context])}
+              :handler (wrap-restricted
+                        (wrap-monad
+                         (fn [{{{stage-id :id} :path
+                                {:keys [begin limit with-context] :or {limit 10 begin 0 with-context false}} :query} :parameters
+                               {_user-id :identity} :session}]
+                           (journal/list-transactions stage-id begin limit with-context))))}}]])
+
+(def action-routes
+  ["/action/a:id"
+   {:swagger {:tags ["action"]}}
+   ["/speak" {:post {:summary "执行舞台行动 - 说话"
+                    :parameters {:body Speak
+                                 :path {:id int?}}
+                    :handler (wrap-restricted
+                              (wrap-monad
+                               (fn [{{speak-record :body
+                                      {avatar-id :id} :path} :parameters
+                                     {user-id :identity} :session}]
+                                 (journal/m-speak avatar-id speak-record user-id))))}}]
+   ["/transact" {:post {:summary "直接对舞台进行控制"
+                        :parameters {:body Transact
+                                     :path {:id int?}}
                         :handler (wrap-restricted
                                   (wrap-monad
-                                   (fn [{{{stage-id :id} :path
-                                          {:keys [begin limit recursed] :or {limit 10 begin 0}} :query} :parameters
+                                   (fn [{{{avatar-id :id} :path
+                                          {:keys [type props]} :body} :parameters
                                          {user-id :identity} :session}]
-                                     (journal/list-transactions stage-id begin limit))))}}]
-   ["/stage/:id/play" {:post {:summary "执行舞台行动"
-                              :parameters {:body associative?
-                                           :path {:id int?}
-                                           :query {:type string?}}
-                              :handler (wrap-restricted
-                                        (wrap-monad
-                                         (fn [{{op-record :body
-                                                {stage-id :id} :path
-                                                {transaction-type :type} :query} :parameters
-                                               {user-id :identity} :session}]
-                                           (journal/transact! stage-id transaction-type op-record user-id))))}}]])
+                                     (journal/service-transact avatar-id type props user-id))))}}]])
+

@@ -1,6 +1,6 @@
 (ns cocdan.data.stage
-  (:require [cocdan.data.avatar :refer [new-avatar]]
-            [cocdan.data.action :refer [IAction]]
+  (:require [cocdan.core.ops.core :refer [register-context-handler]]
+            [cocdan.data.avatar :refer [new-avatar]]
             [cocdan.data.core :as data-core]))
 
 (defrecord Stage [id name introduction image substages avatars controlled_by]
@@ -15,14 +15,7 @@
 
   data-core/IIncrementalUpdate
   (data-core/diff' [this before] (data-core/default-diff' this before))
-  (data-core/update' [this ops] (data-core/default-update' this ops))
-
-  data-core/IDsRecord
-  (to-ds [this] {:stage/id id
-                 :stage/props this})
-  
-  IAction
-  (get-ctx [this _ds] this))
+  (data-core/update' [this ops] (data-core/default-update' this ops)))
 
 (defrecord SubStage [id name adjacencies props]
   #?(:cljs INamed)
@@ -35,11 +28,7 @@
 
   data-core/IIncrementalUpdate
   (data-core/diff' [this before] (data-core/default-diff' this before))
-  (data-core/update' [this ops] (data-core/default-update' this ops))
-
-  data-core/IDsRecord
-  (to-ds [this] {:stage/id id
-                 :stage/props this}))
+  (data-core/update' [this ops] (data-core/default-update' this ops)))
 
 (defn new-substage
   [{:keys [id name adjacencies props]}]
@@ -50,7 +39,9 @@
   (let [substages (->> (map (fn [[k v]] (new-substage (assoc v :id (clojure.core/name k)))) substages)
                        (map (fn [x] [(keyword (str (:id x))) x]))
                        (into {}))
-        avatars (->> (map new-avatar avatars)
+        avatars (->> (map (fn [[_k v]] (new-avatar v)) avatars)
                      (map (fn [x] [(keyword (str (:id x))) x]))
                      (into {}))]
     (Stage. id name introduction image substages avatars controlled_by)))
+
+(register-context-handler new-stage)

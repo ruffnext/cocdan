@@ -1,40 +1,24 @@
 (ns cocdan.data.action 
-  (:require [cocdan.database.ctx-db.core :refer [query-ds-ctx-by-id]]
-            [cocdan.data.core :refer [get-substage-id to-ds
-                                      ITerritorialMixIn
-                                      IDsRecord]]
-            [datascript.core :as d]))
+  (:require [cocdan.core.ops.core :refer [register-transaction-handler]]
+            [cocdan.data.core :refer [ITransaction]]
+            [cocdan.data.territorial :refer [get-substage-id ITerritorialMixIn]]))
 
-(defprotocol IAction
-  (get-id [this] "返回该动作的索引")
-  (get-time [this] "返回动作执行的时间") 
-  (get-type [this] "返回该动作的类型（小写字符串）")
-  (get-ctx [this ds] "返回该动作执行时的上下文"))
+"动作类型，大部分数据都是这个类型"
 
-(defrecord Speak [id time ctx-id avatar substage message props]
-  IAction
-  (get-type [_this] "speak")
-  (get-id [_this] id)
+(defrecord Speak [id time ctx_id avatar substage message props]
+  ITransaction
+  (get-tid [_this] id)
   (get-time [_this] time)
-  (get-ctx [_this ds] (:context/props (d/pull ds '[:context/props] [:context/id ctx-id])))
+  (get-ctx_id [_this] ctx_id)
 
   ITerritorialMixIn
-  (get-substage-id [_this] substage)
-
-  IDsRecord
-  (to-ds [this]
-    {:transaction/id id
-     :transaction/type (get-type this)
-     :transaction/props this}))
+  (get-substage-id [_this] substage))
 
 (defn new-speak
-  [id time ctx-id avatar-id substage-id {:keys [message props]}]
-  (Speak. id time ctx-id avatar-id substage-id message props))
+  [id time ctx_id avatar-id substage-id message props]
+  (Speak. id time ctx_id avatar-id substage-id message props))
 
-(defn new-play
-  "play 指的是那些不造成状态变化的行为，或者说 transact/type 不等于 :transact 的类型"
-  [id ctx-id ctx time {:keys [type avatar payload]}]
-  (let [res (case type 
-              :speak [(new-speak id time ctx-id avatar (get-substage-id (get-in ctx [:avatars (keyword (str avatar))])) payload)]
-              [])]
-    (vec (map to-ds res))))
+(defn handler-speak
+  [{ctx_id :context/id ctx :context/props} {:keys [id time props]}]
+  (let [{:keys [avatar message props]} props]
+    (new-speak id time ctx_id avatar (get-substage-id (get-in ctx [:avatars (keyword (str avatar))])) message props)))

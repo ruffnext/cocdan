@@ -9,6 +9,18 @@
             [cocdan.hooks :as hooks]
             [taoensso.nippy :as nippy]))
 
+(defn query-stage-by-id
+  [stage-id]
+  (m/mlet
+   [stage-base (monad-db/get-stage-by-id stage-id)
+    avatars (monad-db/get-avatars-by-stage-id stage-id)]
+   (either/right
+    (->> (assoc stage-base :avatars (->> avatars
+                                         (map (fn [{id :id :as a}] [(keyword (str id)) a]))
+                                         (into {})))
+         (into {})
+         new-stage))))
+
 (defn create-stage!
   [{:keys [name introduction image substages]} controlled_by]
   (m/mlet [ret (either/try-either
@@ -16,25 +28,16 @@
                  {:name name
                   :introduction introduction
                   :image image
-                  :substages (nippy/freeze (or substages []))
-                  :avatars (nippy/freeze [])
+                  :substages (nippy/freeze (or substages {}))
+                  :avatars (nippy/freeze {})
                   :controlled_by controlled_by}))
-           stage (monad-db/get-stage-by-id (get-db-action-return ret))
-           _insert-initial-operation (monad-db/make-stage-snapshot! (new-stage stage))]
-          (hooks/dispatch! :event/after-stage-created stage)
+           stage (query-stage-by-id (get-db-action-return ret))
+           _dispatch (hooks/dispatch! :event/after-stage-created stage)]
           (either/right stage)))
-
-(defn query-stage-by-id
-  [stage-id]
-  (m/mlet
-   [stage-base (monad-db/get-stage-by-id stage-id)
-    avatars (monad-db/get-avatars-by-stage-id stage-id)]
-   (either/right
-    (assoc stage-base :avatars avatars))))
 
 (defn check-user-stage-access
   [stage user-id]
-  (let [controller-ids (conj (map :controlled_by (:avatars stage)) (:controlled_by stage))]
+  (let [controller-ids (conj (map (fn [[_k v]] (:controlled_by v)) (:avatars stage)) (:controlled_by stage))]
     (if (contains? (set controller-ids) user-id)
       (either/right)
       (either/left (str user-id " 无权修改舞台 " (:id stage))))))
@@ -42,7 +45,7 @@
 (defn update-stage!
   [stage-id {:keys [name introduction image substages avatars controlled_by]} access-user-id]
   (m/mlet
-   [stage (monad-db/get-stage-by-id stage-id)
+   [stage (query-stage-by-id stage-id)
     _check-user-access (check-user-stage-access stage access-user-id)
     _check-user-validate (if controlled_by
                            (get-user-by-id controlled_by)
@@ -57,8 +60,10 @@
                                                :controlled_by controlled_by}
                                               (filter (fn [[_k v]] (some? v)))
                                               (into {}))
-                                :id stage-id}))]
-   (query-stage-by-id stage-id)))
+                                :id stage-id}))
+    res (query-stage-by-id stage-id)
+    _dispatch (hooks/dispatch! :event/after-stage-changed stage res)] 
+   (either/right res)))
 
 (defn delete-stage!
   [stage-id access-user-id]

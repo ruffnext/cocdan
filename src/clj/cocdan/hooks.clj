@@ -7,17 +7,16 @@
 (defonce hooks (atom {}))
 
 (defn hook!
-  [event-key func]
-  (let [func-set (or (event-key @hooks) #{})]
-    (when-not (contains? func-set func)
-      (swap! hooks #(assoc % event-key func-set)))))
+  "所有的 hook 函数都应该返回一个 either"
+  [event-key hook-key func]
+  (swap! hooks #(assoc-in % [event-key hook-key] func)))
 
 (defn dispatch!
   [event-key & args]
-  (let [func (event-key @hooks)]
-    (when-not (empty? func)
+  (let [funcs (map (fn [[_k v]] v) (event-key @hooks))]
+    (if (empty? funcs)
+      (either/right (str event-key " 没有注册钩子函数"))
       (c/with-context
-       either/context
-       (m/for [f func]
-        (apply f args))))))
-
+        either/context
+        (m/for [f funcs]
+          (apply f args))))))
