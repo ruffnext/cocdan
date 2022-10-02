@@ -14,7 +14,8 @@
                avatar-id (r/atom nil)
                is-clear (r/atom false)
                user-id @(rf/subscribe [:common/user-id])]
-    (let [all-avatars (map second (:avatars stage-ctx))
+    (let [_refresh @(rf/subscribe [:partial-refresh/listen :chat-input])
+          all-avatars (map second (:avatars stage-ctx))
           same-substage-avatars (filter #(= (get-substage-id %) substage-id) all-avatars)
           controllable-avatars (->> (filter (fn [{:keys [controlled_by]}]
                                               (= controlled_by user-id))
@@ -26,7 +27,7 @@
                              (reset! avatar-id v)
                              (when hook-avatar-change (hook-avatar-change v)))
           on-textarea-enter (fn [x]
-                              (let [value (-> x .-target .-value) 
+                              (let [value (-> x .-target .-value)
                                     this-op (make-transaction nil nil 4 "speak" {:avatar @avatar-id :message value :props {}})]
                                 (rf/dispatch [:play/execute-one-remotly! stage-id this-op])
                                 (reset! input-value "")

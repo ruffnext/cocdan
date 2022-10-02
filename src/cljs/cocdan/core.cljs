@@ -9,9 +9,9 @@
    [cocdan.event] 
    [cocdan.core.auth :as core-auth]
    [cocdan.data.visualizable] 
+   [cocdan.data.partial-refresh]
    [cocdan.page.login :as login]
-   [cocdan.page.main :as main]
-   [cocdan.fragment.speak]
+   [cocdan.page.main :as main] 
    [cocdan.core.play-room :as play-room]))
 
 ;; 网站内的路径跳转，例如 http://localhost:3000/#/webui 跳转到 main/page 中

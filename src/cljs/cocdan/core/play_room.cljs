@@ -2,6 +2,7 @@
   (:require [cljs-http.client :as http]
             [clojure.core.async :refer [go]]
             [cocdan.core.ops.core :as core-ops :refer [register-transaction-handler]]
+            [cocdan.data.partial-refresh :refer [IPartialRefresh refresh-key]]
             [cocdan.data.transaction.patch :refer [handle-patch-op]]
             [cocdan.data.transaction.speak :refer [handler-speak]]
             [cocdan.database.ctx-db.core :as ctx-db]
@@ -32,51 +33,58 @@
 
 (rf/reg-event-fx
  :fx/refresh-stage-signal
- (fn [{:keys [db]} [_ stage-id]]
-   (js/console.log "REFRESH!")
+ (fn [{:keys [db]} [_ stage-id]] 
    {:db (update-in db [:stage (keyword (str stage-id)) :refresh] #(if % (inc %) 1))}))
 
 (rf/reg-event-fx
- :play/execute
- (fn [{:keys [db]} [_ stage-id transactions] ack]
+ :fx/refresh-play-chat-log-signal
+ (fn [{:keys [db]} [_ stage-id]]
+   {:db (update-in db [:stage (keyword (str stage-id)) :refresh-chat-log] #(if % (inc %) 1))}))
 
-   (when-let [ops-sorted (sort-by first transactions)]
+(rf/reg-event-fx
+ :play/execute
+ (fn [_ [_ stage-id transactions]]
+
+   (if-let [ops-sorted (sort-by first transactions)]
 
     ;; 执行数据库操作
-     (let [stage-key (keyword (str stage-id))
-           ds-db (ctx-db/query-stage-db stage-id)]
-       (doseq [{:keys [id ctx_id time type props ack] :as transaction} ops-sorted]
-         (let [context (ctx-db/query-ds-ctx-by-id @ds-db ctx_id) 
+     (let [ds-db (ctx-db/query-stage-db stage-id)
+           partial-refreshs (atom #{})]
+       (doseq [{:keys [ctx_id] :as transaction} ops-sorted]
+         (let [context (ctx-db/query-ds-ctx-by-id @ds-db ctx_id)
                ds-records (core-ops/ctx-generate-ds stage-id transaction context)]
            (when (seq ds-records)
-             (d/transact! ds-db ds-records))))
-
-     ;; 更新 re-frame 状态
-       (let [max-transact-id-path [:stage stage-key :max-transact-id]
-             rf-max-transact-id (or (get-in db max-transact-id-path) 0)
-             last-transact-id (-> ops-sorted last first)
-             new-db (update-in db [:stage stage-key :refresh] #(if % (inc %) 0))]
-         (if (> last-transact-id rf-max-transact-id)
-           {:db (assoc-in new-db max-transact-id-path last-transact-id)}
-           {:db new-db}))))))
+             (d/transact! ds-db ds-records)
+             (doseq [{props :transaction/props} ds-records]
+               (when (satisfies? IPartialRefresh props)
+                 (swap! partial-refreshs #(apply conj % (refresh-key props))))))))
+       {:fx [(concat [:dispatch] (map (fn [x] [:partial-refresh/refresh! x]) @partial-refreshs))]})
+     ())))
 
 (rf/reg-event-fx
  :play/execute-one-remotly!
  (fn [{:keys [db]} [_ stage-id transaction]]
-   (let [stage-key (keyword (str stage-id))
-         ds-db (ctx-db/query-stage-db stage-id)
+   (let [ds-db (ctx-db/query-stage-db stage-id)
          context  (ctx-db/query-ds-latest-ctx @ds-db)
          next-transaction-id (inc (ctx-db/query-ds-latest-transaction-id @ds-db))
          ds-records (core-ops/ctx-generate-ds stage-id (assoc transaction :id next-transaction-id) context)
-         max-transact-id-path [:stage stage-key :max-transact-id]]
+         partial-refreshs (reduce (fn [a {props :transaction/props}]
+                                    (if (satisfies? IPartialRefresh props)
+                                      (apply conj a (refresh-key props)) a)) #{} ds-records)]
      (d/transact! ds-db ds-records)
      (go (http/post (str "/api/action/a" stage-id "/transact")
                     {:json-params transaction}))
-     {:db (assoc-in db max-transact-id-path next-transaction-id)
-      :fx [[:dispatch [:fx/refresh-stage-signal stage-id]]]})))
+     {:fx [(concat [:dispatch] (map (fn [x] [:partial-refresh/refresh! x]) partial-refreshs))]})))
 
+
+;; play/refresh 是刷新整个 play-room 的钩子，谨慎操作
 (rf/reg-sub
  :play/refresh
  (fn [db [_ stage-id]]
    (or (get-in db [:stage (keyword (str stage-id)) :refresh]) 0)))
+
+(rf/reg-sub
+ :play/refresh-chat-log
+ (fn [db [_ stage-id]]
+   (or (get-in db [:stage (keyword (str stage-id)) :refresh-chat-log]) 0)))
 

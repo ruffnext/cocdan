@@ -1,5 +1,6 @@
-(ns cocdan.fragment.speak 
+(ns cocdan.fragment.chat-log.speak 
   (:require ["antd" :refer [Avatar Badge]]
+            [cocdan.data.partial-refresh :refer [IPartialRefresh]]
             [cocdan.data.performer.core :as performer]
             [cocdan.data.transaction.speak :refer [Speak]]
             [cocdan.data.visualizable :refer [IVisualizable]]))
@@ -42,4 +43,8 @@
   IVisualizable
   (to-hiccup [{:keys [avatar] :as this} ctx {:keys [viewpoint transaction]}]
     (let [avatar-record (get-in (:context/props ctx) [:avatars (keyword (str avatar))])]
-      (speak this avatar-record (if (= viewpoint avatar) :right :left) transaction))))
+      (speak this avatar-record (if (= viewpoint avatar) :right :left) transaction)))
+  
+  IPartialRefresh
+  (refresh-key [_this] [:chat-log]))
+

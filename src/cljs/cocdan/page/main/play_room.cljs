@@ -4,7 +4,7 @@
             [cocdan.core.ops.core :as op-core]
             [cocdan.core.play-room :as p-core] 
             [cocdan.database.ctx-db.core :as ctx-db]
-            [cocdan.fragment.chat-log :as chat-log]
+            [cocdan.fragment.chat-log.core :as chat-log]
             [cocdan.fragment.input :as fragment-input]
             [cocdan.core.ws :as ws-core]
             [datascript.core :as d]
@@ -38,9 +38,9 @@
     [stage-id (or @(rf/subscribe [:sub/stage-performing]) 1)
      substage-id (r/atom "lobby")
      avatar-id (r/atom nil)]
-    (let [_refresh @(rf/subscribe [:play/refresh stage-id]) 
-          ds (p-core/query-stage-ds stage-id) 
-          latest-ctx (ctx-db/query-ds-latest-ctx ds)] 
+    (let [_refresh @(rf/subscribe [:partial-refresh/listen :play-room])
+          stage-db (ctx-db/query-stage-db stage-id)
+          latest-ctx (ctx-db/query-ds-latest-ctx @stage-db)]
       (if latest-ctx
         (let [channel @(rf/subscribe [:ws/channel stage-id])]
           (cond
@@ -55,13 +55,15 @@
                     :padding-right "3em"}}
            [:p.has-text-centered @substage-id]
            [chat-log/chat-log
-            {:ctx-ds ds
+            {:stage-id stage-id
              :substage @substage-id
              :viewpoint @avatar-id}]
            [fragment-input/input
             {:context latest-ctx
              :substage @substage-id
-             :hook-avatar-change (fn [x] (reset! avatar-id x))}]])
+             :hook-avatar-change (fn [x]
+                                   (reset! avatar-id x)
+                                   (reset! chat-log/chat-log-ui-cache {}))}]])
         (do
           (init-play-room stage-id)
           [:p "舞台尚未初始化"])))))

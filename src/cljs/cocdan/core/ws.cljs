@@ -20,14 +20,12 @@
 
 (defn- on-open
   [stage-id event]
-  (js/console.log event)
   (rf/dispatch [:ws/change-channel! stage-id :loaded])
   (js/console.log "OPENED"))
 
 (defn- on-message
   [stage-id event]
-  (let [transaction (data-aux/<-json (.-data event))]
-    (js/console.log transaction)
+  (let [transaction (data-aux/<-json (.-data event))] 
     (rf/dispatch [:play/execute stage-id [transaction]])))
 
 (defn- on-close
