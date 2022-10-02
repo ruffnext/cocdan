@@ -9,7 +9,7 @@
 
 (defn speak
   "生成 speak 组件的 HTML 代码"
-  [{:keys [message mood]} avatar pos {:keys [ack time id]}] 
+  [{:keys [message mood]} avatar pos {:keys [ack time _id]}] 
   (let [header (performer/header avatar mood)
         speaker-name (:name avatar)
         name-item [:div

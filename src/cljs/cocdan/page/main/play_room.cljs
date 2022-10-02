@@ -2,7 +2,6 @@
   (:require [cljs-http.client :as http]
             [clojure.core.async :refer [<! go]]
             [cocdan.core.ops.core :as op-core]
-            [cocdan.core.play-room :as p-core] 
             [cocdan.database.ctx-db.core :as ctx-db]
             [cocdan.fragment.chat-log.core :as chat-log]
             [cocdan.fragment.input :as fragment-input]
@@ -29,7 +28,7 @@
                                          (concat a (op-core/ctx-generate-ds stage-id t latest-ctx-val))))
                                      [] transaction)]
               (d/transact! db (filter (fn [x] (not (contains? x :context/id))) ds-records))
-              (rf/dispatch [:fx/refresh-stage-signal stage-id]))
+              (rf/dispatch [:partial-refresh/refresh! :play-room]))
         nil))))
 
 (defn page

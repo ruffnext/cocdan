@@ -41,9 +41,6 @@
  (fn [db _]
    (:auth/user db)))
 
-(defn query-user-info
-  [ds])
-
 (defn try-session-login
   [] 
   (go 

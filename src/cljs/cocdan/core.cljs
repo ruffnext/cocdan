@@ -7,9 +7,8 @@
    [re-frame.core :as rf]
    [reitit.core :as reitit]
    [cocdan.event] 
-   [cocdan.core.auth :as core-auth]
-   [cocdan.data.visualizable] 
-   [cocdan.data.partial-refresh]
+   [cocdan.system-init]
+   [cocdan.core.auth :as core-auth] 
    [cocdan.page.login :as login]
    [cocdan.page.main :as main] 
    [cocdan.core.play-room :as play-room]))
@@ -28,7 +27,7 @@
       [page params]
       [:p "没有匹配页面"])))
 
-;; ===========================================================================================
+;; ===================================== System Init ===================================
 
 (defonce root (r/atom nil))
 (defonce login-flag (r/atom false))
@@ -41,10 +40,6 @@
    router
    navigate!
    {}))
-
-(defn- work-after-inited
-  []
-  (play-room/register-transaction-transformers))
 
 (defn ^:dev/after-load render-page
   "重新渲染整个页面"
@@ -63,8 +58,4 @@
     (core-auth/try-session-login)
     (swap! login-flag not))
   (start-router!)
-  (work-after-inited)
   (render-page))
-
-(comment 
-)

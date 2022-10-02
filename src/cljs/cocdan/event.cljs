@@ -1,7 +1,8 @@
 (ns cocdan.event
   (:require [re-frame.core :as rf]
             [reitit.frontend.controllers :as rfc]
-            [reitit.frontend.easy :as rfe]))
+            [reitit.frontend.easy :as rfe]
+            [cocdan.data.partial-refresh]))
 
 (rf/reg-event-db
  :common/navigate

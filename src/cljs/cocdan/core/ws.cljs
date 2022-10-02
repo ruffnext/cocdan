@@ -19,7 +19,7 @@
                                                 :retry-remain 3})))
 
 (defn- on-open
-  [stage-id event]
+  [stage-id _event]
   (rf/dispatch [:ws/change-channel! stage-id :loaded])
   (js/console.log "OPENED"))
 
@@ -32,7 +32,7 @@
   [stage-id event]
   (let [retry-remain (atom 3)
         close-code (.-code event)
-        reconnect-status (cond
+        _reconnect-status (cond
                            (= 0 @retry-remain) "failed to reconnect after 3 retries"
                            (= 1000 close-code) "gracefully close"
                            (= 1005 close-code) "need reconnect"
