@@ -3,6 +3,7 @@
                                           register-transaction-handler]]
             [cocdan.data.transaction.patch :refer [handle-patch-op]]
             [cocdan.data.transaction.speak :refer [handler-speak]]
+            [cocdan.core.settings :refer [init-default-settings]]
             [cocdan.database.ctx-db.core :as ctx-db]))
 
 (declare query-stage-ctx-by-id)
@@ -20,6 +21,9 @@
 ;; 对于服务端而言，这个操作是去数据库中检索
 ;; 而对于客户端而言，是向服务端发起请求
 (register-find-ctx-by-id query-stage-ctx-by-id)
+
+;; 初始化设置系统
+(init-default-settings)
 
 
 ;; ============== 函数定义 ==============

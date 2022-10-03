@@ -1,16 +1,17 @@
 (ns cocdan.fragment.chat-log.speak 
-  (:require ["antd" :refer [Avatar Badge]]
-            [cocdan.data.partial-refresh :refer [IPartialRefresh]]
+  (:require ["antd" :refer [Avatar Badge]] 
             [cocdan.data.performer.core :as performer]
             [cocdan.data.transaction.speak :refer [Speak]]
-            [cocdan.data.visualizable :refer [IVisualizable]]))
+            [cocdan.data.mixin.visualization :refer [IChatLogVisualization]]))
 
 "仅针对 NPC、 Avatar 和 KP 能调用 Speak"
 
 (defn speak
   "生成 speak 组件的 HTML 代码"
   [{:keys [message mood]} avatar pos {:keys [ack time _id]}] 
-  (let [header (performer/header avatar mood)
+  (let [avatar-item [:> Avatar {:src (performer/get-header avatar mood)
+                                :title (performer/get-description avatar)}]
+
         speaker-name (:name avatar)
         name-item [:div
                    {:class (case pos :left "chat-name-left" "chat-name-right")}
@@ -21,9 +22,9 @@
                     [:span (str message)]]]
         header-item (if ack
                       [:> Badge {:dot true :status "success" :title (str "消息送达时间 : " time)}
-                       [:> Avatar {:src header}]]
+                       avatar-item]
                       [:> Badge {:dot "载入中" :title "等待服务器返回确认"}
-                       [:> Avatar {:src header}]])]
+                       avatar-item])]
     (case pos
       :right
       [:div.chat-content-line
@@ -40,11 +41,8 @@
         text-item]])))
 
 (extend-type Speak
-  IVisualizable
-  (to-hiccup [{:keys [avatar] :as this} ctx {:keys [viewpoint transaction]}]
-    (let [avatar-record (get-in (:context/props ctx) [:avatars (keyword (str avatar))])]
-      (speak this avatar-record (if (= viewpoint avatar) :right :left) transaction)))
-  
-  IPartialRefresh
-  (refresh-key [_this] [:chat-log]))
-
+  IChatLogVisualization
+  (to-chat-log [{:keys [avatar] :as this} ctx transaction observer]
+    (let [avatar-record (get-in (:context/props ctx) [:avatars (keyword (str avatar))])] 
+      (speak this avatar-record (if (= observer avatar) :right :left) transaction)))
+  (display? [_this] true))

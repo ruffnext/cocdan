@@ -9,8 +9,7 @@
             [cocdan.db.monad-db :as monad-db]
             [cocdan.hooks :as hooks]
             [cocdan.services.journal.db :as journal-db :refer [update-ctx!]]
-            [cocdan.services.stage.core :as stage-core]
-            [datascript.core :as d]))
+            [cocdan.services.stage.core :as stage-core]))
 
 (defonce transaction-dispatcher (atom {}))
 
@@ -25,32 +24,40 @@
   (swap! transaction-dispatcher #(assoc-in % [(keyword (str stage-id)) register-key] handler-fn)))
 
 (defn- m-transact-inner!
-  [stage type props]
-  (let [stage-journal-atom (journal-db/get-stage-journal-atom stage)]
-    (locking stage-journal-atom  ;; stage-journal-atom 是配分各种 id 的 atom，只要保证不重复分配 id，后面就不会出现线程不安全
-      (let [{:keys [transaction-id ctx_id ctx]} ((cond    ;; 分配 ctx_id 和 transaction-id
-                                                   (= type op-core/OP-SNAPSHOT) journal-db/dispatch-new-ctx_id
-                                                   (= type op-core/OP-UPDATE) journal-db/dispatch-new-ctx_id
-                                                   :else journal-db/dispatch-new-transaction-id) stage)
-            op (op-core/make-transaction transaction-id ctx_id (get-current-time-string) type props true) 
-            [transact new-context] (op-core/ctx-generate-ds stage op ctx)]
-        (when new-context
-          (update-ctx! stage new-context))
-        (go ;; 在协程中持久化数据
-          (monad-db/persistence-transaction! (assoc (data-aux/remove-db-prefix transact) :stage stage))
-          (when new-context
-            (monad-db/persistence-context! (assoc (data-aux/remove-db-prefix new-context) :stage stage)))
-          (let [handler-map ((keyword (str stage)) @transaction-dispatcher)]
-            (doseq [[k f] handler-map]
-              (f k stage transact ctx))))
-        (either/right transact)))))
+  "参数
+    * flush-to-database? 由于调用分为内源调用和外源调用：由于数据库发生变化而申请 journal 的变化
+   称为内源调用。这种时候并不需要将 context flush 到数据库中。而外源调用，例如用户的指令。在这种
+   情况下，就需要将新的 context flush 到数据库中。当前这个方法的效率较低。"
+  ([stage type props]
+   (m-transact-inner! stage type props false))
+  ([stage type props flush-to-database?]
+   (let [stage-journal-atom (journal-db/get-stage-journal-atom stage)]
+     (locking stage-journal-atom  ;; stage-journal-atom 是配分各种 id 的 atom，只要保证不重复分配 id，后面就不会出现线程不安全
+       (let [dispatcher (if (contains? @op-core/context-handler (keyword type))
+                          journal-db/dispatch-new-ctx_id
+                          journal-db/dispatch-new-transaction-id)
+             {:keys [transaction-id ctx_id ctx]} (dispatcher stage)
+             op (op-core/make-transaction transaction-id ctx_id (get-current-time-string) type props true)
+             [transact new-context] (op-core/ctx-generate-ds stage op ctx)] 
+         (when new-context
+           (update-ctx! stage new-context))
+         (go ;; 在协程中持久化数据
+           (monad-db/persistence-transaction! (assoc (data-aux/remove-db-prefix transact) :stage stage))
+           (when new-context
+             (monad-db/persistence-context! (assoc (data-aux/remove-db-prefix new-context) :stage stage)) 
+             (when flush-to-database?
+               (monad-db/flush-stage-to-database! (:context/props new-context))))
+           (let [handler-map ((keyword (str stage)) @transaction-dispatcher)]
+             (doseq [[k f] handler-map]
+               (f k stage transact ctx))))
+         (either/right transact))))))
 
 (defn m-transact!
   "为外部调用设计的接口，会进行严格的检查"
   [stage type props]
   (m/mlet
    [_check-op (op-core/m-final-validate-transaction {:type type :props props})
-    transact-result (m-transact-inner! stage type props)]
+    transact-result (m-transact-inner! stage type props true)]
    (either/right
     (data-aux/remove-db-prefix transact-result))))
 
@@ -86,13 +93,17 @@
   (m/mlet
    [_stage (monad-db/get-stage-by-id stage-id)
     transactions (monad-db/list-stage-transactions stage-id order limit begin offset)]
-   (let [transactions (map #(assoc % :ack true) transactions) 
+   (let [transactions (sort-by :id (map #(assoc % :ack true) transactions))
+         {last-tid :id last-t-type :type} (last transactions)
          ctx_ids (->> transactions
                       (map :ctx_id transactions)
                       (filter pos-int?) set)
          min-ctx_ids (apply min ctx_ids)
          contexts (if with-context
-                    (query-stage-contexts stage-id ctx_ids)
+                    (query-stage-contexts stage-id
+                                          (-> ctx_ids
+                                              (#(if (contains? @op-core/context-handler (keyword last-t-type))
+                                                  (conj % last-tid) %))))
                     (query-stage-contexts stage-id (if (= min-ctx_ids 0) [1] [min-ctx_ids])))]
      (either/right
       {:transaction (sort-by :id transactions)
@@ -147,9 +158,3 @@
 (hooks/hook! :event/after-stage-changed :journal-hook hook-stage-changed)
 (hooks/hook! :event/after-avatar-created :journal-hook hook-avatar-created)
 (hooks/hook! :event/after-avatar-updated :journal-hook hook-avatar-updated)
-
-(comment
-  (let [db (d/create-conn)]
-    (d/transact! db [{:db/id 2 :name "a"}])
-    (d/transact! db [{:name "b"}])
-    @db))

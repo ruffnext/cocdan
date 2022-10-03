@@ -38,7 +38,7 @@
                                       {avatar-id :id} :path} :parameters
                                      {user-id :identity} :session}]
                                  (journal/m-speak avatar-id speak-record user-id))))}}]
-   ["/transact" {:post {:summary "直接对舞台进行控制"
+   ["/transact" {:post {:summary "直接对舞台进行控制，该接口仅支持 edn 格式，不支持 json"
                         :parameters {:body Transact
                                      :path {:id int?}}
                         :handler (wrap-restricted

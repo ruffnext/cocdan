@@ -39,7 +39,7 @@
    :stages.join #'stages-page/page-search
    :stage-edit #'stages-page/page-edit
    :avatar-edit #'avatars-page/page-edit
-   :settings.show #'settings-page/page-show
+   :settings.system #'settings-page/page
    :other.export #'other-page/export-page
    :performing #'play-room/page})
 
@@ -57,7 +57,7 @@
        :collapsed @collapsed}
       [:div.logo.is-vcentered
        [:p.has-text-white.title.is-4 {:style {:text-align "center"
-                                              :padding-top "2px"}} "C O C　団"]]
+                                              :padding-top "2px"}} "団"]]
       [:> Menu
        {:onSelect #(->> (.-keyPath %) reverse (s/join ".") keyword nav)
         :theme "dark"
@@ -70,7 +70,7 @@
                     (nav-item "其他" "other" (r/as-element [:> AppstoreAddOutlined])
                               [(nav-item "导出日志" "export")])
                     (nav-item "设置" "settings" (r/as-element [:> SettingOutlined])
-                              [(nav-item "演出设置" "show")
+                              [(nav-item "系统设置" "system")
                                (nav-item "实验配置" "experiment")])
                     (nav-item "车卡" "avatar-edit" (r/as-element [:> UserOutlined]))
                     (nav-item "编辑舞台" "stage-edit" (r/as-element [:> EditOutlined]))]

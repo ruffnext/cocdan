@@ -1,5 +1,5 @@
 (ns cocdan.data.transaction.speak 
-  (:require [cocdan.data.territorial :refer [get-substage-id ITerritorialMixIn]]))
+  (:require [cocdan.data.mixin.territorial :refer [get-substage-id ITerritorialMixIn]]))
 
 (defrecord Speak [avatar substage message props] 
   ITerritorialMixIn

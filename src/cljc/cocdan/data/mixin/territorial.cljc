@@ -1,4 +1,4 @@
-(ns cocdan.data.territorial)
+(ns cocdan.data.mixin.territorial)
 
 "表示具有地点属性的数据"
 

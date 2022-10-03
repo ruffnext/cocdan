@@ -1,6 +1,5 @@
 (ns cocdan.core.ops.core
-  (:require [cocdan.data.core :as data-core]
-            [cocdan.aux :as data-aux]
+  (:require [cocdan.aux :as data-aux]
             [malli.core :as spec]
             [cats.monad.either :as either]))
 
@@ -10,9 +9,11 @@
 (defn register-context-handler
   "注册处理 context 的函数。一旦新的 context 产生
    需要经过一些处理后存入 datascript。
-   格式为： ctx/props -> ctx-props-ds-record"
-  [handler]
-  (reset! context-handler handler))
+   [ctx transaction] -> context/props
+   如果 transaction 没有对应的 handler，则认为这
+   个 transaction 不会产生新的 context"
+  [type-key handler]
+  (swap! context-handler #(assoc % type-key handler)))
 
 (defn register-transaction-handler
   "注册 transaction 的处理函数
@@ -63,13 +64,6 @@
   (-> (data-aux/add-db-prefix :context op)
       (assoc :context/ack ack)))
 
-(defn- generate-new-context
-  [ctx {:keys [type props]}]
-  (cond
-    (= type OP-SNAPSHOT) props
-    (= type OP-UPDATE) (data-core/update' ctx props)
-    :else nil))
-
 (defn ctx-generate-ds
   "在上下文中运行 op 指令，并返回 datascript 的指令"
   ([stage-id {:keys [ctx_id] :as op}]
@@ -79,15 +73,19 @@
   ([_stage-id {:keys [id ctx_id time type ack] :as op} {ctx_id-from-ctx :context/id
                                                         stage-id :context/stage
                                                         _context-ack :context/ack :as ctx}]
-   (let [handler ((keyword type) @transaction-handler)
+   (let [type-key (keyword type)
+         t-handler (type-key @transaction-handler)
+         c-handler (type-key @context-handler)
          t-item (-> op
-                    (#(if handler
-                        (assoc % :props (handler ctx op)) %))
-                    (#(assoc % :ctx_id (or ctx_id-from-ctx ctx_id) :stage stage-id)) 
-                    (op-to-transaction-ds (or ack false)))] 
-     (if (contains? #{"snapshot" "update"} type)
-       (let [new-context-props (@context-handler (generate-new-context (:context/props ctx) op))]
-         [t-item (context-to-context-ds {:id id :time time :props new-context-props} ack)])
+                    (#(if t-handler
+                        (assoc % :props (t-handler ctx op)) %))
+                    (#(assoc % :ctx_id (or ctx_id-from-ctx ctx_id) :stage stage-id))
+                    (op-to-transaction-ds (or ack false)))
+         c-item (when c-handler
+                  (-> {:id id :time time :props (c-handler (:context/props ctx) op)}
+                      (context-to-context-ds ack)))]
+     (if c-item
+       [t-item c-item]
        [t-item]))))
 
 (def update-props-spec

@@ -12,12 +12,14 @@
    {:id 2 :username "ruff" :nickname "handsome man"}])
 
 (def test-avatars
-  [{:id 1 :name "初始角色" :image "" :description "初始的角色" :stage 1 :substage "lobby" :controlled_by 1 :props {:str 100}}
+  [{:id 1 :name "初始角色" :image "" :description "初始的角色" :stage 1 :substage "lobby"  :controlled_by 1 :props {:attrs {:str 100} :equipments {:左手 #{} :右手 #{} :背包 #{"智能手机" "钥匙串"}}}}
    {:id 2 :name "第二个角色" :image "" :description "第二个角色" :stage 1 :substage "lobby" :controlled_by 1 :props {:str 150}}
    {:id 3 :name "第三个角色" :image "" :description "由 2 控制" :stage 1 :substage "lobby" :controlled_by 2 :props {:str 200}}])
 
 (def test-stages
-  [{:id 1 :name "测试舞台" :introduction "舞台介绍" :image "" :substages {:lobby {:name "大厅"}} :avatars {} :controlled_by 1}])
+  [{:id 1 :name "测试舞台" :introduction "舞台介绍" :image "" 
+    :substages {:lobby {:name "大厅" :adjacencies [] :description "这是一个大厅，篝火在大厅的中央舞动着。柴火还剩下很多，周围也没有怪物，看上去非常安全。你可以在里面休息到你想离开为止。"}} 
+    :avatars {} :controlled_by 1}])
 
 (def routes
   ["/test"

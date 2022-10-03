@@ -5,3 +5,10 @@
 
 ;; (deftest test-home
 ;;   (is (= 2 3)))
+
+(deftest ops-test
+  (let [data-a {:key-a #{1 2 3}}
+        data-b {:key-a #{1 2 4}}
+        diffs (data-core/default-diff' data-a data-b)]
+    (is (= data-b (data-core/default-update' data-a diffs)))
+    diffs))

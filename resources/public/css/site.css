@@ -92,3 +92,17 @@ div.chat-content-outer {
   font-size: 9px;
   text-align: center;
 }
+
+.substage-indicator-container {
+  border: 0px;
+}
+
+.dev-bordered {
+  border: 1px solid;
+}
+
+.narrow-input {
+  background-color: rgba(0, 0, 0, 0);
+  border: 0px;
+  padding: 0px; 
+}

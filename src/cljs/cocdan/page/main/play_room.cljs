@@ -2,10 +2,13 @@
   (:require [cljs-http.client :as http]
             [clojure.core.async :refer [<! go]]
             [cocdan.core.ops.core :as op-core]
+            [cocdan.core.ws :as ws-core]
+            [cocdan.data.mixin.territorial :refer [get-substage-id]]
             [cocdan.database.ctx-db.core :as ctx-db]
+            [cocdan.fragment.avatar.indicator :as avatar-indicator]
             [cocdan.fragment.chat-log.core :as chat-log]
             [cocdan.fragment.input :as fragment-input]
-            [cocdan.core.ws :as ws-core]
+            [cocdan.fragment.substage.indicator :as substage-indicator]
             [datascript.core :as d]
             [re-frame.core :as rf]
             [reagent.core :as r]))
@@ -39,9 +42,10 @@
      avatar-id (r/atom nil)]
     (let [_refresh @(rf/subscribe [:partial-refresh/listen :play-room])
           stage-db (ctx-db/query-stage-db stage-id)
-          latest-ctx (ctx-db/query-ds-latest-ctx @stage-db)]
+          {{avatars :avatars} :context/props :as latest-ctx} (ctx-db/query-ds-latest-ctx @stage-db) 
+          substage-id-deref @substage-id]
       (if latest-ctx
-        (let [channel @(rf/subscribe [:ws/channel stage-id])]
+        (let [channel @(rf/subscribe [:ws/channel stage-id])] 
           (cond
             (= :unset channel) (do
                                  (js/console.log "初始化 WebSocket")
@@ -52,17 +56,27 @@
            {:style {:padding-top "1em"
                     :padding-left "3em"
                     :padding-right "3em"}}
-           [:p.has-text-centered @substage-id]
-           [chat-log/chat-log
-            {:stage-id stage-id
-             :substage @substage-id
-             :viewpoint @avatar-id}]
-           [fragment-input/input
-            {:context latest-ctx
-             :substage @substage-id
-             :hook-avatar-change (fn [x]
-                                   (reset! avatar-id x)
-                                   (reset! chat-log/chat-log-ui-cache {}))}]])
+           [:div.columns
+            [:div.column.is-10
+             [:p.has-text-centered "舞台"]
+             [chat-log/chat-log
+              {:stage-id stage-id
+               :substage substage-id-deref
+               :observer @avatar-id}]
+             [fragment-input/input
+              {:stage-id stage-id
+               :context latest-ctx
+               :substage @substage-id
+               :hook-avatar-change (fn [x]
+                                     (reset! avatar-id x)
+                                     (when ((keyword (str x)) avatars)
+                                       (reset! substage-id (get-substage-id ((keyword (str x)) avatars))))
+                                     (reset! chat-log/chat-log-ui-cache {}))}]]
+            [:div.column.is-2
+             {:style {:font-size "12px"}}
+             [:p "　"] ;; 空一行出来，与聊天框持平
+             [substage-indicator/indicator stage-id latest-ctx substage-id-deref]
+             [avatar-indicator/indicator stage-id latest-ctx @avatar-id]]]])
         (do
           (init-play-room stage-id)
           [:p "舞台尚未初始化"])))))

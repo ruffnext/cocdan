@@ -1,7 +1,8 @@
 (ns cocdan.data.stage
   (:require [cocdan.core.ops.core :refer [register-context-handler]]
             [cocdan.data.performer.avatar :refer [new-avatar]]
-            [cocdan.data.core :as data-core]))
+            [cocdan.data.core :as data-core]
+            [cocdan.core.ops.core :as op-core]))
 
 (defrecord Stage [id name introduction image substages avatars controlled_by]
 
@@ -17,7 +18,7 @@
   (data-core/diff' [this before] (data-core/default-diff' this before))
   (data-core/update' [this ops] (data-core/default-update' this ops)))
 
-(defrecord SubStage [id name adjacencies props]
+(defrecord SubStage [id name description adjacencies props]
   #?(:cljs INamed)
   #?(:cljs (-name [_this] id))
   #?(:cljs (-namespace [_this] nil))
@@ -31,8 +32,8 @@
   (data-core/update' [this ops] (data-core/default-update' this ops)))
 
 (defn new-substage
-  [{:keys [id name adjacencies props]}]
-  (SubStage. id name adjacencies (or props {})))
+  [{:keys [id name description adjacencies props]}]
+  (SubStage. id name description adjacencies (or props {})))
 
 (defn new-stage
   [{:keys [id name introduction image substages avatars controlled_by]}]
@@ -48,4 +49,5 @@
   [context-props]
   (new-stage context-props))
 
-(register-context-handler new-stage)
+(register-context-handler (keyword op-core/OP-SNAPSHOT) (fn [_ctx {:keys [props]}] (new-stage props)))
+(register-context-handler (keyword op-core/OP-UPDATE) (fn [ctx {:keys [props]}] (new-stage (data-core/update' ctx props))))

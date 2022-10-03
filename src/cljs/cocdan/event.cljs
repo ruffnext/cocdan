@@ -2,6 +2,7 @@
   (:require [re-frame.core :as rf]
             [reitit.frontend.controllers :as rfc]
             [reitit.frontend.easy :as rfe]
+            [cocdan.core.play-room]
             [cocdan.data.partial-refresh]))
 
 (rf/reg-event-db

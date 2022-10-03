@@ -1,7 +1,7 @@
 (ns cocdan.fragment.input
   (:require ["antd" :refer [Cascader Mentions]]
             [cocdan.core.ops.core :refer [make-transaction]] 
-            [cocdan.data.territorial :refer [get-substage-id]] 
+            [cocdan.data.mixin.territorial :refer [get-substage-id]] 
             [re-frame.core :as rf]
             [reagent.core :as r]))
 
@@ -27,9 +27,8 @@
                              (reset! avatar-id v)
                              (when hook-avatar-change (hook-avatar-change v)))
           on-textarea-enter (fn [x]
-                              (let [value (-> x .-target .-value)
-                                    this-op (make-transaction nil nil 4 "speak" {:avatar @avatar-id :message value :props {}})]
-                                (rf/dispatch [:play/execute-one-remotly! stage-id this-op])
+                              (let [value (-> x .-target .-value)]
+                                (rf/dispatch [:play/execute-transaction-props-easy! stage-id "speak" {:avatar @avatar-id :message value :props {}}])
                                 (reset! input-value "")
                                 (reset! is-clear true)))
           _ (when (nil? @avatar-id) (on-avatar-change [(-> controllable-avatars first first)] nil))] 

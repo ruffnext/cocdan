@@ -2,7 +2,7 @@
   (:require
    [re-frame.core :as rf]
    [cats.monad.either :as either]
-   [cocdan.aux :as data-aux]))
+   [clojure.edn :refer [read-string]]))
 
 (goog-define ws-host "localhost")
 (goog-define ws-port 3001)
@@ -25,7 +25,7 @@
 
 (defn- on-message
   [stage-id event]
-  (let [transaction (data-aux/<-json (.-data event))] 
+  (let [transaction (read-string (.-data event))] 
     (rf/dispatch [:play/execute stage-id [transaction]])))
 
 (defn- on-close

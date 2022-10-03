@@ -5,7 +5,8 @@
             [cocdan.aux :as data-aux]
             [cocdan.db.monad-db :as monad-db]))
 
-; 存舞台的 ctx_id 、 operation-id 和 ctx_id 对应的 context
+; 存放舞台最新的 ctx 的 map
+; 格式为 {:ctx_id id :transaction-d tid :ctx {:context/id id}}
 (defonce db (atom {}))
 
 (defn- init-stage-db

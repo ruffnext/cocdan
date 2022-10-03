@@ -2,7 +2,7 @@
   (:require [cats.context :as c]
             [cats.core :as m]
             [cats.monad.either :as either]
-            [clojure.tools.logging :as log] 
+            [clojure.tools.logging :as log]
             [cocdan.aux :as data-aux]
             [cocdan.data.stage :refer [new-context]]
             [cocdan.db.core :as db]
@@ -106,14 +106,6 @@
         (db/get-stage-context-by-id {:stage-id stage-id :id %})))
      m-extra-stage-context)))
 
-(comment
-  (log/debug
-   (get-stage-latest-ctx-by-stage-id 1))
-
-  (log/debug
-   (-> (db/get-stage-context-by-id {:stage-id 1 :id 4})
-       m-extra-stage-context)))
-
 (defn get-latest-transaction-id-by-stage-id
   [stage-id]
   (m/mlet
@@ -162,7 +154,25 @@
 
 (defn persistence-context!
   [transaction]
-  (let [to-be-insert (-> transaction (update :props nippy/freeze))]
+  (let [to-be-insert (-> transaction (update :props nippy/freeze))] 
     (db/insert-context!
      to-be-insert)))
 
+(defn flush-stage-to-database!
+  [{:keys [avatars substages] :as stage}]
+  (doseq
+   [[k {props :props :as v}] avatars]
+    (db/general-updater
+     {:id (name k)
+      :updates (->> (assoc v :props (nippy/freeze (if props props {})))
+                    (filter (fn [[_k v]] v))
+                    (into {}))
+      :table "avatars"}))
+  (db/general-updater
+   {:id (:id stage)
+    :updates (-> stage
+                 (assoc :substages (if substages (nippy/freeze substages) nil))
+                 (assoc :avatars (if avatars (nippy/freeze avatars) nil))
+                 (#(filter (fn [[_k v]] (some? v)) %))
+                 (#(into {} %)))
+    :table "stages"}))
