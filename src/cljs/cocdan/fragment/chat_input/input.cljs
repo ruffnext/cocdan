@@ -1,11 +1,11 @@
 (ns cocdan.fragment.chat-input.input
   (:require ["antd" :refer [Mentions]]
+            [cats.monad.either :as either]
+            [cocdan.core.coc.dice :refer [parse-cmd]]
             [cocdan.core.settings :as settings]
             [cocdan.data.mixin.territorial :refer [get-substage-id]]
-            [cocdan.fragment.chat-input.dice :refer [parse-cmd]]
             [re-frame.core :as rf]
-            [reagent.core :as r]
-            [cats.monad.either :as either]))
+            [reagent.core :as r]))
 
 (defn input
   [{:keys [avatar-id substage-id stage-id avatars]}]
@@ -18,7 +18,7 @@
           on-textarea-enter (fn [x]
                               (let [value (-> x .-target .-value)]
                                 (either/branch
-                                 (parse-cmd avatar-id value)
+                                 (parse-cmd value ((keyword (str avatar-id)) avatars))
                                  (fn [_left]
                                    (rf/dispatch [:play/execute-transaction-props-easy! stage-id "speak" {:substage substage-id :avatar avatar-id :message value :props {}}]))
                                  (fn [right]

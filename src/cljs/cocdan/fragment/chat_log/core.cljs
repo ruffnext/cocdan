@@ -4,9 +4,8 @@
             [cocdan.data.mixin.visualization :refer [IChatLogVisualization to-chat-log display?]]
             [cocdan.database.ctx-db.core :as ctx-db]
             [cocdan.fragment.chat-log.speak]
-            [cocdan.fragment.chat-log.patch]
-            [cocdan.fragment.chat-log.st]
-            [cocdan.fragment.chat-log.rc]
+            [cocdan.fragment.chat-log.patch] 
+            [cocdan.fragment.chat-log.dice]
             [datascript.core :as d]
             [re-frame.core :as rf]))
 

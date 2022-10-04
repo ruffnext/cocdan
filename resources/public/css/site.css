@@ -76,6 +76,18 @@ div.chat-content-outer {
   padding-left: 1em;
 }
 
+.dice-hint {
+  width: 60%;
+  text-align: right;
+  padding-right: 1em;
+}
+
+.dice-value {
+  width: 40%;
+  text-align: left;
+  padding-left: 1em;
+}
+
 .chat-log {
   border: 1px solid;
   height: 60vh;

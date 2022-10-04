@@ -1,9 +1,9 @@
-(ns cocdan.system-init 
+(ns cocdan.system-init
   (:require [cocdan.core.ops.core :refer [register-context-handler
                                           register-find-ctx-by-id
                                           register-transaction-handler]]
             [cocdan.core.settings :refer [init-default-settings]]
-            [cocdan.core.transaction-handler :refer [handle-rc handle-st]]
+            [cocdan.core.transaction-handler :refer [handle-dice]]
             [cocdan.data.transaction.dice :refer [handle-st-context]]
             [cocdan.data.transaction.patch :refer [handle-patch-op]]
             [cocdan.data.transaction.speak :refer [handler-speak]]
@@ -18,9 +18,9 @@
 ;; 对于服务端来说，这部分逻辑是不必要的。
 (register-transaction-handler :speak handler-speak)
 (register-transaction-handler :update handle-patch-op)
-(register-transaction-handler :rc handle-rc)
+(register-transaction-handler :rc handle-dice)
+(register-transaction-handler :ra handle-dice)
 (register-context-handler :st handle-st-context)
-(register-transaction-handler :st handle-st)
 
 ;; 注册当 context 找不到时的操作
 ;;

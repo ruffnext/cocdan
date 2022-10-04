@@ -98,7 +98,7 @@
    [:message string?]
    [:props associative?]])
 
-(def rc-props-spec
+(def r-props-spec
   [:map
    [:avatar int?]
    [:attr string?]])
@@ -113,7 +113,8 @@
   (let [res (case type
               "update" (spec/explain update-props-spec props)
               "speak" (spec/explain speak-props-spec props)
-              "rc" (spec/explain rc-props-spec props)
+              "rc" (spec/explain r-props-spec props)
+              "ra" (spec/explain r-props-spec props)
               "st" (spec/explain st-props-spec props)
               {:errors (str "无法检验 transaction 类型" type)})]
     (if res

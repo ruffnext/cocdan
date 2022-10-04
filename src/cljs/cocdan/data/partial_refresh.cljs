@@ -1,5 +1,5 @@
 (ns cocdan.data.partial-refresh
-  (:require [cocdan.data.transaction.dice :refer [RC ST]]
+  (:require [cocdan.data.transaction.dice :refer [RC RA ST]]
             [cocdan.data.transaction.patch :refer [TPatch]]
             [cocdan.data.transaction.speak :refer [Speak]]
             [re-frame.core :as rf]))
@@ -43,6 +43,11 @@
 
 (extend-type
  RC
+  IPartialRefresh
+  (refresh-key [_this] [:chat-log]))
+
+(extend-type
+ RA
   IPartialRefresh
   (refresh-key [_this] [:chat-log]))
 
