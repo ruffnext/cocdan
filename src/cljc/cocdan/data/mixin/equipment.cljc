@@ -10,8 +10,8 @@
     [this performer solt])
 
   (get-equipments
-    [this only-visible?]
-    "列出所有的装备。only-visible = true 时仅返回可见的装备")
+    [this slot-key only-visible?]
+    "列出槽中的装备。only-visible = true 时仅返回可见的装备")
 
   (get-slots
     [this]

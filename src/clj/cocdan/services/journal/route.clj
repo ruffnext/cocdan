@@ -27,24 +27,24 @@
                            (journal/list-transactions stage-id begin offset limit with-context (if desc :desc :asce)))))}}]])
 
 (def action-routes
-  ["/action/a:id"
+  ["/action"
    {:swagger {:tags ["action"]}}
-   ["/speak" {:post {:summary "执行舞台行动 - 说话"
-                    :parameters {:body Speak
-                                 :path {:id int?}}
-                    :handler (wrap-restricted
-                              (wrap-monad
-                               (fn [{{speak-record :body
-                                      {avatar-id :id} :path} :parameters
-                                     {user-id :identity} :session}]
-                                 (journal/m-speak avatar-id speak-record user-id))))}}]
-   ["/transact" {:post {:summary "直接对舞台进行控制，该接口仅支持 edn 格式，不支持 json"
-                        :parameters {:body Transact
-                                     :path {:id int?}}
-                        :handler (wrap-restricted
-                                  (wrap-monad
-                                   (fn [{{{avatar-id :id} :path
-                                          {:keys [type props]} :body} :parameters
-                                         {user-id :identity} :session}]
-                                     (journal/service-transact avatar-id type props user-id))))}}]])
+   ["/a:id/speak" {:post {:summary "执行舞台行动 - 说话"
+                          :parameters {:body Speak
+                                       :path {:id int?}}
+                          :handler (wrap-restricted
+                                    (wrap-monad
+                                     (fn [{{speak-record :body
+                                            {avatar-id :id} :path} :parameters
+                                           {user-id :identity} :session}]
+                                       (journal/m-speak avatar-id speak-record user-id))))}}]
+   ["/s:id/transact" {:post {:summary "直接对舞台进行控制，该接口仅支持 edn 格式，不支持 json，s 为 stage"
+                             :parameters {:body Transact
+                                          :path {:id int?}}
+                             :handler (wrap-restricted
+                                       (wrap-monad
+                                        (fn [{{{stage-id :id} :path
+                                               {:keys [type props]} :body} :parameters
+                                              {user-id :identity} :session}]
+                                          (journal/service-transact stage-id type props user-id))))}}]])
 

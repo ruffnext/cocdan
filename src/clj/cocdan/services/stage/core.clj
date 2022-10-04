@@ -7,7 +7,8 @@
             [cocdan.db.monad-db :as monad-db :refer [get-db-action-return
                                                      get-user-by-id]]
             [cocdan.hooks :as hooks]
-            [taoensso.nippy :as nippy]))
+            [taoensso.nippy :as nippy]
+            [clojure.string :as s]))
 
 (defn query-stage-by-id
   [stage-id]
@@ -17,19 +18,22 @@
    (either/right
     (->> (assoc stage-base :avatars (->> avatars
                                          (map (fn [{id :id :as a}] [(keyword (str id)) a]))
+                                         (concat (:avatars stage-base)) set
                                          (into {})))
          (into {})
          new-stage))))
 
 (defn create-stage!
-  [{:keys [name introduction image substages]} controlled_by]
+  [{:keys [name introduction image avatars substages]} controlled_by]
   (m/mlet [ret (either/try-either
                 (db/create-stage!
                  {:name name
                   :introduction introduction
                   :image image
                   :substages (nippy/freeze (or substages {}))
-                  :avatars (nippy/freeze {})
+                  :avatars (nippy/freeze (assoc (or avatars {}) :0 {:id 0 :name "KP" :image ""
+                                                                    :description "id = 0 的是 KP，您也可以将 KP 角色借给某个玩家进行操作，此时 controlled_by 填写该玩家的 id"
+                                                                    :substage "lobby" :controlled_by 1 :props {:str 150}}))
                   :controlled_by controlled_by}))
            stage (query-stage-by-id (get-db-action-return ret))
            _dispatch (hooks/dispatch! :event/after-stage-created stage)]
@@ -50,13 +54,16 @@
     _check-user-validate (if controlled_by
                            (get-user-by-id controlled_by)
                            (either/right))
+    npc (either/right
+         (->> (filter (fn [[k _v]] (s/starts-with? (name k) "-") (or avatars {})))
+              (#(if (seq %) (into {} %) nil))))
     _work (either/try-either
            (db/general-updater {:table "stages"
                                 :updates (->> {:name name
                                                :introduction introduction
                                                :image image
                                                :substages (if substages (nippy/freeze substages) nil)
-                                               :avatars (if avatars (nippy/freeze avatars) nil)
+                                               :avatars (if npc (nippy/freeze npc) nil)
                                                :controlled_by controlled_by}
                                               (filter (fn [[_k v]] (some? v)))
                                               (into {}))

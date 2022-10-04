@@ -148,24 +148,24 @@
 
 (defn persistence-transaction!
   [transaction]
-  (let [to-be-insert (-> transaction (update :props nippy/freeze))]
+  (let [to-be-insert (-> transaction (update :props nippy/freeze))] 
     (db/insert-transaction!
      to-be-insert)))
 
 (defn persistence-context!
   [transaction]
-  (let [to-be-insert (-> transaction (update :props nippy/freeze))] 
+  (let [to-be-insert (-> transaction (update :props nippy/freeze))]
     (db/insert-context!
      to-be-insert)))
 
 (defn flush-stage-to-database!
   [{:keys [avatars substages] :as stage}]
-  (doseq
-   [[k {props :props :as v}] avatars]
+  (doseq                                                    ;; 玩家自建角色的 id 从 1 开始
+   [{id :id props :props :as v} (->> avatars (map second) (filter #(pos-int? (:id %))))]
     (db/general-updater
-     {:id (name k)
+     {:id id
       :updates (->> (assoc v :props (nippy/freeze (if props props {})))
-                    (filter (fn [[_k v]] v))
+                    (filter (fn [[_k v]] v)) 
                     (into {}))
       :table "avatars"}))
   (db/general-updater

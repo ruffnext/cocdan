@@ -42,7 +42,7 @@
               (let [before (or (k flatten-before) :unset)
                     after (or (k flatten-after) :unset)]
                 (calc-value-diff k before after)))]
-    (apply concat (map aux (set (concat (keys flatten-before) (keys flatten-after)))))))
+    (vec (apply concat (map aux (set (concat (keys flatten-before) (keys flatten-after))))))))
 
 (defn- handle-update
   [before current after]

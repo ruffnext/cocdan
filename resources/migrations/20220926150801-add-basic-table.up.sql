@@ -6,6 +6,7 @@ CREATE TABLE users
 CREATE TABLE transactions
 (id INTEGER,
  ctx_id INTEGER,
+ user INTEGER,
  stage INTEGER,
  time VARCHAR(32),
  type VARCHAR(60),

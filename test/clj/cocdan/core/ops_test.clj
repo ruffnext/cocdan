@@ -17,7 +17,7 @@
                                             (into {})) :controller "user-a"})
         db (d/create-conn play-room-database-schema)
 
-        op1 (op-core/make-transaction 1 0 1 op-core/OP-SNAPSHOT stage)
+        op1 (op-core/make-transaction 1 0 1 0 op-core/OP-SNAPSHOT stage)
         _work (d/transact! db (op-core/ctx-generate-ds "stage-1" op1 nil))
         ctx1 (ctx-db/query-ds-latest-ctx @db)
         _ (log/debug ctx1)
@@ -27,7 +27,7 @@
                    :context/props (new-stage stage)}
 
         op2-diffs [[:avatars.avatar-1.name "avatar-name" "avatar-name-modified"]]
-        op2 (op-core/make-transaction 2 1 2 op-core/OP-UPDATE op2-diffs)
+        op2 (op-core/make-transaction 2 1 2 0 op-core/OP-UPDATE op2-diffs)
         _work (d/transact! db (op-core/ctx-generate-ds "stage-1" op2 ctx1))
         ctx2 (ctx-db/query-ds-latest-ctx @db)
         ctx2-real {:context/id 2
@@ -35,7 +35,7 @@
                    :context/time 2
                    :context/props (assoc-in (:context/props ctx1-real) [:avatars :avatar-1 :name] "avatar-name-modified")}
 
-        op3 (op-core/make-transaction 3 2 3 "speak" {:type :speak :avatar "avatar-1" :payload {:message "hello" :props {}}})]
+        op3 (op-core/make-transaction 3 2 3 0 "speak" {:type :speak :avatar "avatar-1" :payload {:message "hello" :props {}}})]
     (testing "basic test"
       (is (= ctx1 ctx1-real))
       (is (= ctx2 ctx2-real)))

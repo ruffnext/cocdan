@@ -38,13 +38,13 @@
 
 ;; 客户端发送给服务端的 op 中，id, ctx_id, time 和 ack 字段会被忽略
 (defrecord transaction
-           [id ctx_id time type props ack])
+           [id ctx_id user time type props ack])
 
 (defn make-transaction
-  ([id ctx_id time type props ack]
-   (transaction. id ctx_id (or time (data-aux/get-current-time-string)) type props ack))
-  ([id ctx_id time type props]
-   (make-transaction id ctx_id time type props false)))
+  ([id ctx_id user time type props ack]
+   (transaction. id ctx_id user (or time (data-aux/get-current-time-string)) type props ack))
+  ([id ctx_id user time type props]
+   (make-transaction id ctx_id user time type props false)))
 
 (defonce hooks (atom {}))
 
@@ -82,7 +82,7 @@
                     (#(assoc % :ctx_id (or ctx_id-from-ctx ctx_id) :stage stage-id))
                     (op-to-transaction-ds (or ack false)))
          c-item (when c-handler
-                  (-> {:id id :time time :props (c-handler (:context/props ctx) op)}
+                  (-> {:id id :time time :props (c-handler ctx op)}
                       (context-to-context-ds ack)))]
      (if c-item
        [t-item c-item]
@@ -94,16 +94,28 @@
 
 (def speak-props-spec
   [:map
-   [:avatar pos-int?]
+   [:avatar int?]
    [:message string?]
    [:props associative?]])
+
+(def rc-props-spec
+  [:map
+   [:avatar int?]
+   [:attr string?]])
+
+(def st-props-spec
+  [:map
+   [:avatar int?]
+   [:attr-map associative?]])
 
 (defn m-final-validate-transaction
   [{:keys [type props]}]
   (let [res (case type
               "update" (spec/explain update-props-spec props)
               "speak" (spec/explain speak-props-spec props)
-              {:errors (str "无法识别 transaction 类型 " type)})]
+              "rc" (spec/explain rc-props-spec props)
+              "st" (spec/explain st-props-spec props)
+              {:errors (str "无法检验 transaction 类型" type)})]
     (if res
       (either/left res)
       (either/right))))

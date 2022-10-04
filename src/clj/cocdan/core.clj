@@ -7,6 +7,7 @@
    [cocdan.config :refer [env]]
    [clojure.tools.cli :refer [parse-opts]]
    [clojure.tools.logging :as log]
+   [cocdan.services.dice.core]
    [mount.core :as mount]) 
   (:gen-class))
 

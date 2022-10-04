@@ -10,9 +10,10 @@
   (Speak. avatar-id substage-id message props))
 
 (defn handler-speak
-  [{ctx :context/props} {{:keys [avatar message props]} :props}]
-  (let [avatar-record (get-in ctx [:avatars (keyword (str avatar))])
-        avatar-substage (if (satisfies? ITerritorialMixIn avatar-record)
-                          (get-substage-id avatar-record)
-                          nil)]
-    (new-speak  avatar avatar-substage message props)))
+  [{ctx :context/props} {{:keys [avatar substage message props]} :props}]
+  (let [substage-id (if substage substage
+                        (let [avatar-record (get-in ctx [:avatars (keyword (str avatar))])]
+                          (if (satisfies? ITerritorialMixIn avatar-record)
+                            (get-substage-id avatar-record)
+                            nil)))]
+    (new-speak  avatar substage-id message props)))

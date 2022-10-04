@@ -34,8 +34,8 @@ WHERE id = :id AND stage = :stage
 -- :name insert-transaction! :insert :1
 -- :doc 创建一个 transaction
 INSERT INTO transactions
-(id, ctx_id, stage,time, type, props)
-VALUES (:id, :ctx_id, :stage, :time, :type, :props)
+(id, ctx_id, user, stage, time, type, props)
+VALUES (:id, :ctx_id, :user, :stage, :time, :type, :props)
 
 -- :name insert-context! :insert :1
 -- :doc 创建一个 context

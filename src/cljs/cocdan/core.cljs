@@ -10,6 +10,7 @@
    [cocdan.system-init]
    [cocdan.core.auth :as core-auth]
    [cocdan.page.login :as login]
+   [cocdan.modal.core :as modal-core]
    [cocdan.page.main :as main]))
 
 ;; 网站内的路径跳转，例如 http://localhost:3000/#/webui 跳转到 main/page 中
@@ -23,7 +24,9 @@
 (defn page []
   (let [{page :page params :params} @(rf/subscribe [:common/page])] 
     (if page
-      [page params]
+      [:div
+       [page params]
+       (modal-core/page)]
       [:p "没有匹配页面"])))
 
 ;; ===================================== System Init ===================================

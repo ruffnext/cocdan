@@ -7,7 +7,7 @@
             [cocdan.database.ctx-db.core :as ctx-db]
             [cocdan.fragment.avatar.indicator :as avatar-indicator]
             [cocdan.fragment.chat-log.core :as chat-log]
-            [cocdan.fragment.input :as fragment-input]
+            [cocdan.fragment.chat-input.core :as fragment-input]
             [cocdan.fragment.substage.indicator :as substage-indicator]
             [datascript.core :as d]
             [re-frame.core :as rf]
@@ -75,7 +75,12 @@
             [:div.column.is-2
              {:style {:font-size "12px"}}
              [:p "　"] ;; 空一行出来，与聊天框持平
-             [substage-indicator/indicator stage-id latest-ctx substage-id-deref]
+             [substage-indicator/indicator {:stage-id stage-id
+                                            :substage-id substage-id-deref
+                                            :context latest-ctx
+                                            :on-substage-change (fn [x]
+                                                                  (reset! substage-id x)
+                                                                  (reset! chat-log/chat-log-ui-cache {}))}]
              [avatar-indicator/indicator stage-id latest-ctx @avatar-id]]]])
         (do
           (init-play-room stage-id)

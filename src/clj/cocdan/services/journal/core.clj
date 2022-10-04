@@ -28,16 +28,16 @@
     * flush-to-database? 由于调用分为内源调用和外源调用：由于数据库发生变化而申请 journal 的变化
    称为内源调用。这种时候并不需要将 context flush 到数据库中。而外源调用，例如用户的指令。在这种
    情况下，就需要将新的 context flush 到数据库中。当前这个方法的效率较低。"
-  ([stage type props]
-   (m-transact-inner! stage type props false))
-  ([stage type props flush-to-database?]
+  ([user stage type props]
+   (m-transact-inner! user stage type props false))
+  ([user stage type props flush-to-database?]
    (let [stage-journal-atom (journal-db/get-stage-journal-atom stage)]
      (locking stage-journal-atom  ;; stage-journal-atom 是配分各种 id 的 atom，只要保证不重复分配 id，后面就不会出现线程不安全
        (let [dispatcher (if (contains? @op-core/context-handler (keyword type))
                           journal-db/dispatch-new-ctx_id
                           journal-db/dispatch-new-transaction-id)
              {:keys [transaction-id ctx_id ctx]} (dispatcher stage)
-             op (op-core/make-transaction transaction-id ctx_id (get-current-time-string) type props true)
+             op (op-core/make-transaction transaction-id ctx_id user (get-current-time-string) type props true)
              [transact new-context] (op-core/ctx-generate-ds stage op ctx)] 
          (when new-context
            (update-ctx! stage new-context))
@@ -54,21 +54,18 @@
 
 (defn m-transact!
   "为外部调用设计的接口，会进行严格的检查"
-  [stage type props]
+  [stage type props user-id] 
   (m/mlet
    [_check-op (op-core/m-final-validate-transaction {:type type :props props})
-    transact-result (m-transact-inner! stage type props true)]
+    transact-result (m-transact-inner! user-id stage type props true)]
    (either/right
     (data-aux/remove-db-prefix transact-result))))
 
 (defn service-transact
-  [avatar-id type props access-user-id]
+  [stage-id type props access-user-id] 
   (m/mlet
-   [{:keys [controlled_by stage]} (monad-db/get-avatar-by-id avatar-id)
-    _check-user-access (if (= controlled_by access-user-id)
-                         (either/right)
-                         (either/left "你无权控制该角色"))]
-   (m-transact! stage type props)))
+   [_stage (monad-db/get-stage-by-id stage-id)]
+   (m-transact! stage-id type props access-user-id)))
 
 (defn m-speak
   [avatar-id props access-user-id]
@@ -77,7 +74,7 @@
     _check-user-access (if (= controlled_by access-user-id)
                          (either/right)
                          (either/left "你无权控制该角色"))] 
-   (m-transact! stage "speak" (assoc props :avatar avatar-id))))
+   (m-transact! access-user-id stage "speak" (assoc props :avatar avatar-id))))
 
 (defn- query-stage-contexts
   [stage-id ctx_ids] 
@@ -111,13 +108,13 @@
 
 (defn- make-stage-snapshot
   [stage]
-  (m-transact-inner! (:id stage) op-core/OP-SNAPSHOT stage))
+  (m-transact-inner! 0 (:id stage) op-core/OP-SNAPSHOT stage))
 
 (defn- m-make-update!
   [stage-id diffs]
   (if (empty? diffs)
     (either/right (str stage-id " 没有变化，不生成 update 指令"))
-    (m-transact-inner! stage-id op-core/OP-UPDATE diffs)))
+    (m-transact-inner! 0 stage-id op-core/OP-UPDATE diffs)))
 
 #_{:clj-kondo/ignore [:unused-private-var]}
 (defn- make-stage-snapshot-by-id

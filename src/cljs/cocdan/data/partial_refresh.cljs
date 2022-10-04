@@ -1,5 +1,6 @@
 (ns cocdan.data.partial-refresh
-  (:require [cocdan.data.transaction.patch :refer [TPatch]]
+  (:require [cocdan.data.transaction.dice :refer [RC ST]]
+            [cocdan.data.transaction.patch :refer [TPatch]]
             [cocdan.data.transaction.speak :refer [Speak]]
             [re-frame.core :as rf]))
 
@@ -39,3 +40,13 @@
  TPatch
   IPartialRefresh
   (refresh-key [_this] [:play-room :chat-log :chat-input]))
+
+(extend-type
+ RC
+  IPartialRefresh
+  (refresh-key [_this] [:chat-log]))
+
+(extend-type
+ ST
+  IPartialRefresh
+  (refresh-key [_this] [:play-room :chat-log :play-room/avatar-indicator]))

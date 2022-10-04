@@ -1,10 +1,10 @@
 (ns cocdan.fragment.avatar.indicator
   (:require ["antd" :refer [Divider Modal]]
+            [clojure.string :as s]
             [cocdan.core.settings :as settings]
-            [cocdan.data.mixin.equipment :refer [get-equipments]]
+            [cocdan.data.mixin.equipment :refer [get-equipments get-slots]]
             [cocdan.data.performer.core :refer [get-attr get-attr-max]]
             [re-frame.core :as rf]
-            [clojure.string :as s]
             [reagent.core :as r]))
 
 (defn- narrow-field-input-elem
@@ -13,19 +13,21 @@
          placeholder "请输入"
          style {}
          current-value ""}}]
-  [:input.narrow-input
-   {:defaultValue current-value
-    :spellCheck false
-    :placeholder placeholder
-    :disabled (not can-edit?)
-    :style style
-    :onBlur (fn [x]
-              (let [new-value (-> (-> x .-target .-value)
-                                  (#(if val-fn (val-fn %) %)))]
-                (when-not (= new-value current-value)
-                  (rf/dispatch [:play/execute-transaction-props-easy!
-                                stage-id "update"
-                                [[field-keyword (or current-value :unset) new-value]]]))))}])
+  (with-meta
+    [:input.narrow-input
+     {:defaultValue current-value
+      :spellCheck false
+      :placeholder placeholder
+      :disabled (not can-edit?)
+      :style style
+      :onBlur (fn [x]
+                (let [new-value (-> (-> x .-target .-value)
+                                    (#(if val-fn (val-fn %) %)))]
+                  (when-not (= new-value current-value)
+                    (rf/dispatch [:play/execute-transaction-props-easy!
+                                  stage-id "update"
+                                  [[field-keyword (or current-value :unset) new-value]]]))))}]
+    {:key (str field-keyword current-value)}))
 
 (defn- center-colon
   []
@@ -53,7 +55,7 @@
   (r/with-let
     [editor-open? (r/atom false)
      field-clicked (r/atom nil)
-     equipment-edit (fn [solt-key equipment-val]
+     equipment-edit (fn [slot-key equipment-val]
                       [:td [:input.narrow-input
                             {:style {:max-width "8em"}
                              :defaultValue equipment-val
@@ -61,19 +63,19 @@
                              :onBlur (fn [x]
                                        (let [new-value (-> x .-target .-value)]
                                          (when-not (= new-value equipment-val)
-                                           (let [path-key (keyword (str "avatars." avatar-id ".props.equipments." (name solt-key)))
+                                           (let [path-key (keyword (str "avatars." avatar-id ".props.equipments." (name slot-key)))
                                                  remove-before (if (empty? equipment-val) [] [path-key equipment-val :remove])
                                                  add-later (if (empty? new-value) [] [path-key :remove new-value])
                                                  final-ops (vec (filter seq [remove-before add-later]))]
                                              (when (seq final-ops)
                                                (rf/dispatch [:play/execute-transaction-props-easy!
                                                              stage-id "update"
-                                                             final-ops]))))))}]])]
+                                                             final-ops]))))))}]])] 
     [:div
      [:> Divider "物品栏"]
      [:table
       {:style {:width "100%"}}
-      [:tbody
+      [:tbody 
        (apply concat
               (map (fn [[e-key e-val-list]]
                      (-> [(with-meta [:tr [:th {:on-click #(do (reset! editor-open? true)
@@ -84,10 +86,11 @@
                                           [:tr [:th ""] [equipment-edit e-key (str v)]]
                                           {:key (str e-key (or v (js/Math.random)))}))
                                       (rest e-val-list)))))
-                   (->> (get-equipments avatar false)
-                        (map (fn [[k x]]
-                               (if (empty? x)
-                                 [k x] [k (conj x nil)])))
+                   (->> (get-slots avatar)
+                        (map (fn [k]
+                               (let [x (get-equipments avatar k false)]
+                                 (if (empty? x)
+                                   [k x] [k (conj x nil)]))))
                         (into {}))))]]
      [:> Modal
       {:title (str @field-clicked " 中的物品")
@@ -98,7 +101,8 @@
 
 (defn indicator
   [stage-id ctx avatar-id]
-  (let [{:keys [name] :as avatar} (get-in ctx [:context/props :avatars (keyword (str avatar-id))])]
+  (let [{:keys [name] :as avatar} (get-in ctx [:context/props :avatars (keyword (str avatar-id))])
+        _refresh @(rf/subscribe [:partial-refresh/listen :play-room/avatar-indicator])]
     (when avatar 
       (let [is-kp? (settings/query-setting-value-by-key :is-kp)]
         [:div
@@ -114,7 +118,7 @@
                                 :current-value name
                                 :placeholder "请输入角色姓名"
                                 :can-edit? is-kp?}]]]
-           (attr-table-item stage-id avatar "HP" is-kp?)
-           (attr-table-item stage-id avatar "MP" is-kp?)
-           (attr-table-item stage-id avatar "SAN" is-kp?)]]
+           [attr-table-item stage-id avatar "HP" is-kp?]
+           [attr-table-item stage-id avatar "MP" is-kp?]
+           [attr-table-item stage-id avatar "SAN" is-kp?]]]
          [equipment-table stage-id avatar]]))))

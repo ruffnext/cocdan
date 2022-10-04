@@ -44,11 +44,19 @@
        :context/id))
 
 (defn query-ds-latest-transaction-id
-  [ds]
-  (->> (d/datoms ds :avet :transaction/id)
-       reverse first first
-       (d/pull ds '[:transaction/id])
-       :transaction/id))
+  ([ds]
+   (->> (d/datoms ds :avet :transaction/id)
+        reverse first first
+        (d/pull ds '[:transaction/id])
+        :transaction/id))
+  ([ds verified?]
+   (if verified?
+     (->> (d/datoms ds :avet :transaction/id)
+          reverse (map first)
+          (d/pull-many ds '[:transaction/id :transaction/ack])
+          (drop-while #(not (:transaction/ack %)))
+          first :transaction/id)
+     (query-ds-latest-transaction-id ds))))
 
 (defn import-stage-context!
   [stage-db contexts]
