@@ -10,35 +10,45 @@
 (defn input
   [{{{stage-id :id :as stage-ctx} :context/props} :context
     substage-id :substage
-    hook-avatar-change :hook-avatar-change}]
-  (r/with-let [action-value (r/atom nil)
-               avatar-id (r/atom nil)
+    avatar-id :avatar-id}]
+  (r/with-let [action-value (r/atom ["input" "speak"]) 
                user-id @(rf/subscribe [:common/user-id])] 
     (let [_refresh @(rf/subscribe [:partial-refresh/listen :chat-input])
           all-avatars (map second (:avatars stage-ctx))
           is-kp (settings/query-setting-value-by-key :is-kp)
           same-substage-avatars (filter #(or (= (get-substage-id %) substage-id) (and is-kp (= 0 (:id %)))) all-avatars)
+          same-substage-avatars-id (map :id same-substage-avatars)
           controllable-avatars (->> (filter (fn [{:keys [controlled_by]}]
                                               (or is-kp (= controlled_by user-id)))
                                             same-substage-avatars)
-                                    (map (fn [{:keys [id name]}] [id name]))) 
+                                    (map (fn [{:keys [id name]}] [id name])))
           on-cascader-change (fn [v _] (reset! action-value v))
           on-avatar-change (fn [[v] _]
-                             (reset! avatar-id v)
-                             (when hook-avatar-change (hook-avatar-change v)))
-          
-          _ (when (nil? @avatar-id) (on-avatar-change [(-> controllable-avatars first first)] nil))] 
-      (if @avatar-id
+                             (rf/dispatch [:play/change-avatar-id! v])
+                             (let [avatars (:avatars stage-ctx)]
+                               (when ((keyword (str v)) avatars)
+                                 (rf/dispatch [:play/change-substage-id! (get-substage-id ((keyword (str v)) avatars))])))
+                             (rf/dispatch [:chat-log/clear-cache!]))]
+      (when-not (contains? (set same-substage-avatars-id) avatar-id)
+        (cond
+          (seq controllable-avatars) (on-avatar-change [(-> controllable-avatars first first)] nil)
+          (some? avatar-id) (on-avatar-change nil nil)
+          :else ()))
+      (if avatar-id
         [:div
          [:> Cascader
           {:options (map (fn [[id name]] {:value id :label name}) controllable-avatars)
-           :value [@avatar-id]
+           :value [avatar-id]
            :allowClear false
            :onChange on-avatar-change}]
 
          [:> Cascader
-          {:options [{:value "speak" :label "说话"}
-                     {:value "move" :label "移动"}
+          {:options [(if is-kp
+                       {:value "input" :label "说话"
+                        :children [{:value "speak" :label "通常"}
+                                   {:value "narration" :label "旁白"}]}
+                       {:value "input" :label "说话"
+                        :children [{:value "speak" :label "通常"}]})
                      {:value "dice" :label "检定"
                       :children [{:value "attr"
                                   :label "属性检定"
@@ -51,14 +61,15 @@
            :value @action-value
            :onChange on-cascader-change}]
          (case (first @action-value)
-           "speak"
+           "input"
            [chat-input/input {:stage-id stage-id
                               :substage-id substage-id
-                              :avatar-id @avatar-id
-                              :avatars (:avatars stage-ctx)}]
+                              :avatar-id avatar-id
+                              :avatars (:avatars stage-ctx)
+                              :speak-type (second @action-value)}]
            "dice"
            [dice-input/dice {:stage-id stage-id
-                             :avatar-id @avatar-id
+                             :avatar-id avatar-id
                              :attr (last @action-value)}]
 
            [:p "请选择行动"])]

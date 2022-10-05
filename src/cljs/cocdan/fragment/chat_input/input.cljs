@@ -8,7 +8,7 @@
             [reagent.core :as r]))
 
 (defn input
-  [{:keys [avatar-id substage-id stage-id avatars]}]
+  [{:keys [avatar-id substage-id stage-id avatars speak-type]}]
   (r/with-let
     [input-key (r/atom (js/Math.random))]
     (let [all-avatars (map second avatars)
@@ -20,10 +20,10 @@
                                 (either/branch
                                  (parse-cmd value ((keyword (str avatar-id)) avatars))
                                  (fn [_left]
-                                   (rf/dispatch [:play/execute-transaction-props-easy! stage-id "speak" {:substage substage-id :avatar avatar-id :message value :props {}}]))
+                                   (rf/dispatch [:play/execute-transaction-props-easy! stage-id speak-type {:substage substage-id :avatar avatar-id :message value :props {}}]))
                                  (fn [right]
                                    (rf/dispatch (vec (concat [:play/execute-transaction-props-easy! stage-id] right)))))
-                                (reset! input-key (js/Math.random))))]
+                                (reset! input-key (js/Math.random))))] 
       (with-meta
         [:> Mentions
          {:autoSize true

@@ -1,9 +1,10 @@
 (ns cocdan.data.performer.avatar
-  (:require [clojure.string :as str]
+  (:require [clojure.core :refer [parse-long]]
+            [clojure.string :as str]
             [cocdan.data.core :as data-core]
             [cocdan.data.mixin.equipment :refer [IEquipmentMixIn]]
-            [cocdan.data.performer.core :refer [IPerformer]]
-            [cocdan.data.mixin.territorial :refer [ITerritorialMixIn]]))
+            [cocdan.data.mixin.territorial :refer [ITerritorialMixIn]]
+            [cocdan.data.performer.core :refer [IPerformer]]))
 
 (defrecord Avatar [id name image description substage controlled_by props]
 
@@ -24,7 +25,8 @@
                       (pos-int? id) "avatar"
                       (neg-int? id) "npc"
                       (= 0 id) "KP"))
-  (get-attr [_this prop-name] (or ((keyword (str/lower-case prop-name)) (:attrs props)) 0))
+  (get-attr [_this prop-name] (or ((keyword (str/lower-case (clojure.core/name prop-name))) (:attrs props)) 0))
+  (set-attr [this attr-name attr-val] (assoc-in this [:props :attrs (keyword (clojure.core/name attr-name))] attr-val))
   (get-attr-max [_this _prop-name] 10)
   (get-header [_this _mood] "/img/warning_clojure.png")
   (get-image [_this] "/img/warning_clojure.png")

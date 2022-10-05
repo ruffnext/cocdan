@@ -26,6 +26,9 @@
     对于技能，不应区分中英名称，例如 闪避 和 Dodge 和 dodge 等价 。
     返回为一个整数，不低于 0，不高于 1e4。")
 
+  (set-attr
+    [this attr-name attr-val])
+
   (get-attr-max
     [this attr-name]
     "返回该演出者的某项属性的最大值")

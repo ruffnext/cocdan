@@ -1,7 +1,5 @@
 (ns cocdan.data.stage
-  (:require [cocdan.core.ops.core :refer [OP-SNAPSHOT OP-UPDATE
-                                          register-context-handler]]
-            [cocdan.data.core :as data-core]
+  (:require [cocdan.data.core :as data-core]
             [cocdan.data.performer.avatar :refer [new-avatar]]))
 
 (defrecord Stage [id name introduction image substages avatars controlled_by]
@@ -48,6 +46,3 @@
 (defn new-context
   [context-props]
   (new-stage context-props))
-
-(register-context-handler (keyword OP-SNAPSHOT) (fn [_ctx {:keys [props]}] (new-stage props)))
-(register-context-handler (keyword OP-UPDATE) (fn [{ctx :context/props} {:keys [props]}] (new-stage (data-core/update' ctx props))))

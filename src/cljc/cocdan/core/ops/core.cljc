@@ -1,7 +1,8 @@
 (ns cocdan.core.ops.core
-  (:require [cocdan.aux :as data-aux]
-            [malli.core :as spec]
-            [cats.monad.either :as either]))
+  (:require [cats.core :as m]
+            [cats.monad.either :as either]
+            [cocdan.aux :as data-aux]
+            [malli.core :as spec]))
 
 (defonce transaction-handler (atom {}))
 (defonce context-handler (atom nil))
@@ -9,7 +10,7 @@
 (defn register-context-handler
   "注册处理 context 的函数。一旦新的 context 产生
    需要经过一些处理后存入 datascript。
-   [ctx transaction] -> context/props
+   [ctx transaction] -> either context/props
    如果 transaction 没有对应的 handler，则认为这
    个 transaction 不会产生新的 context"
   [type-key handler]
@@ -17,7 +18,7 @@
 
 (defn register-transaction-handler
   "注册 transaction 的处理函数
-   [ctx transaction] -> transaction/props
+   [ctx transaction] -> either transaction/props
    这个函数的主要目的是为了附加以下的上下文
    * 可视化（主要在客户端实现）
    * 时变上下文（例如骰子的点数）"
@@ -49,44 +50,34 @@
 (defonce hooks (atom {}))
 
 (defn register-find-ctx-by-id
-  "注册函数：fn ( stage-id, ctx_id ) -> ctx
-   当 ctx = nil 时，op 将不执行"
+  "注册函数：fn ( stage-id, ctx_id ) -> either ctx
+   如果失败，transaction 将不被执行"
   [handler]
   (swap! hooks #(assoc % :find-ctx-by-id handler)))
-
-(defn op-to-transaction-ds
-  [op ack]
-  (-> (data-aux/add-db-prefix :transaction op)
-      (assoc :transaction/ack ack)))
-
-(defn context-to-context-ds
-  [op ack]
-  (-> (data-aux/add-db-prefix :context op)
-      (assoc :context/ack ack)))
 
 (defn ctx-generate-ds
   "在上下文中运行 op 指令，并返回 datascript 的指令"
   ([stage-id {:keys [ctx_id] :as op}]
-   (when-let [func (:find-ctx-by-id @hooks)]
-     (when-let [ctx (func stage-id ctx_id)]
-       (ctx-generate-ds stage-id op ctx))))
-  ([_stage-id {:keys [id ctx_id time type ack] :as op} {ctx_id-from-ctx :context/id
-                                                        stage-id :context/stage
-                                                        _context-ack :context/ack :as ctx}]
-   (let [type-key (keyword type)
-         t-handler (type-key @transaction-handler)
-         c-handler (type-key @context-handler)
-         t-item (-> op
-                    (#(if t-handler
-                        (assoc % :props (t-handler ctx op)) %))
-                    (#(assoc % :ctx_id (or ctx_id-from-ctx ctx_id) :stage stage-id))
-                    (op-to-transaction-ds (or ack false)))
-         c-item (when c-handler
-                  (-> {:id id :time time :props (c-handler ctx op)}
-                      (context-to-context-ds ack)))]
-     (if c-item
-       [t-item c-item]
-       [t-item]))))
+   (let [func (:find-ctx-by-id @hooks)]
+     (if func
+       (either/branch-right
+        (func stage-id ctx_id)
+        (fn [ctx] (ctx-generate-ds stage-id op ctx)))
+       (either/left "未设置缺省的上下文查询 hook，无法查询上下文"))))
+  ([_stage-id {:keys [id ctx_id time type ack] :as t-record} {ctx_id-from-ctx :context/id
+                                                              stage-id :context/stage
+                                                              _context-ack :context/ack :as ctx}]
+   (let [type-key (keyword (str type))
+         t-handler (or (type-key @transaction-handler) (fn [_ t-record] (either/right (:props t-record))))
+         c-handler (or (type-key @context-handler) (fn [& _] (either/right nil)))] 
+     (m/mlet
+      [new-t-props (t-handler ctx t-record)
+       new-t-record (either/right (assoc t-record :ctx_id (or ctx_id-from-ctx ctx_id) :stage stage-id :props new-t-props :ack (or ack false)))
+       c-props (c-handler ctx new-t-record)]
+      (either/right
+       (if c-props
+         [(data-aux/add-db-prefix :transaction new-t-record) (data-aux/add-db-prefix :context {:id id :time time :props c-props :ask (or ack false)})]
+         [(data-aux/add-db-prefix :transaction new-t-record)]))))))
 
 (def update-props-spec
   [:vector
@@ -108,14 +99,28 @@
    [:avatar int?]
    [:attr-map associative?]])
 
+(def narration-props-spec
+  [:map
+   [:substage string?]
+   [:message string?]
+   [:props associative?]])
+
+(def sc-props-spec
+  [:map
+   [:avatar int?]
+   [:loss-on-success string?]
+   [:loss-on-failure string?]])
+
 (defn m-final-validate-transaction
   [{:keys [type props]}]
   (let [res (case type
               "update" (spec/explain update-props-spec props)
               "speak" (spec/explain speak-props-spec props)
+              "narration" (spec/explain narration-props-spec props)
               "rc" (spec/explain r-props-spec props)
               "ra" (spec/explain r-props-spec props)
               "st" (spec/explain st-props-spec props)
+              "sc" (spec/explain sc-props-spec props)
               {:errors (str "无法检验 transaction 类型" type)})]
     (if res
       (either/left res)

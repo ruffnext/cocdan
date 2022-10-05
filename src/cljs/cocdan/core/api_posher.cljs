@@ -46,5 +46,3 @@
     (when (nil? (:db/id record))
       (rf/dispatch [:api/refresh-stage-by-id stage-id]))
     avatar))
-
-

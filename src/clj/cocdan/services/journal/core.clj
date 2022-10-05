@@ -3,20 +3,16 @@
             [cats.monad.either :as either]
             [clojure.core.async :refer [go]]
             [clojure.tools.logging :as log]
-            [cocdan.core.ops.core :as op-core]
             [cocdan.aux :as data-aux :refer [get-current-time-string]]
+            [cocdan.core.ops.core :as op-core]
             [cocdan.data.core :refer [default-diff']]
+            [cocdan.services.journal.handler]
             [cocdan.db.monad-db :as monad-db]
             [cocdan.hooks :as hooks]
             [cocdan.services.journal.db :as journal-db :refer [update-ctx!]]
             [cocdan.services.stage.core :as stage-core]))
 
 (defonce transaction-dispatcher (atom {}))
-
-;; 清空 transaction-handler，服务端不对任何 transaction 进行处理
-;; 除了内建的 context 的钩子以外
-(reset! op-core/transaction-handler {})
-
 "注册日志处理函数，输入参数为
    [register-key stage-id transact, ctx]"
 (defn register-journal-hook
@@ -37,20 +33,22 @@
                           journal-db/dispatch-new-ctx_id
                           journal-db/dispatch-new-transaction-id)
              {:keys [transaction-id ctx_id ctx]} (dispatcher stage)
-             op (op-core/make-transaction transaction-id ctx_id user (get-current-time-string) type props true)
-             [transact new-context] (op-core/ctx-generate-ds stage op ctx)] 
-         (when new-context
-           (update-ctx! stage new-context))
-         (go ;; 在协程中持久化数据
-           (monad-db/persistence-transaction! (assoc (data-aux/remove-db-prefix transact) :stage stage))
-           (when new-context
-             (monad-db/persistence-context! (assoc (data-aux/remove-db-prefix new-context) :stage stage)) 
-             (when flush-to-database?
-               (monad-db/flush-stage-to-database! (:context/props new-context))))
-           (let [handler-map ((keyword (str stage)) @transaction-dispatcher)]
-             (doseq [[k f] handler-map]
-               (f k stage transact ctx))))
-         (either/right transact))))))
+             op (op-core/make-transaction transaction-id ctx_id user (get-current-time-string) type props true)] 
+         (either/branch-right
+          (op-core/ctx-generate-ds stage op ctx)
+          (fn [[transact new-context]] 
+            (when new-context
+              (update-ctx! stage new-context))
+            (go ;; 在协程中持久化数据
+              (monad-db/persistence-transaction! (assoc (data-aux/remove-db-prefix transact) :stage stage))
+              (when new-context
+                (monad-db/persistence-context! (assoc (data-aux/remove-db-prefix new-context) :stage stage))
+                (when flush-to-database?
+                  (monad-db/flush-stage-to-database! (:context/props new-context))))
+              (let [handler-map ((keyword (str stage)) @transaction-dispatcher)]
+                (doseq [[k f] handler-map]
+                  (f k stage transact ctx))))
+            (either/right transact))))))))
 
 (defn m-transact!
   "为外部调用设计的接口，会进行严格的检查"

@@ -13,33 +13,32 @@
          placeholder "请输入"
          style {}
          current-value ""}}]
-  (with-meta
-    [:input.narrow-input
-     {:defaultValue current-value
-      :spellCheck false
-      :placeholder placeholder
-      :disabled (not can-edit?)
-      :style style
-      :onBlur (fn [x]
-                (let [new-value (-> (-> x .-target .-value)
-                                    (#(if val-fn (val-fn %) %)))]
-                  (when-not (= new-value current-value)
-                    (rf/dispatch [:play/execute-transaction-props-easy!
-                                  stage-id "update"
-                                  [[field-keyword (or current-value :unset) new-value]]]))))}]
-    {:key (str field-keyword current-value)}))
+  [:input.narrow-input
+   {:defaultValue current-value
+    :spellCheck false
+    :placeholder placeholder
+    :disabled (not can-edit?)
+    :style style
+    :onBlur (fn [x]
+              (let [new-value (-> (-> x .-target .-value)
+                                  (#(if val-fn (val-fn %) %)))]
+                (when-not (= new-value current-value)
+                  (rf/dispatch [:play/execute-transaction-props-easy!
+                                stage-id "update"
+                                [[field-keyword (or current-value :unset) new-value]]]))))}])
 
 (defn- center-colon
   []
   [:td {:style {:min-width "10px" :text-align "center"}} ":"])
 
 (defn- attr-table-item
-  [stage-id avatar attr-name is-kp?]
+  [stage-id avatar attr-name is-kp?] 
   [:tr
    [:th attr-name]
    [center-colon]
    [:td
     {:style {:max-width "2em"}}
+    ^{:key (str attr-name (get-attr avatar attr-name))}
     [narrow-field-input-elem {:stage-id stage-id
                               :field-keyword (keyword (str "avatars." (:id avatar) ".props.attrs." (s/lower-case attr-name)))
                               :current-value (get-attr avatar attr-name)
@@ -104,7 +103,7 @@
   (let [{:keys [name] :as avatar} (get-in ctx [:context/props :avatars (keyword (str avatar-id))])
         _refresh @(rf/subscribe [:partial-refresh/listen :play-room/avatar-indicator])]
     (when avatar 
-      (let [is-kp? (settings/query-setting-value-by-key :is-kp)]
+      (let [is-kp? (settings/query-setting-value-by-key :is-kp)] 
         [:div
          [:> Divider "角色状态"]
          [:table

@@ -60,13 +60,12 @@
 (defn indicator
   [{stage-id :stage-id
     substage-id :substage-id
-    ctx :context
-    hook-substage-change :on-substage-change}]
+    ctx :context}] 
   (let [{:keys [substages] :as stage} (:context/props ctx)
         on-substage-change (fn [x]
                              (if (empty? x)
                                (substage-edit/launch {:stage stage :substage-id nil})
-                               (hook-substage-change x)))]
+                               (rf/dispatch [:play/change-substage-id! x])))]
     [:div.substage-indicator-container
      {:onDoubleClick (fn [_]
                        (substage-edit/launch {:stage stage

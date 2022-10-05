@@ -1,7 +1,7 @@
 (ns cocdan.data.partial-refresh
-  (:require [cocdan.data.transaction.dice :refer [RC RA ST]]
+  (:require [cocdan.data.transaction.dice :as dice]
             [cocdan.data.transaction.patch :refer [TPatch]]
-            [cocdan.data.transaction.speak :refer [Speak]]
+            [cocdan.data.transaction.speak :refer [Narration Speak]]
             [re-frame.core :as rf]))
 
 ; 对于部分 Transaction 来说，很有可能只需要刷新 UI 的一部分内容
@@ -19,8 +19,8 @@
    (or (get-in db [:partial-refresh listen-key]) 0)))
 
 (rf/reg-event-fx
- :partial-refresh/refresh!
- (fn [{:keys [db]} [_ & listen-keys]]
+ :partial-refresh/refresh! 
+ (fn [{:keys [db]} [_ & listen-keys]] 
    {:db (reduce (fn [a x]
                   (update-in a [:partial-refresh x] #(if % (inc %) 1)))
                 db listen-keys)}))
@@ -39,19 +39,29 @@
 (extend-type
  TPatch
   IPartialRefresh
-  (refresh-key [_this] [:play-room :chat-log :chat-input]))
+  (refresh-key [_this] [:play-room :chat-log :chat-input :play-room/avatar-indicator]))
 
 (extend-type
- RC
+ dice/RC
   IPartialRefresh
   (refresh-key [_this] [:chat-log]))
 
 (extend-type
- RA
+ dice/RA
   IPartialRefresh
   (refresh-key [_this] [:chat-log]))
 
 (extend-type
- ST
+ dice/ST
+  IPartialRefresh
+  (refresh-key [_this] [:play-room :chat-log :play-room/avatar-indicator]))
+
+(extend-type
+ Narration
+  IPartialRefresh
+  (refresh-key [_this] [:chat-log]))
+
+(extend-type
+ dice/SC
   IPartialRefresh
   (refresh-key [_this] [:play-room :chat-log :play-room/avatar-indicator]))

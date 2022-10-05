@@ -1,5 +1,6 @@
 (ns cocdan.core.ops-test 
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [cats.core :as m]
+            [clojure.test :refer [deftest is testing]]
             [clojure.tools.logging :as log]
             [cocdan.core.ops.core :as op-core]
             [cocdan.data.stage :refer [new-stage]]
@@ -18,7 +19,7 @@
         db (d/create-conn play-room-database-schema)
 
         op1 (op-core/make-transaction 1 0 1 0 op-core/OP-SNAPSHOT stage)
-        _work (d/transact! db (op-core/ctx-generate-ds "stage-1" op1 nil))
+        _work (d/transact! db (m/extract (op-core/ctx-generate-ds "stage-1" op1 nil)))
         ctx1 (ctx-db/query-ds-latest-ctx @db)
         _ (log/debug ctx1)
         ctx1-real {:context/id 1
@@ -28,7 +29,7 @@
 
         op2-diffs [[:avatars.avatar-1.name "avatar-name" "avatar-name-modified"]]
         op2 (op-core/make-transaction 2 1 2 0 op-core/OP-UPDATE op2-diffs)
-        _work (d/transact! db (op-core/ctx-generate-ds "stage-1" op2 ctx1))
+        _work (d/transact! db (m/extract (op-core/ctx-generate-ds "stage-1" op2 ctx1)))
         ctx2 (ctx-db/query-ds-latest-ctx @db)
         ctx2-real {:context/id 2
                    :context/ack false
@@ -39,4 +40,4 @@
     (testing "basic test"
       (is (= ctx1 ctx1-real))
       (is (= ctx2 ctx2-real)))
-    (op-core/ctx-generate-ds db op3)))
+    (m/extract (op-core/ctx-generate-ds db op3))))

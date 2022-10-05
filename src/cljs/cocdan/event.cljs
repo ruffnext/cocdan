@@ -3,7 +3,8 @@
             [reitit.frontend.controllers :as rfc]
             [reitit.frontend.easy :as rfe]
             [cocdan.core.play-room]
-            [cocdan.data.partial-refresh]))
+            [cocdan.data.partial-refresh]
+            ["antd" :refer [notification]]))
 
 (rf/reg-event-db
  :common/navigate
@@ -34,3 +35,13 @@
  :common/route
  (fn [db _]
    (-> db :common/route)))
+
+(rf/reg-event-fx
+ :ui/toast
+ (fn [_ [_ notification-type title content]]
+   (js/console.log title content)
+   ((aget notification notification-type)
+    (clj->js
+     {:message title
+      :description content})) 
+   {}))

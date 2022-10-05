@@ -71,8 +71,9 @@ div.chat-content-outer {
 }
 
 .transact-value {
-  width: 60%;
+  width: 50%;
   text-align: left;
+  margin-right: auto;
   padding-left: 1em;
 }
 
@@ -117,4 +118,11 @@ div.chat-content-outer {
   background-color: rgba(0, 0, 0, 0);
   border: 0px;
   padding: 0px; 
+}
+
+.chat-log-narration {
+  font-style: italic;
+  max-width: 488px;
+  margin-left: auto;
+  margin-right: auto;
 }

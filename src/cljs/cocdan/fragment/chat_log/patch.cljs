@@ -5,10 +5,27 @@
 
 (extend-type TPatch
   IChatLogVisualization
-  (to-chat-log [{:keys [ops]} _ctx _transaction _observer] 
-    [:div
-     (map-indexed (fn [i [k _before after]]
-                    (with-meta [:div.is-flex
-                                [:p.transact-key (str k " : ")]
-                                [:p.transact-value (str after)]] {:key i})) ops)])
-  (display? [_this] (settings/query-setting-value-by-key :is-kp)))
+  (to-chat-log
+    [{:keys [ops]} {stage :context/props} _transaction observer]
+    (let [is-kp (settings/query-setting-value-by-key :is-kp)
+          [_substage-before substage-after] (->> (map (fn [[a b c]]
+                                                        (let [re-result (= (str "avatars." observer ".substage") (name a))]
+                                                          (when re-result [b c]))) ops)
+                                                 (filter some?) first)
+          hints (if substage-after
+                  (let [{:keys [name description]} (get-in stage [:substages (keyword substage-after)])]
+                    [[:div.is-flex
+                      [:p.transact-key (str "你来到了 「" name "」")]
+                      [:p.transact-value {:style {:font-style "italic"}}
+                       description]]])
+                  [])
+          kv-changes (if is-kp
+                       [(map-indexed (fn [i [k _before after]]
+                                       (with-meta [:div.is-flex
+                                                   [:p.transact-key (str k " : ")]
+                                                   [:p.transact-value (str after)]] {:key i})) ops)]
+                       [])]
+      (vec (concat [:div]
+                   kv-changes
+                   hints))))
+  (display? [_this] true))
