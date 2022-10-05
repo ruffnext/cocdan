@@ -1,4 +1,4 @@
-(ns cocdan.page.main.play-room 
+(ns cocdan.page.main.play-room
   (:require [cljs-http.client :as http]
             [clojure.core.async :refer [<! go]]
             [cocdan.core.ops.core :as op-core]
@@ -13,26 +13,29 @@
             [reagent.core :as r]
             [cats.core :as m]))
 
-(defn- init-play-room
-  [stage-id]
-  (go
-    (let [{:keys [status body]} (<! (http/get (str "/api/journal/s" stage-id)
-                                              {:query-params {:with-context true}}))]
-      (case status
-        200 (let [{:keys [context transaction]} body
-                  db (ctx-db/query-stage-db stage-id)
-                  _ (ctx-db/import-stage-context! db context)
-                  ds @db
-                  latest-ctx (atom nil)
-                  ds-records (reduce (fn [a {:keys [ctx_id] :as t}]
-                                       (let [latest-ctx-val @latest-ctx
-                                             latest-ctx-val (if (= (:context/id latest-ctx-val) ctx_id)
-                                                              latest-ctx-val (reset! latest-ctx (ctx-db/query-ds-ctx-by-id ds ctx_id)))] 
-                                         (concat a (m/extract (op-core/ctx-generate-ds stage-id t latest-ctx-val)))))
-                                     [] transaction)]
-              (d/transact! db (filter (fn [x] (not (contains? x :context/id))) ds-records))
-              (rf/dispatch [:partial-refresh/refresh! :play-room]))
-        nil))))
+(rf/reg-event-fx
+ :play/retrieve-recent-logs
+ (fn [_ [_ stage-id]]
+   (go
+     (let [{:keys [status body]} (<! (http/get (str "/api/journal/s" stage-id)
+                                               {:query-params {:with-context true}}))]
+       (case status
+         200 (let [{:keys [context transaction]} body
+                   db (ctx-db/query-stage-db stage-id)
+                   _ (ctx-db/import-stage-context! db context)
+                   ds @db
+                   latest-ctx (atom nil)
+                   ds-records (reduce (fn [a {:keys [ctx_id] :as t}]
+                                        (let [latest-ctx-val @latest-ctx
+                                              latest-ctx-val (if (= (:context/id latest-ctx-val) ctx_id)
+                                                               latest-ctx-val (reset! latest-ctx (ctx-db/query-ds-ctx-by-id ds ctx_id)))]
+                                          (concat a (m/extract (op-core/ctx-generate-ds stage-id t latest-ctx-val)))))
+                                      [] transaction)]
+               (js/console.log ds-records)
+               (d/transact! db (filter (fn [x] (not (contains? x :context/id))) ds-records))
+               (rf/dispatch [:partial-refresh/refresh! :play-room :chat-log]))
+         nil)))
+   {}))
 
 (defn page
   []
@@ -44,11 +47,11 @@
           substage-id-deref @(rf/subscribe [:play-sub/substage-id])
           avatar-id-deref @(rf/subscribe [:play-sub/avatar-id])]
       (if latest-ctx
-        (let [channel @(rf/subscribe [:ws/channel stage-id])]
+        (let [channel-status @(rf/subscribe [:ws/channel stage-id])]
           (cond
-            (= :unset channel) (ws-core/init-ws! stage-id)
-            (= :loading channel) (js/console.log "WebSocket 正在载入中")
-            (= :failed channel) (js/console.log "WebSocket 载入失败")
+            (= :unset channel-status) (ws-core/init-ws! stage-id)
+            (= :loading channel-status) (js/console.log "WebSocket 正在载入中")
+            (= :failed channel-status) (js/console.log "WebSocket 载入失败")
             :else ())
           [:div.container
            {:style {:padding-top "1em"
@@ -74,5 +77,5 @@
                                             :context latest-ctx}]
              [avatar-indicator/indicator stage-id latest-ctx avatar-id-deref]]]])
         (do
-          (init-play-room stage-id)
+          (rf/dispatch [:play/retrieve-recent-logs stage-id])
           [:p "舞台尚未初始化"])))))

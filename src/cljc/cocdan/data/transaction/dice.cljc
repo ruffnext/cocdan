@@ -55,6 +55,8 @@
 
 (defrecord ST [avatar attr-map])
 
+; TODO: dice rh
+
 (defn handle-st-context
   [{ctx :context/props} {{:keys [avatar attr-map]} :props}] 
   (let [avatar-record (get-in ctx [:avatars (keyword (str avatar))])

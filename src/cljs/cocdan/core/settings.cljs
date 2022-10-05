@@ -25,4 +25,4 @@
 
 (defn init-default-settings
   []
-  (update-setting-value-by-key :is-kp true))
+  (update-setting-value-by-key :is-kp false))

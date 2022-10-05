@@ -8,6 +8,6 @@
         attr-zh-name (attrs-core/get-attr-localization-name attr :zh)]
     [:button.button
      {:on-click (fn [_]
-                  (rf/dispatch [:play/execute-transaction-props-easy!
+                  (rf/dispatch [:play/execute-transaction-props-to-remote-easy!
                                 stage-id "rc" {:avatar avatar-id :attr attr-standard-name}]))}
      (str "进行 " attr-zh-name " 检定")]))

@@ -30,7 +30,7 @@
                                                           {:name name :description description :substage substage :id avatar-id}}
                                                          {})}
                                avatar-later {:avatars {(keyword (str (:id @avatar-edit))) @avatar-edit}}]
-                           (rf/dispatch [:play/execute-transaction-props-easy!
+                           (rf/dispatch [:play/execute-transaction-props-to-remote-easy!
                                          stage-id "update"
                                          (data-core/default-diff' avatar-before avatar-later)])) 
                          (reset! open? false))]

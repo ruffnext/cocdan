@@ -47,7 +47,7 @@
                                                          (contains? target-keys-set key) (conj a [(keyword (str "avatars." key ".substage")) substage substage-id])
                                                          :else a)) [] all-avatar-items)
                                op (vec (concat diffs-substage diffs-avatars))]
-                           (rf/dispatch [:play/execute-transaction-props-easy! stage-id "update" op])
+                           (rf/dispatch [:play/execute-transaction-props-to-remote-easy! stage-id "update" op])
                            (reset! open? false)))]
       [:div.modal.is-active
        [:div.modal-background

@@ -1,14 +1,16 @@
 {:nrepl {:port 7002}
  :builds
-        {:app
-               {:target     :browser
-                :output-dir "target/cljsbuild/public/js"
-                :asset-path "/js"
-                :modules    {:app {:entries [cocdan.app]
-                                   :init-fn cocdan.core/init!}}
-                
-                :release    {}}
-         :test {:target  :node-test, :output-to "target/test/test.js"
-                :autorun true}}
+ {:app
+  {:target     :browser
+   :output-dir "target/cljsbuild/public/js"
+   :asset-path "/js"
+   :modules    {:app {:entries [cocdan.app]
+                      :init-fn cocdan.core/init!}}
+   :dev        {:closure-defines {cocdan.core.ws/ws-host "localhost"
+                                  cocdan.core.ws/ws-port 3000}}
+   :release {:closure-defines {cocdan.core.ws/ws-host "cocdan.ruffnex.me"
+                               cocdan.core.ws/ws-port 443}}}
+  :test {:target  :node-test, :output-to "target/test/test.js"
+         :autorun true}}
  :lein  {:profile "+dev"}
  :compiler-options {:externs ["datascript/externs.js"]}}

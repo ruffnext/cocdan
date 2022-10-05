@@ -1,6 +1,6 @@
 (ns cocdan.fragment.chat-log.core
   (:require [cocdan.aux :refer [remove-db-prefix]]
-            [cocdan.data.mixin.territorial :refer [get-substage-id ITerritorialMixIn]]
+            ;; [cocdan.data.mixin.territorial :refer [get-substage-id ITerritorialMixIn]]
             [cocdan.data.mixin.visualization :refer [IChatLogVisualization to-chat-log display?]]
             [cocdan.database.ctx-db.core :as ctx-db]
             [cocdan.fragment.chat-log.speak]
@@ -18,10 +18,10 @@
 (rf/reg-event-fx
  :chat-log/clear-cache!
  (fn [& _]
-   (reset! chat-log-ui-cache {})))
+   (reset! chat-log-ui-cache {}) {}))
 
 (defn- query-can-visualizations
-  [stage-ds substage limit]
+  [stage-ds _substage limit]
   (->> (d/datoms stage-ds :avet :transaction/id)
        reverse (map first)
        (d/pull-many stage-ds '[*])
@@ -29,10 +29,10 @@
        (filter (fn [{x :props}]
                  (and
                   (implements? IChatLogVisualization x)
-                  (or
-                   (not (implements? ITerritorialMixIn x))
-                   (let [substage-id (get-substage-id x)]
-                     (= substage-id substage)))
+                  ;; (or
+                  ;;  (not (implements? ITerritorialMixIn x))
+                  ;;  (let [substage-id (get-substage-id x)]
+                  ;;    (= substage-id substage)))
                   (display? x))))
        (take limit)))
 

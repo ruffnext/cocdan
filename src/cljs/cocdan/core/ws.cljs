@@ -1,11 +1,10 @@
 (ns cocdan.core.ws
-  (:require [cats.monad.either :as either]
-            [clojure.core.async :refer [<! go timeout]]
+  (:require [clojure.core.async :refer [<! go timeout]]
             [clojure.edn :refer [read-string]]
             [re-frame.core :as rf]))
 
 (goog-define ws-host "localhost")
-(goog-define ws-port 3001)
+(goog-define ws-port 3000)
 (def max-retries 3)
 (defonce retry-remain (atom 3))
 (declare init-ws!)
@@ -29,7 +28,7 @@
 (defn- on-message
   [stage-id event]
   (let [transaction (read-string (.-data event))] 
-    (rf/dispatch [:play/execute-many stage-id [transaction]])))
+    (rf/dispatch [:play/execute-many-from-remote stage-id [transaction]])))
 
 (defn- on-close
   [stage-id event]
@@ -41,9 +40,9 @@
           (= 1005 close-code) ["error" "与服务器失去链接" "正在尝试重连"]
           (= 1006 close-code) ["error" "服务器拒绝链接" "无法与服务器建立链接，服务器拒绝了客户端的链接请求！"]
           :else ["error" "致命错误" (str "cannot handle ws close code " (.-code event))])] 
-    (rf/dispatch-sync [:ws/change-channel! stage-id :failed])
+    (rf/dispatch [:ws/change-channel! stage-id :failed])
     (rf/dispatch [:ui/toast info-type info-title info-content])
-    (when @retry-remain
+    (when (pos-int? @retry-remain)
       (swap! retry-remain dec)
       (go
         (<! (timeout 3000))
@@ -51,12 +50,11 @@
 
 (defn init-ws!
   [stage-id]
-  (let [url (str "ws://"  ws-host ":" ws-port "/ws/" stage-id)]
+  (let [protocol (case (-> js/window .-location .-protocol) "http:" "ws" "wss")
+        url (str protocol "://"  ws-host ":" ws-port "/ws/" stage-id)]
     (rf/dispatch-sync [:ws/change-channel! stage-id :loading])
-    (either/branch-right
-     (either/try-either (js/WebSocket. url))
-     (fn [channel]
-       (set! (.-onopen channel) (partial on-open stage-id))
-       (set! (.-onmessage channel) (partial on-message stage-id))
-       (set! (.-onclose channel) (partial on-close stage-id))
-       (set! (.-onerror channel) #(js/console.log %))))))
+    (when-let [channel (js/WebSocket. url)]
+      (set! (.-onopen channel) (partial on-open stage-id))
+      (set! (.-onmessage channel) (partial on-message stage-id))
+      (set! (.-onclose channel) (partial on-close stage-id))
+      (set! (.-onerror channel) #(js/console.log %)))))

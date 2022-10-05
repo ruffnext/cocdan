@@ -23,7 +23,7 @@
               (let [new-value (-> (-> x .-target .-value)
                                   (#(if val-fn (val-fn %) %)))]
                 (when-not (= new-value current-value)
-                  (rf/dispatch [:play/execute-transaction-props-easy!
+                  (rf/dispatch [:play/execute-transaction-props-to-remote-easy!
                                 stage-id "update"
                                 [[field-keyword (or current-value :unset) new-value]]]))))}])
 
@@ -67,7 +67,7 @@
                                                  add-later (if (empty? new-value) [] [path-key :remove new-value])
                                                  final-ops (vec (filter seq [remove-before add-later]))]
                                              (when (seq final-ops)
-                                               (rf/dispatch [:play/execute-transaction-props-easy!
+                                               (rf/dispatch [:play/execute-transaction-props-to-remote-easy!
                                                              stage-id "update"
                                                              final-ops]))))))}]])] 
     [:div

@@ -14,6 +14,7 @@
     [:select
      {:style {:border "0" :appearance "none" :text-align "center"}
       :value substage-id
+      :disabled (not (settings/query-setting-value-by-key :is-kp))
       :on-change #(on-change (-> % .-target .-value))}
      (map (fn [[value display-name]] ^{:key value} [:option {:value value} display-name]) all-options)]))
 
@@ -31,7 +32,7 @@
         :onBlur (fn [x]
                   (let [value (-> x .-target .-value)]
                     (when-not (= description value)
-                      (rf/dispatch [:play/execute-transaction-props-easy!
+                      (rf/dispatch [:play/execute-transaction-props-to-remote-easy!
                                     stage-id "update"
                                     [[(keyword (str "substages." substage-id ".description")) description value]]]))))
         :style {:font-size "12px"
@@ -53,7 +54,8 @@
                 [:> Avatar
                  {:src (performer/get-header avatar :default)
                   :title (str (name avatar) "\n" (performer/get-description avatar))
-                  :on-click (fn [_] (avatar-edit/launch {:stage stage :avatar-id (:id avatar)}))}]
+                  :on-click (fn [_] (when (settings/query-setting-value-by-key :is-kp)
+                                      (avatar-edit/launch {:stage stage :avatar-id (:id avatar)})))}]
                 {:key (:id avatar)})) same-substage-avatars)]
       [:p "这儿没有任何角色"])))
 
@@ -68,8 +70,9 @@
                                (rf/dispatch [:play/change-substage-id! x])))]
     [:div.substage-indicator-container
      {:onDoubleClick (fn [_]
-                       (substage-edit/launch {:stage stage
-                                              :substage-id substage-id}))}
+                       (when (settings/query-setting-value-by-key :is-kp)
+                         (substage-edit/launch {:stage stage
+                                                :substage-id substage-id})))}
      [:> Divider
       (r/as-element [substage-selector {:substage-id substage-id
                                         :substages substages

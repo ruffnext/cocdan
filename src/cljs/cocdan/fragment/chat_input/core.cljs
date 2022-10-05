@@ -74,5 +74,3 @@
 
            [:p "请选择行动"])]
         [:p "在这个舞台上你没有可操作的角色"]))))
-
-;; (rf/dispatch [:play/execute-transaction-props-easy! 1 "st" {:avatar 0 :attr-map {:str 99}} true])
