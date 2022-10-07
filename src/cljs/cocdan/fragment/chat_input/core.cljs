@@ -27,8 +27,7 @@
                              (rf/dispatch [:play/change-avatar-id! v])
                              (let [avatars (:avatars stage-ctx)]
                                (when ((keyword (str v)) avatars)
-                                 (rf/dispatch [:play/change-substage-id! (get-substage-id ((keyword (str v)) avatars))])))
-                             (rf/dispatch [:chat-log/clear-cache!]))]
+                                 (rf/dispatch [:play/change-substage-id! (get-substage-id ((keyword (str v)) avatars))]))))]
       (when-not (contains? (set same-substage-avatars-id) avatar-id)
         (cond
           (seq controllable-avatars) (on-avatar-change [(-> controllable-avatars first first)] nil)

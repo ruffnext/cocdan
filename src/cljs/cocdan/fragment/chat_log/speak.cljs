@@ -42,7 +42,7 @@
 
 (extend-type Speak
   IChatLogVisualization
-  (to-chat-log [{:keys [avatar] :as this} ctx transaction observer]
-    (let [avatar-record (get-in (:context/props ctx) [:avatars (keyword (str avatar))])] 
+  (to-chat-log [{:keys [avatar] :as this} ctx transaction observer] 
+    (let [avatar-record (get-in (:context/props ctx) [:avatars (keyword (str avatar))])]
       (speak this avatar-record (if (= observer avatar) :right :left) transaction)))
   (display? [_this] true))

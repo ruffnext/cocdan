@@ -24,20 +24,21 @@
 
 (rf/reg-event-fx
  :play/execute-many-from-remote
- (fn [_ [_ stage-id transactions]]
+ (fn [{:keys [db]} [_ stage-id transactions]]
 
    (if-let [ops-sorted (sort-by first transactions)]
 
     ;; 执行数据库操作
      (let [ds-db (ctx-db/query-stage-db stage-id)
            recent-t-id-from-remote (:id (first ops-sorted))
-           latest-t-id-from-local (ctx-db/query-ds-latest-transaction-id @ds-db)
+           latest-t-id-from-local (ctx-db/query-ds-latest-transaction-id @ds-db true)
            partial-refresh (atom [])]
        
        ;; 首先是本地的 transaction 入库，之后发送到服务器，服务器确认后再通过
        ;; execute-many-from-remote 返回。因此正常情况下，服务端返回的 ack
-       ;; 应当是本地数据库的最后一个。如果不是，则应当向服务器请求状态同步。
-       (when (not= recent-t-id-from-remote latest-t-id-from-local)
+       ;; 应该验证的是数据库中最后的一个未验证项。如果不是，则客户端应向服务端
+       ;; 发起同步请求
+       (when (not= recent-t-id-from-remote (inc latest-t-id-from-local))
          (rf/dispatch [:play/retrieve-recent-logs stage-id]))
        
 
@@ -52,7 +53,8 @@
             (fn [ds-records] 
               (d/transact! ds-db ds-records)
               (swap! partial-refresh #(concat % (get-partial-refresh-from-ds-records ds-records)))))))
-       {:fx [[:dispatch (vec (concat [:partial-refresh/refresh!] @partial-refresh))]]})
+       {:db (assoc-in db [:play (keyword (str stage-id)) :last-ack-transaction-id] (:id (last ops-sorted)))
+        :fx [[:dispatch (vec (concat [:partial-refresh/refresh!] @partial-refresh))]]})
      {})))
 
 (defn- execute-transaction-props-easy!
@@ -102,11 +104,9 @@
 (rf/reg-event-fx
  :play/change-avatar-id!
  (fn [{:keys [db]} [_ avatar-id]]
-   {:db (assoc-in db [:play :avatar-id] avatar-id)
-    :fx [[:dispatch [:chat-log/clear-cache!]]]}))
+   {:db (assoc-in db [:play :avatar-id] avatar-id)}))
 
 (rf/reg-event-fx
  :play/change-substage-id!
  (fn [{:keys [db]} [_ substage-id]] 
-   {:db (assoc-in db [:play :substage-id] substage-id)
-    :fx [[:dispatch [:chat-log/clear-cache!]]]}))
+   {:db (assoc-in db [:play :substage-id] substage-id)}))
