@@ -70,10 +70,19 @@
               (assoc a (add-db-prefix-aux base k) v)
               a)) {} attrs))
 
+(defn datetime-to-string
+  [dt]
+  #?(:cljs (.toJSON dt))
+  #?(:clj (.toString dt)))
+
 (defn get-current-time-string
   []
   #?(:cljs (.toJSON (js/Date.)))
   #?(:clj (.toString (java.time.Instant/now))))
+
+(defn datetime-string-to-datetime
+  [time-string]
+  #?(:cljs (js/Date. time-string)))
 
 #?(:clj (def mapper (json/object-mapper {:decode-key-fn keyword})))
 

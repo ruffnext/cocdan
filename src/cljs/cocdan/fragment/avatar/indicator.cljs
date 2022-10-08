@@ -103,7 +103,7 @@
   (let [{:keys [name] :as avatar} (get-in ctx [:context/props :avatars (keyword (str avatar-id))])
         _refresh @(rf/subscribe [:partial-refresh/listen :play-room/avatar-indicator])]
     (when avatar 
-      (let [is-kp? (settings/query-setting-value-by-key :is-kp)] 
+      (let [is-kp? (settings/query-setting-value-by-key :game-play/is-kp)] 
         [:div
          [:> Divider "角色状态"]
          [:table

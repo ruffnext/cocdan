@@ -7,7 +7,7 @@
    :modules    {:app {:entries [cocdan.app]
                       :init-fn cocdan.core/init!}}
    :dev        {:closure-defines {cocdan.core.ws/ws-host "localhost"
-                                  cocdan.core.ws/ws-port 3000}}
+                                  cocdan.core.ws/ws-port 3001}}
    :release {:closure-defines {cocdan.core.ws/ws-host "cocdan.ruffnex.me"
                                cocdan.core.ws/ws-port 443}}}
   :test {:target  :node-test, :output-to "target/test/test.js"

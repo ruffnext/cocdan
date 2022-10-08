@@ -3,7 +3,8 @@
             [clojure.core.async :refer [<! go]]
             [cocdan.data.client-ds :refer [to-ds]]
             [cocdan.data.stage :refer [new-stage]]
-            [re-frame.core :as rf]))
+            [re-frame.core :as rf]
+            [reitit.frontend.easy :as rfe])) 
 
 (defn- init-login-data
   []
@@ -21,25 +22,23 @@
 
 (rf/reg-event-fx
  :event/auth-login
- (fn [{:keys [db]} [_ user-info]] 
-   
-   (if user-info
-     {:db (-> db
-              (assoc :auth/user user-info)
-              (assoc :auth/status true))
-      :after-login nil}
-     {:db (-> db
-              (assoc :auth/status false))})))
+ (fn [{:keys [db]} [_ user-info]]
+   (let [current-fragment @(:last-fragment @rfe/history)]
+     (if user-info
+       (do
+         (when (= current-fragment "/")
+           (rfe/push-state :main {:nav "stage.list"}))
+         {:db (-> db
+                  (assoc :auth/user user-info)
+                  (assoc :auth/status true))
+          :after-login nil})
+       {:db (-> db
+                (assoc :auth/status false))}))))
 
 (rf/reg-sub
  :common/user-id
  (fn [db _]
    (:id (:auth/user db))))
-
-(rf/reg-sub
- :sub/auth-user
- (fn [db _]
-   (:auth/user db)))
 
 (defn try-session-login
   [] 

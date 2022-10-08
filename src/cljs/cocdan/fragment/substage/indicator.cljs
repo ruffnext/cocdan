@@ -14,7 +14,7 @@
     [:select
      {:style {:border "0" :appearance "none" :text-align "center"}
       :value substage-id
-      :disabled (not (settings/query-setting-value-by-key :is-kp))
+      :disabled (not (settings/query-setting-value-by-key :game-play/is-kp))
       :on-change #(on-change (-> % .-target .-value))}
      (map (fn [[value display-name]] ^{:key value} [:option {:value value} display-name]) all-options)]))
 
@@ -22,7 +22,7 @@
   [{stage-id :stage-id
     {description :description
      substage-id :id} :substage}]
-  (if (settings/query-setting-value-by-key :is-kp)
+  (if (settings/query-setting-value-by-key :game-play/is-kp)
     (with-meta   ;; force re-render this react component
       [:> (.-TextArea Input)
        {:autoSize true
@@ -54,7 +54,7 @@
                 [:> Avatar
                  {:src (performer/get-header avatar :default)
                   :title (str (name avatar) "\n" (performer/get-description avatar))
-                  :on-click (fn [_] (when (settings/query-setting-value-by-key :is-kp)
+                  :on-click (fn [_] (when (settings/query-setting-value-by-key :game-play/is-kp)
                                       (avatar-edit/launch {:stage stage :avatar-id (:id avatar)})))}]
                 {:key (:id avatar)})) same-substage-avatars)]
       [:p "这儿没有任何角色"])))
@@ -70,7 +70,7 @@
                                (rf/dispatch [:play/change-substage-id! x])))]
     [:div.substage-indicator-container
      {:onDoubleClick (fn [_]
-                       (when (settings/query-setting-value-by-key :is-kp)
+                       (when (settings/query-setting-value-by-key :game-play/is-kp)
                          (substage-edit/launch {:stage stage
                                                 :substage-id substage-id})))}
      [:> Divider

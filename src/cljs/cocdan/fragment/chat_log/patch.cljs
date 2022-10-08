@@ -1,14 +1,12 @@
 (ns cocdan.fragment.chat-log.patch
   (:require [cocdan.data.transaction.patch :refer [TPatch]]
-            [cocdan.data.mixin.visualization :refer [IChatLogVisualization]]
-            [cocdan.core.settings :as settings]))
+            [cocdan.data.mixin.visualization :refer [IChatLogVisualization]]))
 
 (extend-type TPatch
   IChatLogVisualization
   (to-chat-log
     [{:keys [ops]} {stage :context/props} _transaction observer]
-    (let [is-kp (settings/query-setting-value-by-key :is-kp)
-          [_substage-before substage-after] (->> (map (fn [[a b c]]
+    (let [[_substage-before substage-after] (->> (map (fn [[a b c]]
                                                         (let [re-result (= (str "avatars." observer ".substage") (name a))]
                                                           (when re-result [b c]))) ops)
                                                  (filter some?) first)
@@ -19,7 +17,7 @@
                       [:p.transact-value {:style {:font-style "italic"}}
                        description]]])
                   [])
-          kv-changes (if is-kp
+          kv-changes (if (= 0 observer)
                        [(map-indexed (fn [i [k _before after]]
                                        (with-meta [:div.is-flex
                                                    [:p.transact-key (str k " : ")]

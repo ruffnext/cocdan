@@ -62,13 +62,13 @@
              [:p.has-text-centered "舞台"]
              [chat-log/chat-log
               {:stage-id stage-id
-               :substage substage-id-deref
+               :substage-id substage-id-deref
                :observer avatar-id-deref}]
              [fragment-input/input
               {:stage-id stage-id
                :avatar-id avatar-id-deref
                :context latest-ctx
-               :substage substage-id-deref}]]
+               :substage-id substage-id-deref}]]
             [:div.column.is-2
              {:style {:font-size "12px"}}
              [:p "　"] ;; 空一行出来，与聊天框持平

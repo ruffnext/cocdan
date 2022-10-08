@@ -26,9 +26,8 @@
       (when-let [[_ _ substage-after] (first (filter (fn [[this-avatar-id substage-before _]]
                                                        (and (= avatar-id this-avatar-id)
                                                             (= substage-id substage-before))) substage-changes))]
-        (let [last-transaction-id (ctx-db/query-ds-latest-transaction-id @(ctx-db/query-stage-db stage-id))]
-          (js/console.log last-transaction-id id substage-after)
-          (when (and substage-after (= (inc last-transaction-id) id))
+        (let [last-transaction-id (ctx-db/query-ds-latest-transaction-id @(ctx-db/query-stage-db stage-id))] 
+          (when (and substage-after (= (inc last-transaction-id) id)) ;; 当 kp 改变玩家操控角色的子舞台时，强制玩家的子舞台跟着切换
             (rf/dispatch [:play/change-substage-id! substage-after])))))
     (either/right (patch/->TPatch props))))
 

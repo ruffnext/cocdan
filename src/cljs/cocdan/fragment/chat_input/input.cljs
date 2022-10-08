@@ -12,7 +12,7 @@
   (r/with-let
     [input-key (r/atom (js/Math.random))]
     (let [all-avatars (map second avatars)
-          is-kp (settings/query-setting-value-by-key :is-kp)
+          is-kp (settings/query-setting-value-by-key :game-play/is-kp)
           same-substage-avatars (filter #(or (= (get-substage-id %) substage-id) (and is-kp (= 0 (:id %)))) all-avatars)
           mentionable-avatars (filter #(not= (:id %) avatar-id) same-substage-avatars)
           on-textarea-enter (fn [x]

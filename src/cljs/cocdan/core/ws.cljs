@@ -4,7 +4,7 @@
             [re-frame.core :as rf]))
 
 (goog-define ws-host "localhost")
-(goog-define ws-port 3000)
+(goog-define ws-port 3001)
 (def max-retries 3)
 (defonce retry-remain (atom 3))
 (declare init-ws!)

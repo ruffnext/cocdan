@@ -1,8 +1,8 @@
 (ns cocdan.page.main.settings 
-  (:require ["antd" :refer [Select]]
-            [clojure.string :as s]
+  (:require ["antd" :refer [Select]] 
             [cocdan.core.settings :refer [posh-setting-key-and-values
-                                          update-setting-value-by-key]]))
+                                          update-setting-value-by-key]]
+            [cocdan.aux :as data-aux]))
 
 (defn page-show
   []
@@ -10,7 +10,7 @@
 
 
 (defn setting-item-elem
-  [k val]
+  [k setting-name val]
   (let [val-elem
         (cond
           (nil? val) "nil"
@@ -69,15 +69,15 @@
                            (when (not (js/isNaN res))
                              (update-setting-value-by-key k res))))}]
 
-          ;; (instance? js/Date val)
-          ;; [:div.control
-          ;;  [:input.input
-          ;;   {:type "datetime-local"
-          ;;    :value (aux-misc/date-to-local-utc-string val)
-          ;;    :on-change #(update-config-item-by-key
-          ;;                 k
-          ;;                 (aux-misc/parse-utc-str-date
-          ;;                  (-> % .-target .-value)))}]]
+          (instance? js/Date val)
+          [:div.control
+           [:input.input
+            {:type "datetime-local"
+             :value (data-aux/datetime-to-string val)
+             :on-change #(update-setting-value-by-key
+                          k
+                          (data-aux/datetime-string-to-datetime
+                           (-> % .-target .-value)))}]]
 
           (string? val) [:div.control
                          [:input.input
@@ -87,7 +87,7 @@
 
           :else (str val))]
     [:tr
-     [:th.is-vcentered (last (s/split (name k) #"\." 2))]
+     [:th.is-vcentered {:title (str k)} setting-name]
      [:th.is-vcentered val-elem]]))
 
 (defn settings-box-container
@@ -112,9 +112,9 @@
    prefix
    (doall
     (map
-     (fn [[k v]]
+     (fn [[k n v]]
        (with-meta
-         (setting-item-elem k v)
+         (setting-item-elem k n v)
          {:key k}))
      settings-set))])
 
@@ -129,4 +129,4 @@
          {:key i}))
      (into
       (sorted-map)
-      (group-by #(-> % first name (s/split #"\." 2) first) @(posh-setting-key-and-values)))))])
+      (group-by #(-> % first namespace) @(posh-setting-key-and-values)))))])
