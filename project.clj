@@ -49,6 +49,7 @@
                  [com.taoensso/nippy "3.2.0"]
                  [cljs-http "0.1.46"] 
                  [metosin/malli "0.8.9"]
+                 [tongue "0.4.4"]  ; i11n
                  [thheller/shadow-cljs "2.19.9" :scope "provided"]]
 
   :min-lein-version "2.0.0"

@@ -1,41 +1,37 @@
-(ns cocdan.core.coc.attrs)
+(ns cocdan.core.coc.attrs
+  (:require [tongue.core :as tongue]))
 
-(def base-list
-  [[:str [:zh "力量"]]
-   [:dex [:zh "敏捷"]]
-   [:pow [:zh "意志"]]
-   [:con [:zh "体质"]]
-   [:app [:zh "外貌"]]
-   [:edu [:zh "教育"]]
-   [:siz [:zh "体型"]]
-   [:int [:zh "灵感"] [:zh "智力"]]
-   [:san [:zh "理智"] [:zh "理智值"]]
-   [:luck [:zh "幸运"] [:zh "运气"]]
-   [:mp [:zh "魔法"]]
-   [:hp [:zh "体力"]]
-   [:san [:zh "san值"]]
-   [:investigate [:zh "侦查"]]])
+(def i11n-dict
+  {:zh {:str "力量"
+        :dex "敏捷"
+        :pow "意志"
+        :con "体质"
+        :app "外貌"
+        :edu "教育"
+        :siz "体型"
+        :int "智力"
+        :san "理智"
+        :luck "幸运"
+        :mp "魔法值"
+        :hp "体力值"
+        :investigate "侦查"
+        :tongue/missing-key "{1}"}})
+
+
+(def tr (tongue/build-translate i11n-dict))
 
 (def standard-to-localization
-  (->> (map (fn [[standard-key & localizations]]
-              (map (fn [[lang-key value]]
-                     [(keyword (str (name standard-key) "." (name lang-key))) value]) localizations))
-            base-list)
+  (->> (map (fn [[_k v]] (vec v)) i11n-dict)
        (apply concat)
-       (into {})))
-
-(def localization-to-standard
-  (->> (map (fn [[standard-key & localizations]]
-              (map (fn [[_lang-key value]] [(keyword value) standard-key]) localizations))
-            base-list)
-       (apply concat)
+       (filter (fn [[k _v]] (not= (namespace k) "tongue")))
+       (map (fn [[k v]]
+              [(keyword v) k]))
        (into {})))
 
 (defn cover-attr-name-standard
   [attr-name]
-  (name (or ((keyword attr-name) localization-to-standard) attr-name)))
+  (name (or ((keyword attr-name) standard-to-localization) attr-name)))
 
 (defn get-attr-localization-name
-  [standard-attr-name localization-key]
-  (let [find-key (keyword (str standard-attr-name "." (name localization-key)))]
-    (or (find-key standard-to-localization) standard-attr-name)))
+  [standard-attr-key localization-key]
+  (tr localization-key standard-attr-key))

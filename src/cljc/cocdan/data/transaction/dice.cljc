@@ -78,4 +78,4 @@
         avatar (get-in ctx [:avatars (keyword (str avatar))])
         san-val (get-attr avatar "san")] 
     (either/right
-     (assoc-in ctx [:avatars avatar-key] (set-attr avatar "san" (- san-val san-loss))))))
+     (assoc-in ctx [:avatars avatar-key] (set-attr avatar "san" (max (- san-val san-loss) 0))))))

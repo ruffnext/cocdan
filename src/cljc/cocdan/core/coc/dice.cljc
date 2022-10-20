@@ -73,9 +73,9 @@
     (if-not res
       (either/left ".st 指令非法")
       (let [update-op-list (->> (map (fn [[_ key-name value]]
-                                       (let [attr-standard-name (attrs-core/cover-attr-name-standard key-name)
-                                             attr-standard-key (keyword (str "avatars." avatar-id ".props.attrs." attr-standard-name))]
-                                         [attr-standard-key [(get-attr avatar attr-standard-name) (parse-long value)]])) res)
+                                       (let [standard-attr-name (attrs-core/cover-attr-name-standard key-name)
+                                             attr-standard-key (keyword (str "avatars." avatar-id ".props.attrs." (name standard-attr-name)))]
+                                         [attr-standard-key [(get-attr avatar standard-attr-name) (parse-long value)]])) res)
                                 (into {})
                                 (map (fn [[k v]] (vec (concat [k] v)))) vec)]
         (either/right ["update" update-op-list])))))
@@ -90,7 +90,7 @@
         reg-pattern #"^[.。](?<cmd>(close|show|watch|sc|st|aa|r[b]+|r[p]+|rd|ra|rc|r\d{1,}d\d{1,}[^ ]*))[ ]*(?<rest>.*)"
         res (re-seq reg-pattern pure-cmd)]
     (if-not res
-      (either/left "该消息并非为一个合法的 coc 指令")
+      (either/left (str cmd " 并非为一个合法的 coc 指令"))
       (let [[_ _ cmd cmd-rest] (first res)
             handler-fn (cond
                          (s/starts-with? cmd "r") new-r-command

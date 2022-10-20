@@ -1,8 +1,9 @@
 (ns cocdan.fragment.chat-log.speak 
-  (:require ["antd" :refer [Avatar Badge]] 
+  (:require ["antd" :refer [Avatar Badge]]
+            [cocdan.core.settings :refer [translate]]
+            [cocdan.data.mixin.visualization :refer [IChatLogVisualization]]
             [cocdan.data.performer.core :as performer]
-            [cocdan.data.transaction.speak :refer [Speak]]
-            [cocdan.data.mixin.visualization :refer [IChatLogVisualization]]))
+            [cocdan.data.transaction.speak :refer [Speak]]))
 
 "仅针对 NPC、 Avatar 和 KP 能调用 Speak"
 
@@ -21,7 +22,7 @@
                    [:div.chat-content
                     [:span (str message)]]]
         header-item (if ack
-                      [:> Badge {:dot true :status "success" :title (str "消息送达时间 : " time)}
+                      [:> Badge {:dot true :status "success" :title (str "消息送达时间 : " (translate :date-full-12-hour (js/Date. time)))}
                        avatar-item]
                       [:> Badge {:dot "载入中" :title "等待服务器返回确认"}
                        avatar-item])]

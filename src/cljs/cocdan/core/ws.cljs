@@ -3,8 +3,6 @@
             [clojure.edn :refer [read-string]]
             [re-frame.core :as rf]))
 
-(goog-define ws-host "localhost")
-(goog-define ws-port 3001)
 (def max-retries 3)
 (defonce retry-remain (atom 3))
 (declare init-ws!)
@@ -51,7 +49,7 @@
 (defn init-ws!
   [stage-id]
   (let [protocol (case (-> js/window .-location .-protocol) "http:" "ws" "wss")
-        url (str protocol "://"  ws-host ":" ws-port "/ws/" stage-id)]
+        url (str protocol "://"  (-> js/window .-location .-host) "/ws/" stage-id)]
     (rf/dispatch-sync [:ws/change-channel! stage-id :loading])
     (when-let [channel (js/WebSocket. url)]
       (set! (.-onopen channel) (partial on-open stage-id))

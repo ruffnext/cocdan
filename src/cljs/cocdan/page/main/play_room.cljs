@@ -31,7 +31,6 @@
                                                                latest-ctx-val (reset! latest-ctx (ctx-db/query-ds-ctx-by-id ds ctx_id)))]
                                           (concat a (m/extract (op-core/ctx-generate-ds stage-id t latest-ctx-val)))))
                                       [] transaction)]
-               (js/console.log ds-records)
                (d/transact! db (filter (fn [x] (not (contains? x :context/id))) ds-records))
                (rf/dispatch [:partial-refresh/refresh! :play-room :chat-log]))
          nil)))
