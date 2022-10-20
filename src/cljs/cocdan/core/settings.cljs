@@ -3,7 +3,7 @@
             [datascript.core :as d]
             [posh.reagent :as p]
             [re-frame.core :as rf]
-            [cocdan.core.i11n :as i11n]))
+            [cocdan.core.i18n :as i18n]))
 
 (defn update-setting-value-by-key
   [k value]
@@ -36,4 +36,4 @@
 
 (defn translate
   [& res]
-  (apply i11n/translate (query-setting-value-by-key :ui/language) res))
+  (apply i18n/translate (query-setting-value-by-key :ui/language) res))

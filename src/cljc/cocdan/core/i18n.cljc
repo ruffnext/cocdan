@@ -1,4 +1,4 @@
-(ns cocdan.core.i11n 
+(ns cocdan.core.i18n 
   (:require [tongue.core :as tongue]))
 
 (def inst-strings-en
