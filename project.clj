@@ -47,7 +47,7 @@
                  [funcool/cats "2.4.2"]
                  [prismatic/schema "1.4.0"]
                  [com.taoensso/nippy "3.2.0"]
-                 [cljs-http "0.1.46"] 
+                 [io.github.ruffnext/cljs-http "0.1.47"] 
                  [metosin/malli "0.8.9"]
                  [tongue "0.4.4"]  ; i11n
                  [thheller/shadow-cljs "2.19.9" :scope "provided"]]
