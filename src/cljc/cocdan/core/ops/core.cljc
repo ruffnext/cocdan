@@ -2,7 +2,8 @@
   (:require [cats.core :as m]
             [cats.monad.either :as either]
             [cocdan.aux :as data-aux]
-            [malli.core :as spec]))
+            [cocdan.core.ops.data :as op-data]
+            [malli.core :as mc]))
 
 (defonce transaction-handler (atom {}))
 (defonce context-handler (atom nil))
@@ -47,37 +48,54 @@
   ([id ctx_id user time type props]
    (make-transaction id ctx_id user time type props false)))
 
-(defonce hooks (atom {}))
+(mc/=> make-transaction-v2 [:=> [:cat :int :int :int :string :string :any :boolean] op-data/transaction-spec])
+(defn make-transaction-v2
+  "创建一个 transaction"
+  [id ctx_id user time type payload ack]
+  {:id id :ctx_id ctx_id :user user :time time :type type :payload payload :ack ack})
 
-(defn register-find-ctx-by-id
-  "注册函数：fn ( stage-id, ctx_id ) -> either ctx
-   如果失败，transaction 将不被执行"
-  [handler]
-  (swap! hooks #(assoc % :find-ctx-by-id handler)))
+(defn make-context-v2
+  "创建一个 context"
+  [id time payload ack]
+  {:id id :time time :payload payload :ack ack})
+(mc/=> make-context-v2 [:=> [:cat :int :string :any :boolean] op-data/context-spec])
+
+(defn ctx-run!
+  "在上下文中运行 transaction ，产生 transaction 和 context
+   run的过程中可能会产生副作用。"
+  [{t-id :id _t-ctx-id :ctx_id t-time :time t-type :type t-ack :ack t-payload :payload :as transaction}
+   {c-ctx-id :id _c-ack :ack :as context}]
+  (let [type-key (keyword t-type)
+        t-handler (or (type-key @transaction-handler) (fn [_ _] (either/right t-payload)))
+        c-handler (or (type-key @context-handler) (fn [_ _] (either/right nil)))]
+    (m/mlet
+     [new-t-payload (t-handler transaction context)
+      new-t-record (either/right (assoc transaction :ctx_id c-ctx-id :payload new-t-payload))
+      new-c-payload (c-handler new-t-record context)] 
+     (let [new-c-record (when new-c-payload
+                         (make-context-v2 t-id t-time new-c-payload t-ack))] 
+       (either/right
+        [new-t-record new-c-record])))))
+(mc/=> ctx-run! [:=>
+                 [:cat op-data/transaction-spec op-data/context-spec]
+                 (op-data/make-either-spec :string [:cat op-data/transaction-spec [:or op-data/context-spec nil?]])])
 
 (defn ctx-generate-ds
   "在上下文中运行 op 指令，并返回 datascript 的指令"
-  ([stage-id {:keys [ctx_id] :as op}]
-   (let [func (:find-ctx-by-id @hooks)]
-     (if func
-       (either/branch-right
-        (func stage-id ctx_id)
-        (fn [ctx] (ctx-generate-ds stage-id op ctx)))
-       (either/left "未设置缺省的上下文查询 hook，无法查询上下文"))))
-  ([_stage-id {:keys [id ctx_id time type ack] :as t-record} {ctx_id-from-ctx :context/id
-                                                              stage-id :context/stage
-                                                              _context-ack :context/ack :as ctx}]
-   (let [type-key (keyword (str type))
-         t-handler (or (type-key @transaction-handler) (fn [_ t-record] (either/right (:props t-record))))
-         c-handler (or (type-key @context-handler) (fn [& _] (either/right nil)))] 
-     (m/mlet
-      [new-t-props (t-handler ctx t-record)
-       new-t-record (either/right (assoc t-record :ctx_id (or ctx_id-from-ctx ctx_id) :stage stage-id :props new-t-props :ack (or ack false)))
-       c-props (c-handler ctx new-t-record)]
-      (either/right
-       (if c-props
-         [(data-aux/add-db-prefix :transaction new-t-record) (data-aux/add-db-prefix :context {:id id :time time :props c-props :ask (or ack false)})]
-         [(data-aux/add-db-prefix :transaction new-t-record)]))))))
+  [_stage-id {:keys [id ctx_id time type ack] :as t-record} {ctx_id-from-ctx :context/id
+                                                             stage-id :context/stage
+                                                             _context-ack :context/ack :as ctx}]
+  (let [type-key (keyword (str type))
+        t-handler (or (type-key @transaction-handler) (fn [_ t-record] (either/right (:props t-record))))
+        c-handler (or (type-key @context-handler) (fn [& _] (either/right nil)))]
+    (m/mlet
+     [new-t-props (t-handler ctx t-record)
+      new-t-record (either/right (assoc t-record :ctx_id (or ctx_id-from-ctx ctx_id) :stage stage-id :props new-t-props :ack (or ack false)))
+      c-props (c-handler ctx new-t-record)]
+     (either/right
+      (if c-props
+        [(data-aux/add-db-prefix :transaction new-t-record) (data-aux/add-db-prefix :context {:id id :time time :props c-props :ask (or ack false)})]
+        [(data-aux/add-db-prefix :transaction new-t-record) nil])))))
 
 (def update-props-spec
   [:vector
@@ -112,15 +130,15 @@
    [:loss-on-failure string?]])
 
 (defn m-final-validate-transaction
-  [{:keys [type props]}]
+  [{:keys [type payload]}]
   (let [res (case type
-              "update" (spec/explain update-props-spec props)
-              "speak" (spec/explain speak-props-spec props)
-              "narration" (spec/explain narration-props-spec props)
-              "rc" (spec/explain r-props-spec props)
-              "ra" (spec/explain r-props-spec props)
-              "st" (spec/explain st-props-spec props)
-              "sc" (spec/explain sc-props-spec props)
+              "update" (mc/explain update-props-spec payload)
+              "speak" (mc/explain speak-props-spec payload)
+              "narration" (mc/explain narration-props-spec payload)
+              "rc" (mc/explain r-props-spec payload)
+              "ra" (mc/explain r-props-spec payload)
+              "st" (mc/explain st-props-spec payload)
+              "sc" (mc/explain sc-props-spec payload)
               {:errors (str "无法检验 transaction 类型" type)})]
     (if res
       (either/left res)

@@ -1,6 +1,6 @@
 (ns cocdan.data.transaction.dice 
   (:require [cats.monad.either :as either]
-            [cocdan.data.core :refer [default-update']]
+            [cocdan.data.core :refer [update']]
             [cocdan.data.performer.core :refer [get-attr set-attr]]))
 
 (defprotocol IDice
@@ -58,24 +58,24 @@
 ; TODO: dice rh
 
 (defn handle-st-context
-  [{ctx :context/props} {{:keys [avatar attr-map]} :props}] 
-  (let [avatar-record (get-in ctx [:avatars (keyword (str avatar))])
+  [{{:keys [avatar attr-map]} :payload} {ctx-payload :payload}] 
+  (let [avatar-record (get-in ctx-payload [:avatars (keyword (str avatar))])
         ops (reduce (fn [a [k v]]
                       (let [avatar-attr-val (get-attr avatar-record (name k))]
                         (if (= avatar-attr-val v)
-                          a (conj a [(keyword (str "avatars." avatar ".props.attrs." (name k))) avatar-attr-val v]))))
+                          a (conj a [(keyword (str "avatars." avatar ".payload.attrs." (name k))) avatar-attr-val v]))))
                     [] attr-map)]
-    (either/right (default-update' ctx ops))))
+    (either/right (update' ctx-payload ops))))
 
 (defn handle-sc-transaction
-  [_ctx {{:keys [avatar attr-val dice-result san-loss loss-on-success loss-on-failure]} :props}]
+  [{{:keys [avatar attr-val dice-result san-loss loss-on-success loss-on-failure]} :payload} _ctx]
   (either/right
    (->SC avatar attr-val dice-result san-loss loss-on-success loss-on-failure)))
 
 (defn handle-sc-context
-  [{ctx :context/props} {{:keys [avatar san-loss]} :props}]
+  [{{:keys [avatar san-loss]} :payload} {ctx-payload :payload}]
   (let [avatar-key (keyword (str avatar))
-        avatar (get-in ctx [:avatars (keyword (str avatar))])
+        avatar (get-in ctx-payload [:avatars (keyword (str avatar))])
         san-val (get-attr avatar "san")] 
     (either/right
-     (assoc-in ctx [:avatars avatar-key] (set-attr avatar "san" (max (- san-val san-loss) 0))))))
+     (assoc-in ctx-payload [:avatars avatar-key] (set-attr avatar "san" (max (- san-val san-loss) 0))))))

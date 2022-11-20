@@ -1,9 +1,8 @@
 (ns ^:dev/once cocdan.app
-  (:require
-    [cocdan.core :as core]
-    [cljs.spec.alpha :as s]
-    [expound.alpha :as expound]
-    [devtools.core :as devtools]))
+  (:require [cljs.spec.alpha :as s]
+            [cocdan.core :as core]
+            [devtools.core :as devtools]
+            [expound.alpha :as expound]))
 
 (extend-protocol IPrintWithWriter
   js/Symbol

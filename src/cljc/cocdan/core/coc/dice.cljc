@@ -74,7 +74,7 @@
       (either/left ".st 指令非法")
       (let [update-op-list (->> (map (fn [[_ key-name value]]
                                        (let [standard-attr-name (attrs-core/cover-attr-name-standard key-name)
-                                             attr-standard-key (keyword (str "avatars." avatar-id ".props.attrs." (name standard-attr-name)))]
+                                             attr-standard-key (keyword (str "avatars." avatar-id ".payload.attrs." (name standard-attr-name)))]
                                          [attr-standard-key [(get-attr avatar standard-attr-name) (parse-long value)]])) res)
                                 (into {})
                                 (map (fn [[k v]] (vec (concat [k] v)))) vec)]

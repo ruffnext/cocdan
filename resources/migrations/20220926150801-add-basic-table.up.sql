@@ -10,13 +10,13 @@ CREATE TABLE transactions
  stage INTEGER,
  time VARCHAR(32),
  type VARCHAR(60),
- props BLOB);
+ payload BLOB);
 --;;
 CREATE TABLE contexts
 (id INTEGER,
  stage INTEGER,
  time VARCHAR(32),
- props BLOB);
+ payload BLOB);
 --;;
 CREATE TABLE avatars
 (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,7 +26,7 @@ CREATE TABLE avatars
  stage INTEGER,
  substage VARCHAR(120),
  controlled_by INTEGER,
- props BLOB);
+ payload BLOB);
 --;;
 CREATE TABLE stages
 (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,4 +42,4 @@ CREATE TABLE substages
 (id VARCHAR(120),
  name VARCHAR(250),
  adjacencies BLOB, -- 一个列表，存 substage id
- props BLOB);
+ payload BLOB);

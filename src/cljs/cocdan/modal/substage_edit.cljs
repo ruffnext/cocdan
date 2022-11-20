@@ -40,7 +40,7 @@
                                                                             :name @substage-name-edit
                                                                             :description @substage-description-edit
                                                                             :adjacencies []}}}
-                               diffs-substage (data-core/default-diff' substage-before substage-after)
+                               diffs-substage (data-core/diff' substage-before substage-after)
                                diffs-avatars (reduce (fn [a {:keys [key substage]}]
                                                        (cond
                                                          (contains? default-target-keys key) a

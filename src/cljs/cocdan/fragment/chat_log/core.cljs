@@ -30,17 +30,17 @@
 (defn- visualization-log-by-avatar
   "返回一个 [tid hiccup] / false 的结构
    历史记录的渲染是追踪 avatar 的"
-  [stage-ds avatar-id {:keys [id ctx_id props] :as transaction}]
+  [stage-ds avatar-id {:keys [id ctx_id payload] :as transaction}]
   (let [context (ctx-db/query-ds-ctx-by-id stage-ds ctx_id)
-        avatar (get-in context [:context/props :avatars (keyword (str avatar-id))])
-        substage-id (if (satisfies? ITerritorialMixIn props) (get-substage-id props) nil)] 
+        avatar (get-in context [:payload :avatars (keyword (str avatar-id))])
+        substage-id (if (satisfies? ITerritorialMixIn payload) (get-substage-id payload) nil)] 
     (cond
       (or (empty? context) (empty? avatar)) false
-      (not (satisfies? IChatLogVisualization props)) false
-      (and (satisfies? ITerritorialMixIn props)
+      (not (satisfies? IChatLogVisualization payload)) false
+      (and (satisfies? ITerritorialMixIn payload)
            (not= avatar-id 0) ;; kp 需要渲染所有舞台上的日志
-           (not= (get-substage-id props) (get-substage-id avatar))) false
-      :else [id substage-id (with-meta (to-chat-log props
+           (not= (get-substage-id payload) (get-substage-id avatar))) false
+      :else [id substage-id (with-meta (to-chat-log payload
                                                     context
                                                     transaction
                                                     avatar-id) {:key (str avatar-id "-" id)})])))
@@ -63,7 +63,7 @@
   [stage-id avatar-id limit]
   (let [stage-ds @(ctx-db/query-stage-db stage-id)
         transactions-reverse (->> (reverse (d/datoms stage-ds :avet :transaction/id))
-                                  (map #(remove-db-prefix (d/pull stage-ds '[*] (:e %))))
+                                  (map #(d/pull stage-ds '[*] (:e %)))
                                   (filter :ack)
                                   (#(if limit (take limit %) %)))
         transactions (reverse transactions-reverse)

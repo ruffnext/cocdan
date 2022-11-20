@@ -31,7 +31,7 @@
 
 (defn init-default-settings
   []
-  (register-setting-key-value :game-play/is-kp "启用 KP 模式" false)
+  (register-setting-key-value :game-play/is-kp "启用 KP 模式" true)
   (register-setting-key-value :ui/language "语言" :zh))
 
 (defn translate

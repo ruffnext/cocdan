@@ -40,7 +40,7 @@
     {:style {:max-width "2em"}}
     ^{:key (str attr-name (get-attr avatar attr-name))}
     [narrow-field-input-elem {:stage-id stage-id
-                              :field-keyword (keyword (str "avatars." (:id avatar) ".props.attrs." (s/lower-case attr-name)))
+                              :field-keyword (keyword (str "avatars." (:id avatar) ".payload.attrs." (s/lower-case attr-name)))
                               :current-value (get-attr avatar attr-name)
                               :placeholder "0"
                               :can-edit? is-kp?
@@ -50,7 +50,7 @@
     (str " / " (get-attr-max avatar attr-name))]])
 
 (defn- equipment-table
-  [stage-id {avatar-id :id :as avatar}]
+  [stage-id {avatar-id :id :as avatar}] 
   (r/with-let
     [editor-open? (r/atom false)
      field-clicked (r/atom nil)
@@ -62,7 +62,7 @@
                              :onBlur (fn [x]
                                        (let [new-value (-> x .-target .-value)]
                                          (when-not (= new-value equipment-val)
-                                           (let [path-key (keyword (str "avatars." avatar-id ".props.equipments." (name slot-key)))
+                                           (let [path-key (keyword (str "avatars." avatar-id ".payload.equipments." (name slot-key)))
                                                  remove-before (if (empty? equipment-val) [] [path-key equipment-val :remove])
                                                  add-later (if (empty? new-value) [] [path-key :remove new-value])
                                                  final-ops (vec (filter seq [remove-before add-later]))]
@@ -100,7 +100,7 @@
 
 (defn indicator
   [stage-id ctx avatar-id]
-  (let [{:keys [name] :as avatar} (get-in ctx [:context/props :avatars (keyword (str avatar-id))])
+  (let [{:keys [name] :as avatar} (get-in ctx [:payload :avatars (keyword (str avatar-id))])
         _refresh @(rf/subscribe [:partial-refresh/listen :play-room/avatar-indicator])]
     (when avatar 
       (let [is-kp? (settings/query-setting-value-by-key :game-play/is-kp)] 

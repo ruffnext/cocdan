@@ -10,7 +10,7 @@
                                                   handle-st-context]]))
 
 (defn handle-attr-check-dice
-  [{ctx :context/props} {{:keys [avatar attr]} :props}]
+  [ {{:keys [avatar attr]} :payload} {ctx :payload}]
   (let [avatar-record (get-in ctx [:avatars (keyword (str avatar))])
         attr-val (get-attr avatar-record attr)] 
     (either/branch-right
@@ -19,7 +19,7 @@
        (either/right  {:avatar avatar :attr attr :attr-val attr-val :dice-result dice-result})))))
 
 (defn handle-sc-transaction
-  [{ctx :context/props} {{:keys [avatar loss-on-success loss-on-failure] :as props} :props}]
+  [ {{:keys [avatar loss-on-success loss-on-failure] :as props} :payload} {ctx :payload}]
   (let [avatar-record (get-in ctx [:avatars (keyword (str avatar))])
         san-val (get-attr avatar-record "san")]
     (m/mlet
@@ -30,8 +30,8 @@
      (either/right
       (assoc props :dice-result dice-result :attr-val san-val :san-loss loss-result)))))
 
-(register-transaction-handler :rc handle-attr-check-dice)
-(register-transaction-handler :ra handle-attr-check-dice)
-(register-context-handler :st handle-st-context)
-(register-context-handler :sc handle-sc-context)
-(register-transaction-handler :sc handle-sc-transaction)
+(register-transaction-handler :rc handle-attr-check-dice) ;; refined
+(register-transaction-handler :ra handle-attr-check-dice) ;; refined
+(register-context-handler :st handle-st-context) ;; refined
+(register-context-handler :sc handle-sc-context) ;; refined
+(register-transaction-handler :sc handle-sc-transaction) ;; refined

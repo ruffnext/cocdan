@@ -1,6 +1,5 @@
 (ns cocdan.data.stage
-  (:require [cocdan.data.core :as data-core]
-            [cocdan.data.performer.avatar :refer [new-avatar]]))
+  (:require [cocdan.data.performer.avatar :refer [new-avatar]]))
 
 (defrecord Stage [id name introduction image substages avatars controlled_by]
 
@@ -10,11 +9,7 @@
 
   #?(:clj clojure.lang.Named)
   #?(:clj (getName [_this] name))
-  #?(:clj (getNamespace [_this] nil))
-
-  data-core/IIncrementalUpdate
-  (data-core/diff' [this before] (data-core/default-diff' this before))
-  (data-core/update' [this ops] (data-core/default-update' this ops)))
+  #?(:clj (getNamespace [_this] nil)))
 
 (defrecord SubStage [id name description adjacencies props]
   #?(:cljs INamed)
@@ -23,11 +18,7 @@
 
   #?(:clj clojure.lang.Named)
   #?(:clj (getName [_this] id))
-  #?(:clj (getNamespace [_this] nil))
-
-  data-core/IIncrementalUpdate
-  (data-core/diff' [this before] (data-core/default-diff' this before))
-  (data-core/update' [this ops] (data-core/default-update' this ops)))
+  #?(:clj (getNamespace [_this] nil)))
 
 (defn new-substage
   [{:keys [id name description adjacencies props]}]

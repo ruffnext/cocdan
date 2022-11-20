@@ -32,7 +32,7 @@
                                avatar-later {:avatars {(keyword (str (:id @avatar-edit))) @avatar-edit}}]
                            (rf/dispatch [:play/execute-transaction-props-to-remote-easy!
                                          stage-id "update"
-                                         (data-core/default-diff' avatar-before avatar-later)])) 
+                                         (data-core/diff' avatar-before avatar-later)])) 
                          (reset! open? false))]
       [:div.modal.is-active
        [:div.modal-background

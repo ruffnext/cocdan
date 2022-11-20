@@ -1,9 +1,9 @@
 (ns cocdan.routes.test
-  (:require [cocdan.services.stage.core :as stage]
+  (:require [cats.monad.either :as either]
             [cocdan.middleware.monad-api :refer [wrap-monad]]
             [cocdan.services.auth.core :as auth]
             [cocdan.services.avatar.core :as avatar]
-            [cats.monad.either :as either]))
+            [cocdan.services.stage.core :as stage]))
 
 ;; 导入测试的数据集
 
@@ -12,11 +12,11 @@
    {:id 2 :username "ruff" :nickname "handsome man"}])
 
 (def test-avatars
-  [{:id 1 :name "初始角色" :image "" :description "PC角色" :stage 1 :substage "lobby"  :controlled_by 1 :props {:attrs {:str 100} :equipments {:左手 #{} :右手 #{} :背包 #{"智能手机" "钥匙串"}}}}])
+  [{:id 1 :name "初始角色" :image "" :description "PC角色" :stage 1 :substage "lobby"  :controlled_by 1 :payload {:attrs {:str 100} :equipments {:左手 #{} :右手 #{} :背包 #{"智能手机" "钥匙串"}}}}])
 
 (def test-npc
-  [{:id -1 :name "NPC" :image "" :description "id 为负数的都是 NPC" :substage "lobby" :controlled_by 0 :props {:str 150}}
-   {:id -2 :name "由玩家控制的 NPC" :image "" :description "这也是一个 NPC，您可以将这个角色让渡给某个玩家进行操控，这时候 controlled_by 填写该玩家的 id" :substage "lobby" :controlled_by 1 :props {:str 200}}])
+  [{:id -1 :name "NPC" :image "" :description "id 为负数的都是 NPC" :substage "lobby" :controlled_by 0 :payload {:str 150}}
+   {:id -2 :name "由玩家控制的 NPC" :image "" :description "这也是一个 NPC，您可以将这个角色让渡给某个玩家进行操控，这时候 controlled_by 填写该玩家的 id" :substage "lobby" :controlled_by 1 :payload {:str 200}}])
 
 (def test-stages
   [{:id 1 :name "测试舞台" :introduction "舞台介绍" :image ""

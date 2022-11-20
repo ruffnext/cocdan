@@ -31,7 +31,7 @@
 (defn- m-extra-avatar-info
   [avatar-db]
   (either/try-either
-   (-> avatar-db (update :props nippy/thaw))))
+   (-> avatar-db (update :payload nippy/thaw))))
 
 (defn get-avatar-by-id
   [avatar-id]
@@ -93,8 +93,7 @@
   [stage-context]
   (either/try-either
    (-> stage-context
-       (update :props #(-> % nippy/thaw new-context))
-       (#(data-aux/add-db-prefix :context %)))))
+       (update :payload #(-> % nippy/thaw new-context)))))
 
 (defn get-stage-latest-ctx-by-stage-id
   [stage-id]
@@ -120,7 +119,7 @@
   [transaction]
   (either/try-either
    (-> transaction
-       (update :props nippy/thaw))))
+       (update :payload nippy/thaw))))
 
 (defn list-stage-transactions
   [stage-id order limit begin offset]
@@ -147,25 +146,25 @@
      m-extra-stage-context)))
 
 (defn persistence-transaction!
-  [transaction]
-  (let [to-be-insert (-> transaction (update :props nippy/freeze))] 
-    (db/insert-transaction!
-     to-be-insert)))
+  [stage-id transaction]
+  (let [to-be-insert (-> transaction (assoc :stage stage-id) (update :payload nippy/freeze))] 
+    (either/try-either
+     (db/insert-transaction! to-be-insert))))
 
 (defn persistence-context!
-  [transaction]
-  (let [to-be-insert (-> transaction (update :props nippy/freeze))]
-    (db/insert-context!
-     to-be-insert)))
+  [stage-id context]
+  (let [to-be-insert (-> context (assoc :stage stage-id) (update :payload nippy/freeze))]
+    (either/try-either
+     (db/insert-context! to-be-insert))))
 
 (defn flush-stage-to-database!
-  [{:keys [avatars substages] :as stage}]
+  [{:keys [avatars substages] :as stage}] 
   (doseq                                                    ;; 玩家自建角色的 id 从 1 开始
-   [{id :id props :props :as v} (->> avatars (map second) (filter #(pos-int? (:id %))))]
+   [{id :id payload :payload :as v} (->> avatars (map second) (filter #(pos-int? (:id %))))]
     (db/general-updater
      {:id id
-      :updates (->> (assoc v :props (nippy/freeze (if props props {})))
-                    (filter (fn [[_k v]] v)) 
+      :updates (->> (assoc v :payload (nippy/freeze (if payload payload {})))
+                    (filter (fn [[_k v]] v))
                     (into {}))
       :table "avatars"}))
   (db/general-updater

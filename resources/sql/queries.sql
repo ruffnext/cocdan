@@ -23,8 +23,8 @@ VALUES (:name, :introduction, :image, :substages, :avatars, :controlled_by)
 -- :name create-avatar! :insert :1
 -- :doc 创建角色
 INSERT INTO avatars
-(name, image, description, stage, substage, controlled_by, props)
-VALUES (:name, :image, :description, :stage, :substage, :controlled_by, :props)
+(name, image, description, stage, substage, controlled_by, payload)
+VALUES (:name, :image, :description, :stage, :substage, :controlled_by, :payload)
 
 -- :name get-transaction :? :1
 -- :doc 获得 transaction
@@ -34,14 +34,14 @@ WHERE id = :id AND stage = :stage
 -- :name insert-transaction! :insert :1
 -- :doc 创建一个 transaction
 INSERT INTO transactions
-(id, ctx_id, user, stage, time, type, props)
-VALUES (:id, :ctx_id, :user, :stage, :time, :type, :props)
+(id, ctx_id, user, stage, time, type, payload)
+VALUES (:id, :ctx_id, :user, :stage, :time, :type, :payload)
 
 -- :name insert-context! :insert :1
 -- :doc 创建一个 context
 INSERT INTO contexts
-(id, stage, time, props)
-VALUES (:id, :stage, :time, :props)
+(id, stage, time, payload)
+VALUES (:id, :stage, :time, :payload)
 
 -- :name list-transactions-recent :? :*
 -- :doc 获得最近的 limit 个 transaction

@@ -8,7 +8,7 @@
             [cocdan.core.settings :as settings]))
 
 (defn input
-  [{{{stage-id :id :as stage-ctx} :context/props} :context
+  [{{{stage-id :id :as stage-ctx} :payload} :context
     substage-id :substage-id
     avatar-id :avatar-id}]
   (r/with-let [action-value (r/atom ["input" "speak"]) 

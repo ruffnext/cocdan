@@ -62,8 +62,8 @@
 (defn indicator
   [{stage-id :stage-id
     substage-id :substage-id
-    ctx :context}] 
-  (let [{:keys [substages] :as stage} (:context/props ctx)
+    {ctx-payload :payload} :context}] 
+  (let [{:keys [substages] :as stage} ctx-payload
         on-substage-change (fn [x]
                              (if (empty? x)
                                (substage-edit/launch {:stage stage :substage-id nil})
@@ -80,4 +80,4 @@
      [substage-description-editor {:stage-id stage-id
                                    :substage ((keyword substage-id) substages)}]
      [substage-avatars-indicator {:substage-id substage-id
-                                  :stage (:context/props ctx)}]]))
+                                  :stage ctx-payload}]]))

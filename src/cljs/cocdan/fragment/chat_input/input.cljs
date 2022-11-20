@@ -19,7 +19,7 @@
                               (let [value (-> x .-target .-value)]
                                 (either/branch
                                  (parse-cmd value ((keyword (str avatar-id)) avatars))
-                                 (fn [_left]
+                                 (fn [_left] 
                                    (rf/dispatch [:play/execute-transaction-props-to-remote-easy! stage-id speak-type {:substage substage-id :avatar avatar-id :message value :props {}}]))
                                  (fn [right]
                                    (rf/dispatch (vec (concat [:play/execute-transaction-props-to-remote-easy! stage-id] right)))))

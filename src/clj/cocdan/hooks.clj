@@ -13,10 +13,10 @@
 
 (defn dispatch!
   [event-key & args]
-  (let [funcs (map (fn [[_k v]] v) (event-key @hooks))]
-    (if (empty? funcs)
+  (let [functions (map (fn [[_k v]] v) (event-key @hooks))] 
+    (if (empty? functions)
       (either/right (str event-key " 没有注册钩子函数"))
       (c/with-context
         either/context
-        (m/for [f funcs]
+        (m/for [f functions]
           (apply f args))))))

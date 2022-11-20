@@ -5,7 +5,7 @@
 (extend-type TPatch
   IChatLogVisualization
   (to-chat-log
-    [{:keys [ops]} {stage :context/props} _transaction observer]
+    [{:keys [ops]} {stage :payload} _transaction observer]
     (let [[_substage-before substage-after] (->> (map (fn [[a b c]]
                                                         (let [re-result (= (str "avatars." observer ".substage") (name a))]
                                                           (when re-result [b c]))) ops)

@@ -44,7 +44,7 @@
                              :handler (wrap-restricted
                                        (wrap-monad
                                         (fn [{{{stage-id :id} :path
-                                               {:keys [type props]} :body} :parameters
+                                               {:keys [type payload]} :body} :parameters
                                               {user-id :identity} :session}]
-                                          (journal/service-transact stage-id type props user-id))))}}]])
+                                          (journal/service-transact stage-id type payload user-id))))}}]])
 

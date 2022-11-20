@@ -1,22 +1,13 @@
 (ns cocdan.data.core
   (:require [clojure.set :as cs]
             [cocdan.aux :as data-aux]
-            [clojure.string :as s]))
+            [clojure.string :as s]
+            [malli.core :as mc]))
 
 "diffs  --> [paths before after]
  paths  --> a.b.c.d.e
  before --> value or :unset
  after  --> value or :unset"
-
-(defprotocol IIncrementalUpdate
-  "可以增量更新的类型" 
-  
-  (diff'
-    [before after]
-    "计量两者的差，并返回 diffs 列表")
-  (update'
-    [before diffs]
-    "按顺序将 diffs 应用到当前对象上，并返回修改后的对象"))
 
 (defn- calc-value-diff
   [k before after]
@@ -34,7 +25,7 @@
 
     :else [[k before after]]))
 
-(defn default-diff'
+(defn diff'
   [before after]
   (let [flatten-before (data-aux/flatten-nested-map before)
         flatten-after (data-aux/flatten-nested-map after)
@@ -53,12 +44,14 @@
       :remove (disj current before)
       after)))
 
-(defn default-update'
+(mc/=> update' [:=> [:cat associative? [:vector [:cat :keyword :any :any]]] associative?])
+(defn update'
   [before diffs] 
   (->> (reduce (fn [a [k before after]]
-                 (let [ks (map keyword (s/split (name k) #"\."))]
+                 (let [ks (map keyword (s/split (name k) #"\."))] 
                    (case after
                      :unset (data-aux/dissoc-in a ks)
                      (update-in a ks #(handle-update before % after))))) before diffs)
        (data-aux/construct-flatten-map)
        (reduce (fn [a [k v]] (assoc a k v)) before)))
+

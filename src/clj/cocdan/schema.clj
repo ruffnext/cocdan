@@ -8,13 +8,13 @@
    :stage int?
    :substage string?
    :controlled_by int?
-   :props associative?})
+   :payload associative?})
 
 (def SubStage
   {:id string?
    :name string?
    :adjacencies [string?]
-   :props associative?})
+   :payload associative?})
 
 (def Stage
   {:id int?
@@ -33,8 +33,8 @@
 
 (def Speak
   {:message string? 
-   :props associative?})
+   :payload associative?})
 
 (def Transact
   {:type string?
-   :props any?})
+   :payload any?})

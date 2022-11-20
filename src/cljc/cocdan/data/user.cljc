@@ -9,8 +9,4 @@
 
   #?(:clj clojure.lang.Named)
   #?(:clj (getName [_this] name))
-  #?(:clj (getNamespace [_this] nil))
-
-  data-core/IIncrementalUpdate
-  (data-core/diff' [this before] (data-core/default-diff' this before))
-  (data-core/update' [this ops] (data-core/default-update' this ops)))
+  #?(:clj (getNamespace [_this] nil)))

@@ -28,10 +28,12 @@
                    ds-records (reduce (fn [a {:keys [ctx_id] :as t}]
                                         (let [latest-ctx-val @latest-ctx
                                               latest-ctx-val (if (= (:context/id latest-ctx-val) ctx_id)
-                                                               latest-ctx-val (reset! latest-ctx (ctx-db/query-ds-ctx-by-id ds ctx_id)))]
-                                          (concat a (m/extract (op-core/ctx-generate-ds stage-id t latest-ctx-val)))))
-                                      [] transaction)]
-               (d/transact! db (filter (fn [x] (not (contains? x :context/id))) ds-records))
+                                                               latest-ctx-val
+                                                               (reset! latest-ctx (ctx-db/query-ds-ctx-by-id ds ctx_id)))] 
+                                          (conj a (-> (op-core/ctx-run! t latest-ctx-val)
+                                                      (m/extract) first))))
+                                      [] transaction)] 
+               (ctx-db/insert-transactions db ds-records)
                (rf/dispatch [:partial-refresh/refresh! :play-room :chat-log]))
          nil)))
    {}))

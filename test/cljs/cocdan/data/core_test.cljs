@@ -9,6 +9,6 @@
 (deftest ops-test
   (let [data-a {:key-a #{1 2 3}}
         data-b {:key-a #{1 2 4}}
-        diffs (data-core/default-diff' data-a data-b)]
-    (is (= data-b (data-core/default-update' data-a diffs)))
+        diffs (data-core/diff' data-a data-b)]
+    (is (= data-b (data-core/update' data-a diffs)))
     diffs))

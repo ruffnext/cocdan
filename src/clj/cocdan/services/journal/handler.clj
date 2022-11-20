@@ -5,10 +5,11 @@
             [cocdan.data.stage :refer [new-stage]]))
 
 (defn handle-update-context
-  [{ctx :context/props} {:keys [props]}] (either/right (new-stage (data-core/update' ctx props))))
+  [{:keys [payload]} {ctx-payload :payload}] 
+  (either/right (new-stage (data-core/update' ctx-payload payload))))
 
 (defn handle-snapshot-context
-  [_ctx {:keys [props]}] (either/right (new-stage props)))
+  [{:keys [payload]} _ctx] (either/right (new-stage payload)))
 
-(register-context-handler :snapshot handle-snapshot-context)
-(register-context-handler :update handle-update-context)
+(register-context-handler :snapshot handle-snapshot-context)  ; refined
+(register-context-handler :update handle-update-context)      ; refined

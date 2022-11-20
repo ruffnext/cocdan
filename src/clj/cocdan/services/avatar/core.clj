@@ -11,7 +11,7 @@
   (if (> stage 0) (monad-db/get-stage-by-id stage) (either/right)))
 
 (defn create-avatar!
-  [{:keys [name image description stage substage props]} access-user-id]
+  [{:keys [name image description stage substage payload]} access-user-id]
   (m/mlet [_check-stage (check-stage stage)
            res (either/try-either
                 (db/create-avatar!
@@ -21,7 +21,7 @@
                   :stage stage
                   :substage substage
                   :controlled_by access-user-id
-                  :props (nippy/freeze (or props {}))}))
+                  :payload (nippy/freeze (or payload {}))}))
            avatar (let [inserted-id (second (first res))]
                     (monad-db/get-avatar-by-id inserted-id))
            _dispatch (hooks/dispatch! :event/after-avatar-created avatar)] 

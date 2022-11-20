@@ -20,20 +20,20 @@
 
 (extend-type dice/RC
   IChatLogVisualization
-  (to-chat-log [this {ctx :context/props} _transaction _observer]
+  (to-chat-log [this {ctx :payload} _transaction _observer]
     (visualize-dice this ctx))
   (display? [_this] true))
 
 (extend-type dice/RA
   IChatLogVisualization
-  (to-chat-log [this {ctx :context/props} _transaction _observer]
+  (to-chat-log [this {ctx :payload} _transaction _observer]
     (visualize-dice this ctx))
   (display? [_this] true))
 
 (extend-type dice/SC
   IChatLogVisualization
   (to-chat-log
-    [{:keys [avatar san-loss attr-val loss-on-failure loss-on-success dice-result] :as this} {ctx :context/props} _transaction _observer]
+    [{:keys [avatar san-loss attr-val loss-on-failure loss-on-success dice-result] :as this} {ctx :payload} _transaction _observer]
     (let [avatar-record (get-in ctx [:avatars (keyword (str avatar))])
           success-level (dice/get-success-level this)]
       [:div

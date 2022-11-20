@@ -55,7 +55,7 @@
                            (get-user-by-id controlled_by)
                            (either/right))
     npc (either/right
-         (->> (filter (fn [[k _v]] (s/starts-with? (name k) "-") (or avatars {})))
+         (->> (filter (fn [[avatar-id-key _v]] (s/starts-with? (name avatar-id-key) "-")) (or avatars {}))
               (#(if (seq %) (into {} %) nil))))
     _work (either/try-either
            (db/general-updater {:table "stages"

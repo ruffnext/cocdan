@@ -9,18 +9,18 @@
             [re-frame.db :refer [app-db]]))
 
 (defn handle-dice-transaction
-  [{_ctx :context/props} {{:keys [avatar attr attr-val dice-result]} :props type :type}]
+  [{{:keys [avatar attr attr-val dice-result]} :payload type :type} {_ctx-payload :payload}]
   (case type
     "rc" (either/right (t-dice/->RC avatar attr attr-val dice-result))
     "ra" (either/right (t-dice/->RA avatar attr attr-val dice-result))
     (either/left (str "无法处理骰子类型为 " type " 的骰子"))))
 
 (defn handle-update-transaction
-  [{{stage-id :id} :context/props} {:keys [props id]}]
+  [{:keys [payload id]} {{stage-id :id} :payload}]
   (let [{:keys [avatar-id substage-id]} (get-in @app-db [:play])
         substage-changes (->> (map (fn [[a b c]]
                                      (let [re-result (re-matches #"avatars\.(?<op>[\d])\.substage" (name a))]
-                                       (when re-result [(parse-long (second re-result)) b c]))) props)
+                                       (when re-result [(parse-long (second re-result)) b c]))) payload)
                               (filter some?))] 
     (when substage-id
       (when-let [[_ _ substage-after] (first (filter (fn [[this-avatar-id substage-before _]]
@@ -29,10 +29,11 @@
         (let [last-transaction-id (ctx-db/query-ds-latest-transaction-id @(ctx-db/query-stage-db stage-id))] 
           (when (and substage-after (= (inc last-transaction-id) id)) ;; 当 kp 改变玩家操控角色的子舞台时，强制玩家的子舞台跟着切换
             (rf/dispatch [:play/change-substage-id! substage-after])))))
-    (either/right (patch/->TPatch props))))
+    (either/right (patch/->TPatch payload))))
 
 (defn handle-update-context
-  [{ctx :context/props} {:keys [props]}] (either/right (new-stage (data-core/update' ctx (:ops props)))))
+  [{:keys [payload]} {ctx :payload}] 
+  (either/right (new-stage (data-core/update' ctx (:ops payload)))))
 
 (defn handle-snapshot-context
-  [_ctx {:keys [props]}] (either/right (new-stage props)))
+  [{:keys [payload]} _ctx] (either/right (new-stage payload)))

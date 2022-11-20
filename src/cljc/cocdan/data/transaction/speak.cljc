@@ -11,9 +11,9 @@
   (Speak. avatar-id substage-id message props))
 
 (defn handler-speak-transaction
-  [{ctx :context/props} {{:keys [avatar substage message props]} :props}]
+  [{{:keys [avatar substage message props]} :payload} {ctx-payload :payload}]
   (let [substage-id (if substage substage
-                        (let [avatar-record (get-in ctx [:avatars (keyword (str avatar))])]
+                        (let [avatar-record (get-in ctx-payload [:avatars (keyword (str avatar))])]
                           (if (satisfies? ITerritorialMixIn avatar-record)
                             (get-substage-id avatar-record)
                             nil)))]
@@ -24,5 +24,5 @@
   (get-substage-id [_this] substage))
 
 (defn handle-narration-transaction
-  [_ctx {{:keys [substage message props]} :props :as _transaction}]
+  [{{:keys [substage message props]} :payload :as _transaction} _ctx]
   (either/right (->Narration substage message props)))
