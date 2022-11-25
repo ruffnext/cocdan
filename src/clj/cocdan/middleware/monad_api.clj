@@ -1,25 +1,39 @@
 (ns cocdan.middleware.monad-api
   (:require [cats.monad.either :as either]
-            [clojure.tools.logging :as log]
-            [ring.util.http-response :as response]))
+            [clojure.tools.logging :as log]))
+
+(defn- handle-api-response
+  [res default-status]
+  (cond
+
+    (nil? res) {:status default-status :body {:status "ok"}}
+
+    (or (instance? clojure.lang.PersistentArrayMap res)
+        (instance? clojure.lang.PersistentHashMap res))
+    (if
+     (and (contains? res :status) (contains? res :body)) res
+     {:status default-status :body res})
+
+    (instance? clojure.lang.PersistentVector res)
+    {:status default-status :body res}
+
+    (string? res)
+    {:status default-status :body res}
+
+    :else
+    {:status default-status :body (str res)}))
 
 (defn wrap-monad
-  [handler]
-  (fn [request]
+  [handler] 
+  (fn [args]
     (either/branch
-     (handler request)
-     (fn [left]
-       (log/error left)
-       (response/bad-request {:error (str left)}))
-     (fn [right] 
+     (handler args)
+     (fn [{:keys [status body] :as res}]
        (cond
-         (map? right) 
-         (if (contains? right :body)
-           (if (contains? right :status)
-             right
-             (assoc right :status 200))
-           {:body right :status 200})
-         
-         (vector? right) {:status 200 :body right}
-
-         :else {:body {:result right} :status 200})))))
+         (instance? clojure.lang.PersistentArrayMap res)
+         (cond
+           (and (pos-int? status) (> status 200) (< status 400)) (handle-api-response body status)
+           (and (some? status) (contains? body :error)) (handle-api-response body res)
+           :else (handle-api-response {:error res} 400))
+         :else (handle-api-response {:error res} 400)))
+     #(handle-api-response % 200))))

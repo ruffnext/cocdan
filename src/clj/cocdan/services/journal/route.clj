@@ -22,7 +22,7 @@
                         (wrap-monad
                          (fn [{{{stage-id :id} :path
                                 {:keys [offset limit with-context desc begin] 
-                                 :or {begin 0 limit 10 offset 0 with-context false desc true}} :query} :parameters
+                                 :or {begin 0 limit 20 offset 0 with-context false desc false}} :query} :parameters
                                {_user-id :identity} :session}]
                            (journal/list-transactions stage-id begin offset limit with-context (if desc :desc :asce)))))}}]])
 

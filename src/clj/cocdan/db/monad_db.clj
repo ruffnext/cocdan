@@ -3,7 +3,6 @@
             [cats.core :as m]
             [cats.monad.either :as either]
             [clojure.tools.logging :as log]
-            [cocdan.aux :as data-aux]
             [cocdan.data.stage :refer [new-context]]
             [cocdan.db.core :as db]
             [taoensso.nippy :as nippy]))
@@ -124,17 +123,22 @@
 (defn list-stage-transactions
   [stage-id order limit begin offset]
   (let [func (if (= order :desc)
-               db/list-transactions-desc
-               db/list-transactions)]
+               db/list-transactions-recent-desc
+               db/list-transactions-history)]
     (m/mlet
-     [raw-results (either/try-either
+     [begin (if (and (= order :desc) (= 0 begin))
+              (either/try-either (-> (db/get-stage-latest-transaction-id {:stage-id stage-id})
+                                     first second inc))
+              (either/right begin))
+      raw-results (either/try-either
                    (func {:stage stage-id :begin begin :limit limit :offset offset}))]
-     (either/right
-      (->> raw-results
-           (map m-extra-transaction)
-           (either/rights)
-           (map m/extract)
-           reverse vec)))))
+     (let [res (->> raw-results
+                    (map m-extra-transaction)
+                    (either/rights)
+                    (map m/extract))] 
+       (if (empty? res)
+         (either/left {:status 204 :body []})
+         (either/right (vec res)))))))
 
 (defn get-stage-context-by-id
   [stage-id ctx_id]
@@ -158,6 +162,9 @@
      (db/insert-context! to-be-insert))))
 
 (defn flush-stage-to-database!
+  "拆分 stage 的信息
+    * 将 avatar 中玩家创建的部分持久化到 avatar 表中
+    * 将 stage 整体塞入 stage 表中"
   [{:keys [avatars substages] :as stage}] 
   (doseq                                                    ;; 玩家自建角色的 id 从 1 开始
    [{id :id payload :payload :as v} (->> avatars (map second) (filter #(pos-int? (:id %))))]

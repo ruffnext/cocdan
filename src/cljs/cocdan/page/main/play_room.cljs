@@ -1,39 +1,40 @@
 (ns cocdan.page.main.play-room
-  (:require [cljs-http.client :as http]
+  (:require [cats.core :as m]
+            [cljs-http.client :as http]
             [clojure.core.async :refer [<! go]]
             [cocdan.core.ops.core :as op-core]
             [cocdan.core.ws :as ws-core]
+            [cocdan.data.stage :refer [new-stage]]
             [cocdan.database.ctx-db.core :as ctx-db]
             [cocdan.fragment.avatar.indicator :as avatar-indicator]
-            [cocdan.fragment.chat-log.core :as chat-log]
             [cocdan.fragment.chat-input.core :as fragment-input]
+            [cocdan.fragment.chat-log.core :as chat-log]
             [cocdan.fragment.substage.indicator :as substage-indicator]
-            [datascript.core :as d]
             [re-frame.core :as rf]
-            [reagent.core :as r]
-            [cats.core :as m]))
+            [reagent.core :as r]))
 
 (rf/reg-event-fx
- :play/retrieve-recent-logs
- (fn [_ [_ stage-id]]
+ :play/retrieve-logs
+ (fn [_ [_ {:keys [stage-id desc? offset limit begin] :or {desc? true offset 0 limit 20 begin 0}}]]
    (go
      (let [{:keys [status body]} (<! (http/get (str "/api/journal/s" stage-id)
-                                               {:query-params {:with-context true}}))]
+                                               {:query-params (-> {:with-context true
+                                                                   :limit limit
+                                                                   :desc desc?
+                                                                   :offset offset
+                                                                   :begin begin})}))]
        (case status
          200 (let [{:keys [context transaction]} body
-                   db (ctx-db/query-stage-db stage-id)
-                   _ (ctx-db/import-stage-context! db context)
-                   ds @db
-                   latest-ctx (atom nil)
-                   ds-records (reduce (fn [a {:keys [ctx_id] :as t}]
-                                        (let [latest-ctx-val @latest-ctx
-                                              latest-ctx-val (if (= (:context/id latest-ctx-val) ctx_id)
-                                                               latest-ctx-val
-                                                               (reset! latest-ctx (ctx-db/query-ds-ctx-by-id ds ctx_id)))] 
-                                          (conj a (-> (op-core/ctx-run! t latest-ctx-val)
-                                                      (m/extract) first))))
-                                      [] transaction)] 
-               (ctx-db/insert-transactions db ds-records)
+                   stage-db (ctx-db/query-stage-db stage-id)
+                   context-with-key (->> (map (fn [{:keys [id] :as ctx}] [(keyword (str id)) (update ctx :payload new-stage)]) context)
+                                         (into {}))
+                   transaction-oped (vec (for [{:keys [ctx_id] :as t} transaction]
+                                           (let [ctx ((keyword (str ctx_id)) context-with-key)]
+                                             (-> (op-core/ctx-run! t ctx)
+                                                 (m/extract) first))))]
+               (ctx-db/import-stage-context! stage-db context)
+               (ctx-db/insert-transactions stage-db transaction-oped)
+               
                (rf/dispatch [:partial-refresh/refresh! :play-room :chat-log]))
          nil)))
    {}))
@@ -44,7 +45,7 @@
     [stage-id (or @(rf/subscribe [:sub/stage-performing]) 1)]
     (let [_refresh @(rf/subscribe [:partial-refresh/listen :play-room])
           stage-db (ctx-db/query-stage-db stage-id)
-          latest-ctx (ctx-db/query-ds-latest-ctx @stage-db)
+          latest-ctx (ctx-db/query-latest-ctx stage-db)
           substage-id-deref @(rf/subscribe [:play-sub/substage-id])
           avatar-id-deref @(rf/subscribe [:play-sub/avatar-id])]
       (if latest-ctx
@@ -61,8 +62,9 @@
            [:div.columns
             [:div.column.is-10
              [:p.has-text-centered "舞台"]
-             [chat-log/chat-log
+             [chat-log/auto-load-chat-log-view
               {:stage-id stage-id
+               :can-show-more? true
                :substage-id substage-id-deref
                :observer avatar-id-deref}]
              [fragment-input/input
@@ -78,5 +80,5 @@
                                             :context latest-ctx}]
              [avatar-indicator/indicator stage-id latest-ctx avatar-id-deref]]]])
         (do
-          (rf/dispatch [:play/retrieve-recent-logs stage-id])
+          (rf/dispatch [:play/retrieve-logs {:stage-id stage-id}])
           [:p "舞台尚未初始化"])))))

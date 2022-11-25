@@ -33,13 +33,13 @@ WHERE id = :id AND stage = :stage
 
 -- :name insert-transaction! :insert :1
 -- :doc 创建一个 transaction
-INSERT INTO transactions
+INSERT OR REPLACE INTO transactions
 (id, ctx_id, user, stage, time, type, payload)
 VALUES (:id, :ctx_id, :user, :stage, :time, :type, :payload)
 
 -- :name insert-context! :insert :1
 -- :doc 创建一个 context
-INSERT INTO contexts
+INSERT OR REPLACE INTO contexts
 (id, stage, time, payload)
 VALUES (:id, :stage, :time, :payload)
 
@@ -55,13 +55,25 @@ SELECT * FROM transactions
 WHERE stage = :stage-id AND id >= :n
 ORDER BY id DESC LIMIT :limit
 
--- :name list-transactions-desc :? :*
+-- :name list-transactions-recent :? :*
+-- :doc 获得最近的 transaction
+SELECT * FROM transactions
+WHERE stage = :stage AND id < :begin
+ORDER BY id LIMIT :limit OFFSET :offset
+
+-- :name list-transactions-recent-desc :? :*
+-- :doc 获得最近的 transaction
+SELECT * FROM transactions
+WHERE stage = :stage AND id < :begin
+ORDER BY id DESC LIMIT :limit OFFSET :offset
+
+-- :name list-transactions-history-desc :? :*
 -- :doc 倒序获得 transaction
 SELECT * FROM transactions
 WHERE stage = :stage AND id > :begin
 ORDER BY id DESC LIMIT :limit OFFSET :offset
 
--- :name list-transactions :? :*
+-- :name list-transactions-history :? :*
 -- :doc 顺序获得 transaction
 SELECT * FROM transactions
 WHERE stage = :stage AND id > :begin

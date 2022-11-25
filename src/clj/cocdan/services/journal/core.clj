@@ -4,7 +4,7 @@
             [clojure.core.async :refer [go]]
             [clojure.tools.logging :as log]
             [cocdan.aux :as data-aux :refer [get-current-time-string]]
-            [cocdan.core.ops.core :as op-core]
+            [cocdan.core.ops.core :as op-core] 
             [cocdan.data.core :refer [diff']]
             [cocdan.db.monad-db :as monad-db]
             [cocdan.hooks :as hooks]
@@ -36,7 +36,7 @@
       (op-core/ctx-run! op ctx)
       (fn [[transact new-context]]
         (when new-context
-          (update-ctx! stage new-context))
+          (update-ctx! stage new-context)) 
         (go ;; 在协程中持久化数据
           (monad-db/persistence-transaction! stage transact)
           (when new-context

@@ -37,3 +37,7 @@
            x
            (fn [left-val] (mc/validate left left-val))
            (fn [right-val] (mc/validate right right-val)))))])
+
+(defn get-context-config 
+  [context config-key]
+  (get-in context [:payload config-key]))

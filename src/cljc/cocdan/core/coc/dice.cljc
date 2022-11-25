@@ -49,9 +49,7 @@
      [_dice-success (roll-a-dice dice-success)
       _dice-failure (roll-a-dice dice-failure)]
      (either/right
-      ["sc" {:avatar avatar-id 
-             :attr "san"
-             :attr-val san
+      ["sc" {:avatar avatar-id :attr "san" :attr-val san
              :loss-on-success dice-success
              :loss-on-failure dice-failure}]))))
 
@@ -76,10 +74,9 @@
                                        (let [standard-attr-name (attrs-core/cover-attr-name-standard key-name)
                                              attr-standard-key (keyword (str "avatars." avatar-id ".payload.attrs." (name standard-attr-name)))]
                                          [attr-standard-key [(get-attr avatar standard-attr-name) (parse-long value)]])) res)
-                                (into {})
+                                (into {}) ;; 去除重复字段
                                 (map (fn [[k v]] (vec (concat [k] v)))) vec)]
         (either/right ["update" update-op-list])))))
-
 
 (defn parse-cmd
   "返回 either [op-type op-props]"

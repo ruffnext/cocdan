@@ -1,6 +1,8 @@
 (ns cocdan.aux
-  (:require [clojure.string :as s]
-            #?(:clj [jsonista.core :as json])))
+  (:require [clojure.string :as s] 
+            [cats.monad.either :as either]
+            #?(:clj [jsonista.core :as json])
+            #?(:clj [clojure.tools.logging :as log])))
 
 ;; 全局辅助函数
 
@@ -38,10 +40,10 @@
   will not be present in the new structure."
   [m [k & ks :as _keys]]
   (if ks
-    (if-let [nextmap (get m k)]
-      (let [newmap (dissoc-in nextmap ks)]
-        (if (seq newmap)
-          (assoc m k newmap)
+    (if-let [next-map (get m k)]
+      (let [new-map (dissoc-in next-map ks)]
+        (if (seq new-map)
+          (assoc m k new-map)
           (dissoc m k)))
       m)
     (dissoc m k)))
@@ -97,3 +99,36 @@
   [val]
   #?(:clj (json/write-value-as-string val)
      :cljs (.stringify js/JSON (clj->js val))))
+
+(defn- log-fn
+  [val]
+  #?(:clj (log/warn val)
+     :cljs (js/console.warn val)))
+
+(defmacro guard
+  "(guard <not-monad-value> <test val / fn> <on-error val / fn>)"
+  ([x check-val-or-fn on-error-val-or-fn]
+   `(let [res# ~x
+          check-result# (if (fn? ~check-val-or-fn)
+                          (try
+                            (~check-val-or-fn res#)
+                            (catch Exception e# false))
+                          ~check-val-or-fn)]
+      (if check-result#
+        (either/right res#)
+        (let [err-msg# (if (fn? ~on-error-val-or-fn)
+                         (let [f# ~on-error-val-or-fn]
+                           (f# res#)) ~on-error-val-or-fn)]
+          (log-fn
+           (str ~(:line (meta &form))
+                " > Checking " ~(pr-str x)
+                " should satisfy "
+                ~(pr-str check-val-or-fn)
+                " but got " (if (nil? res#) "nil" res#)
+                (when err-msg#
+                  (str " -->> " err-msg#))))
+          (either/left err-msg#)))))
+  ([x check-fn]
+   `(guard ~x ~check-fn nil))
+  ([x]
+   `(guard ~x identity nil)))
