@@ -35,15 +35,16 @@
 
    (fn [{:keys [stage] :as right}]
      (ws-db/upsert-one! :channel right)
-     (journal/register-journal-hook stage :ws-transaction-dispatch
-                                    (partial dispatch-transaction (ws-db/query-all-ws-by-stage-id stage))))))
+     (journal/register-journal-hook
+      stage :ws-transaction-dispatch
+      (partial dispatch-transaction (ws-db/query-all-ws-by-stage-id stage))))))
 
 (defn disconnect! [channel {:keys [code reason]}]
   (let [eid (d/entid @ws-db/db [:channel/ws channel])
         stage-id (:channel/stage (d/pull @ws-db/db '[:channel/stage] eid))]
     (when (not (nil? eid))
       (d/transact! ws-db/db [[:db.fn/retractEntity eid]])
-      (journal/register-journal-hook
+      (journal/register-journal-hook ;; 重新注册消息分发服务
        stage-id :ws-transaction-dispatch
        (partial dispatch-transaction (ws-db/query-all-ws-by-stage-id stage-id))))
     (log/info "connection close code:" code "reason:" reason " stage:" stage-id)))
