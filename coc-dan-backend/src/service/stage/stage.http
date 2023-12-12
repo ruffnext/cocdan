@@ -1,0 +1,44 @@
+@hostname = localhost
+@port = 3000
+@host = {{hostname}}:{{port}}
+
+### login 
+# @name login
+POST http://{{host}}/api/user/login HTTP/1.1
+Content-Type : application/json
+
+{
+    "name" : "ruffnex"
+}
+
+@cookies = {{login.response.headers.set-cookie}}
+
+### create stage
+# @name new_stage
+POST http://{{host}}/api/stage/new HTTP/1.1
+Content-Type: application/json
+Cookie: {{cookies}}
+
+{
+    "title" : "stage title",
+    "description" : "example stage"
+}
+
+@stage_uuid = {{new_stage.response.body.uuid}}
+
+@stage_api = {{host}}/api/stage/{{stage_uuid}}
+
+### get stage by id
+GET http://{{stage_api}} HTTP/1.1
+Cookie: {{cookies}}
+
+### list stages by user
+GET http://{{host}}/api/stage/my_stages HTTP/1.1
+Cookie: {{cookies}}
+
+### destroy a stage 
+POST http://{{stage_api}}/leave HTTP/1.1
+Cookie: {{cookies}}
+
+### logout
+POST http://{{host}}/api/user/logout
