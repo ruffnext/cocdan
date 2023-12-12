@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ark-ui/solid": "^1.1.0",
+    "@solidjs/router": "^0.10.1",
     "solid-js": "^1.8.5"
   },
   "devDependencies": {
