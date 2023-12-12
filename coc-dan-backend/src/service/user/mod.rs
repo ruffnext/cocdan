@@ -2,7 +2,7 @@ mod login;
 mod register;
 mod logout;
 
-use axum::{Router, routing::post, extract::{FromRequestParts, State, FromRef}, async_trait, response::{IntoResponse, Response}};
+use axum::{Router, routing::{post, get}, extract::{FromRequestParts, State, FromRef}, async_trait, response::{IntoResponse, Response}, Json};
 use axum_extra::extract::CookieJar;
 use http::request::Parts;
 use sea_orm::{EntityTrait, DatabaseConnection};
@@ -64,8 +64,13 @@ pub async fn is_login(cookies : &CookieJar, db : &DatabaseConnection) -> bool {
     }
 }
 
+async fn get_me(u : user::Model) -> Json<user::Model> {
+    Json(u)
+}
+
 pub fn route() -> Router<AppState> {
     Router::new()
+        .route("/me", get(get_me))
         .route("/register", post(register::register))
         .route("/login", post(login::login))
         .route("/logout", post(logout::logout))

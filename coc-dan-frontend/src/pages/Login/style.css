@@ -1,0 +1,33 @@
+#login-background {
+    width: 100vw;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+#login-card {
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    width: 21em;
+    height: 30em;
+}
+
+#login-header {
+    margin-top: 2em;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    height: 15em;
+    background-repeat: no-repeat;
+}
+
+#login-main {
+    margin-top: 2.7em;
+    margin-left: 3em;
+    margin-right: 3em;
+}
+
+#login-button {
+    width: 100%;
+    margin-top: 2em;
+}

@@ -1,21 +1,18 @@
-/* @refresh reload */
-import { lazy } from 'solid-js'
-import { render } from 'solid-js/web'
-import { Router } from '@solidjs/router'
+import "../node_modules/bulma/css/bulma.min.css";
+import { Route, Router } from '@solidjs/router';
+import { lazy } from 'solid-js';
+import { render } from 'solid-js/web';
+import { Toaster } from "solid-toast";
 
-const root = document.getElementById('root')
+const Index = lazy(() => import('./pages/Index'))
+const Login = lazy(() => import('./pages/Login'))
 
-const routes = [
-    {
-        path: '/login',
-        component: lazy(() => import('./pages/Login'))
-    },
-    {
-        path: '/',
-        component: lazy(() => import('./pages/Index'))
-    }
-]
-
-render(() => 
-    <Router>{routes}</Router>, 
-root!)
+render(() =>
+  <>
+    <Router>
+      <Route path="/" component={Index}></Route>
+      <Route path="/login" component={Login}></Route>
+    </Router>
+    <Toaster />
+  </>,
+  document.getElementById('root')!)
