@@ -1,20 +1,22 @@
 use axum::{extract::{self, State}, Json, response::IntoResponse};
 use axum_extra::extract::{CookieJar, cookie::Cookie};
 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveValue, ActiveModelTrait};
+use ts_rs::TS;
 
 use crate::{err::Left, entities::{prelude::*, *}, AppState};
 
-use super::is_login;
+use super::{is_login, IUser};
 
-#[derive(serde::Deserialize, Debug)]
-pub struct UserLogin {
+#[derive(serde::Deserialize, Debug, TS)]
+#[ts(export)]
+pub struct IUserLogin {
     name : String
 }
 
 pub async fn login (
     cookies : CookieJar, 
     State(state) : State<AppState>,
-    extract::Json(params) : extract::Json<UserLogin>
+    extract::Json(params) : extract::Json<IUserLogin>
 ) -> Result<impl IntoResponse, Left> {
     if is_login(&cookies, &state.db).await == true {
         return Err(Left { 
@@ -31,7 +33,11 @@ pub async fn login (
                 user_id : ActiveValue::Set(v.id),
             };
             let s = s.insert(db).await?;
-            Ok((cookies.add(Cookie::new("SESSION", s.uuid.clone())), Json(v)))
+            let mut new_session = Cookie::new("SESSION", s.uuid.clone());
+            new_session.set_path("/");
+            new_session.set_expires(None);
+            new_session.set_max_age(None);
+            Ok((cookies.add(new_session), Json(IUser::from(v))))
         },
         None => {
             return Err(Left { 

@@ -1,5 +1,6 @@
+import { IUser } from "../../bindings/IUser";
 import { get } from "../../core";
-import { IUser, User } from "../user";
+import { User } from "../user";
 
 export async function try_login() : Promise<User | null> {
   try {

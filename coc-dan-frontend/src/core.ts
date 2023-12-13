@@ -1,6 +1,7 @@
 import toast from "solid-toast"
 
 export interface ServerError {
+  status : number,
   uuid : string
   message : string
 }
@@ -20,6 +21,7 @@ export async function post<T>(url : string, body : any | null, autoToast = true)
     return await res.json()
   } else {
     var val : ServerError = {
+      status : res.status,
       message : await res.text(),
       uuid : ""
     }
@@ -50,13 +52,15 @@ export async function get<T>(url : string, body : any | null, autoToast = true) 
   const res = await fetch(url, params)
   if (res.status == 200) {
     return await res.json()
-  } else if (res.status == 201) {
+  } else if (res.status == 204) {
     throw {
+      status : 204,
       message : "no content",
       uuid : ""
     }
   } else {
     var val : ServerError = {
+      status : res.status,
       message : await res.text(),
       uuid : ""
     }
@@ -67,7 +71,7 @@ export async function get<T>(url : string, body : any | null, autoToast = true) 
     if (val.message == "") {
       val.message = "unknown error"
     }
-    if (autoToast) {
+    if (autoToast == true) { 
       toast.error(val.message)
     }
     throw val

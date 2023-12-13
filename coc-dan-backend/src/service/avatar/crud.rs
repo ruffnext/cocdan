@@ -6,6 +6,8 @@ use crate::AppState;
 use crate::entities::{prelude::*, *};
 use crate::err::Left;
 
+use super::IAvatar;
+
 pub async fn list_by_user(
     u : user::Model,
     State(state) : State<AppState>
@@ -40,6 +42,14 @@ pub async fn get_by_id (
             })
         }
     }
+}
+
+pub async fn get_by_id_req (
+    u : user::Model, 
+    Path(id) : Path<i32>,
+    State(state) : State<AppState>
+) -> Result<IAvatar, Left> {
+    Ok(get_by_id(u, Path(id), State(state)).await?.into())
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]

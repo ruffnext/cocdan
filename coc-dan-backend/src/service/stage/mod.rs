@@ -2,14 +2,38 @@ use axum::{
     routing::{get, post},
     Router, response::IntoResponse, Json,
 };
+use ts_rs::TS;
 
-use crate::AppState;
+use crate::{AppState, entities::stage, def::GameMap};
 
 mod crud;
 
-impl IntoResponse for crate::entities::stage::Model {
+
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[ts(export)]
+pub struct IStage {
+    pub uuid : String,
+    pub owner : i32,
+    pub title : String,
+    pub description : String,
+    pub area : GameMap 
+}
+
+impl IntoResponse for IStage {
     fn into_response(self) -> axum::response::Response {
         (http::StatusCode::OK, Json(self)).into_response()
+    }
+}
+
+impl From<stage::Model> for IStage {
+    fn from(value: stage::Model) -> Self {
+        Self { 
+            uuid: value.uuid, 
+            owner: value.owner, 
+            title: value.title, 
+            description: value.description, 
+            area: serde_json::from_str(&value.areas).unwrap() 
+        }
     }
 }
 
@@ -26,11 +50,10 @@ pub fn route() -> Router<AppState> {
 #[cfg(test)]
 pub mod tests {
 
-    use crate::service::{user::tests::test_create_user_and_login, tests::{new_test_server, test_extract_left_uuid}};
+    use crate::service::{user::{tests::test_create_user_and_login, IUser}, tests::{new_test_server, test_extract_left_uuid}, stage::IStage};
     use http::StatusCode;
     use serde_json::json;
-    use super::crud::CreateStageParams;
-    use crate::entities::*;
+    use super::crud::ICreateStage;
 
     #[tokio::test]
     async fn test_stage_basic() {
@@ -43,21 +66,21 @@ pub mod tests {
         
         // create a stage
         let response = server.post("/api/stage/new")
-            .json(&CreateStageParams {
+            .json(&ICreateStage {
                 title : title.clone(), 
                 description : description.clone()
             }
         ).add_cookie(session.clone()).await;
         assert!(response.status_code() == StatusCode::OK);
         
-        let new_stage : stage::Model = response.json();
+        let new_stage : IStage = response.json();
         assert!(new_stage.title == title);
         assert!(new_stage.description == description);
         
         // list owned stage
         let response = server.get("/api/stage/my_stages").add_cookie(session.clone()).await;
         assert!(response.status_code() == StatusCode::OK);
-        let stages : Vec<stage::Model> = response.json();
+        let stages : Vec<IStage> = response.json();
         assert!(stages.len() == 1);
         let first_stage = stages.first().unwrap();
         assert!(first_stage.title == title);
@@ -66,12 +89,12 @@ pub mod tests {
         
         // get stage by id
         let response = server.get(format!("/api/stage/{}", new_stage.uuid).as_str()).add_cookie(session.clone()).await;
-        let get_by_id_stage : stage::Model = response.json();
+        let get_by_id_stage : IStage = response.json();
         assert!(get_by_id_stage == *first_stage);
 
         // get stage users
         let res = server.get(format!("/api/stage/{}/users", new_stage.uuid).as_str()).add_cookie(session.clone()).await;
-        let stage_users : Vec<user::Model> = res.json();
+        let stage_users : Vec<IUser> = res.json();
         assert!(stage_users.len() == 1);
         assert!(stage_users[0] == u);
 
@@ -93,9 +116,9 @@ pub mod tests {
                 "title" : "stage title".to_string(),
                 "description" : "".to_string()
             })).add_cookie(session3.clone()).await;
-            let user_3_stage : stage::Model = res.json();
+            let user_3_stage : IStage = res.json();
             let res = server.get("/api/stage/my_stages").add_cookie(session3.clone()).await;
-            let user_3_stages : Vec<stage::Model> = res.json();
+            let user_3_stages : Vec<IStage> = res.json();
             assert_eq!(user_3_stages.len(), 2);
             assert!(user_3_stages[0] == new_stage);
             assert!(user_3_stages[1] == user_3_stage);
@@ -108,7 +131,7 @@ pub mod tests {
             assert_eq!(res.status_code(), StatusCode::OK);
             
             let res = server.get("/api/stage/my_stages").add_cookie(session3.clone()).await;
-            let user_3_stages : Vec<stage::Model> = res.json();
+            let user_3_stages : Vec<IStage> = res.json();
             assert_eq!(user_3_stages.len(), 1);
             assert!(user_3_stages[0] == new_stage);
         }
@@ -116,7 +139,7 @@ pub mod tests {
 
         // get stage users
         let res = server.get(format!("/api/stage/{}/users", new_stage.uuid).as_str()).add_cookie(session.clone()).await;
-        let stage_users : Vec<user::Model> = res.json();
+        let stage_users : Vec<IUser> = res.json();
         assert!(stage_users.len() == 3);
         assert!(stage_users[0] == u);
         assert!(stage_users[1] == u2);
@@ -125,7 +148,7 @@ pub mod tests {
         // get stages by user
         let response = server.get("/api/stage/my_stages").add_cookie(session3.clone()).await;
         assert!(response.status_code() == StatusCode::OK);
-        let stages : Vec<stage::Model> = response.json();
+        let stages : Vec<IStage> = response.json();
         assert!(stages[0] == new_stage);
         
         // user 3 leaves
@@ -138,14 +161,14 @@ pub mod tests {
         assert!(res.status_code() == StatusCode::NO_CONTENT);
 
         let res = server.get(format!("/api/stage/{}/users", new_stage.uuid).as_str()).add_cookie(session.clone()).await;
-        let users : Vec<user::Model> = res.json();
+        let users : Vec<IUser> = res.json();
         assert!(users.len() == 2);
         assert!(users[0] == u);
         assert!(users[1] == u2);
 
         let res = server.get("/api/stage/my_stages").add_cookie(session2.clone()).await;
         assert!(res.status_code() == StatusCode::OK);
-        let stages : Vec<stage::Model> = res.json();
+        let stages : Vec<IStage> = res.json();
         assert!(stages.len() == 1);
         assert!(stages[0] == new_stage);
 

@@ -6,6 +6,7 @@ use axum::{Router, routing::{post, get}, extract::{FromRequestParts, State, From
 use axum_extra::extract::CookieJar;
 use http::request::Parts;
 use sea_orm::{EntityTrait, DatabaseConnection};
+use ts_rs::TS;
 use crate::{entities::{prelude::*, user}, err::Left, AppState};
 
 #[async_trait]
@@ -19,6 +20,25 @@ where S: Send + Sync,
         let cookies = CookieJar::from_request_parts(req, state).await.unwrap();
         let state = AppState::from_ref(state);
         get_session_user(&cookies, State(state)).await.map_err(|x| x.into_response())
+    }
+}
+
+
+#[derive(serde::Deserialize, serde::Serialize, TS, PartialEq)]
+#[ts(export)]
+pub struct IUser {
+    pub id : i32,
+    pub name : String,
+    pub nick_name : String
+}
+
+impl From<user::Model> for IUser {
+    fn from(value: user::Model) -> Self {
+        Self {
+            id : value.id,
+            name : value.name.clone(),
+            nick_name : value.nick_name.clone()
+        }
     }
 }
 
@@ -64,8 +84,8 @@ pub async fn is_login(cookies : &CookieJar, db : &DatabaseConnection) -> bool {
     }
 }
 
-async fn get_me(u : user::Model) -> Json<user::Model> {
-    Json(u)
+async fn get_me(u : user::Model) -> Json<IUser> {
+    Json(u.into())
 }
 
 pub fn route() -> Router<AppState> {
@@ -84,10 +104,11 @@ pub (crate) mod tests {
     use http::StatusCode;
 
     use crate::service::tests::{new_test_server, test_extract_left_uuid};
-    use crate::entities::*;
+
+    use super::IUser;
     
-    pub async fn test_create_user_and_login(user_name : &str, server : &TestServer) -> (user::Model, CookieJar) {
-        let u : user::Model = server.post("/api/user/register").json(&json!({
+    pub async fn test_create_user_and_login(user_name : &str, server : &TestServer) -> (IUser, CookieJar) {
+        let u : IUser = server.post("/api/user/register").json(&json!({
             "name" : user_name.to_string()
         })).await.json();
         let response = server.post("/api/user/login").json(&json!({
@@ -107,7 +128,7 @@ pub (crate) mod tests {
             "name" : new_user_name
         })).await;
         assert!(response.status_code() == StatusCode::OK);
-        let u : user::Model = response.json();
+        let u : IUser = response.json();
         assert!(u.name == new_user_name);
 
         // login

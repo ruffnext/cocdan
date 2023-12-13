@@ -3,7 +3,7 @@ use sea_orm::{DbErr, TransactionError};
 
 #[derive(Debug, serde::Serialize)]
 pub struct Left {
-    #[serde(skip)]
+    #[serde(with = "http_status")]
     pub status : http::StatusCode,
     pub message : String,
     pub uuid : &'static str
@@ -36,5 +36,19 @@ impl IntoResponse for Left {
         } else {
             (self.status, Json(self)).into_response()
         }
+    }
+}
+
+mod http_status {
+    use serde::Serializer;
+
+    pub fn serialize<S>(
+        data: &http::StatusCode,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_u16(data.as_u16())
     }
 }

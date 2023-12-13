@@ -5,7 +5,7 @@ use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveValue, ActiveModelTra
 
 use crate::{err::Left, entities::{prelude::*, *}, AppState};
 
-use super::is_login;
+use super::{is_login, IUser};
 
 #[derive(serde::Deserialize, Debug)]
 pub struct UserRegister {
@@ -16,7 +16,7 @@ pub async fn register (
     cookies : CookieJar, 
     State(state) : State<AppState>,
     extract::Json(params) : extract::Json<UserRegister>
-) -> Result<Json<user::Model>, Left> {
+) -> Result<Json<IUser>, Left> {
     if is_login(&cookies, &state.db).await == true {
         return Err(Left { 
             status: http::StatusCode::BAD_REQUEST, 
@@ -40,7 +40,7 @@ pub async fn register (
                 ..Default::default()
             };
             let res = u.insert(db).await?;
-            Ok(Json(res))
+            Ok(Json(res.into()))
         }
     }
 }

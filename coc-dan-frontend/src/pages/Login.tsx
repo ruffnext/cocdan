@@ -1,9 +1,11 @@
 import { createSignal } from "solid-js"
 import "./Login/style.css"
-import { IUser, User } from "../core/user";
+import { User, setGlobalUser } from "../core/user";
 import { post } from "../core";
 import toast from "solid-toast";
 import { try_login } from "../core/user/login";
+import { IUser } from "../bindings/IUser";
+import { useNavigate } from "@solidjs/router";
 
 export default () => {
   const [username, setUsername] = createSignal<string>("");
@@ -25,15 +27,18 @@ export default () => {
     }
   }
 
-  try_login().then((user : User | null) => {
-    if (user != null) {
-      afterLogin(user)
+  const navigate = useNavigate()
+
+  try_login().then((u : User | null) => {
+    if (u != null) {
+      afterLogin(u)
     }
   })
 
-  function afterLogin(user : User) {
-    console.log("login success ", user)
-    // TODO
+  function afterLogin(u : User) {
+    console.log("login success ", u)
+    setGlobalUser(u)
+    navigate("/home")
   }
 
   return <div id="login-background">
@@ -57,8 +62,7 @@ export default () => {
         <button
           id="login-button"
           class={"button is-primary " + loginButtonState()}
-          onClick={toggleLogin}
-          >
+          onClick={toggleLogin}>
           Login
         </button>
       </div>

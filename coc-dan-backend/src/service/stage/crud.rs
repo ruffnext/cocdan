@@ -3,6 +3,7 @@ use axum::response::IntoResponse;
 use axum::{Json, extract};
 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveModelTrait, DbErr, ActiveValue, DatabaseConnection, IntoActiveModel };
 use tracing::debug;
+use ts_rs::TS;
 use uuid::Uuid;
 use sea_orm::TransactionTrait;
 
@@ -11,9 +12,13 @@ use crate::def::GameMap;
 use crate::service::avatar::clear_user_stage_avatars;
 use crate::err::Left;
 use crate::entities::{prelude::*, *};
+use crate::service::user::IUser;
 
-#[derive(serde::Deserialize, serde::Serialize)]
-pub struct CreateStageParams {
+use super::IStage;
+
+#[derive(serde::Deserialize, serde::Serialize, TS)]
+#[ts(export)]
+pub struct ICreateStage {
     pub title : String,
     pub description : String
 }
@@ -21,8 +26,8 @@ pub struct CreateStageParams {
 pub async fn create (
     u : crate::entities::user::Model, 
     State(state) : State<AppState>,
-    extract::Json(params) : extract::Json<CreateStageParams>
-) -> Result<Json<crate::entities::stage::Model>, Left> {
+    extract::Json(params) : extract::Json<ICreateStage>
+) -> Result<Json<IStage>, Left> {
     let game_map = GameMap::new_empty();
     let db = &state.db;
     let res = db.transaction::<_, stage::Model, DbErr>(|ctx| {
@@ -43,16 +48,16 @@ pub async fn create (
             Ok(res)
         })
     }).await?;
-    Ok(Json(res))
+    Ok(Json(res.into()))
 }
 
 pub async fn get_by_uuid (
     _u : user::Model, 
     Path(uuid) : Path<Uuid>,
     State(state) : State<AppState>
-) -> Result<stage::Model, Left> {
+) -> Result<IStage, Left> {
     match Stage::find_by_id(uuid.to_string()).one(&state.db).await? {
-        Some(v) => Ok(v),
+        Some(v) => Ok(v.into()),
         None => Err(Left {
             status : http::StatusCode::NO_CONTENT,
             message : String::new(),
@@ -64,18 +69,18 @@ pub async fn get_by_uuid (
 pub async fn list_stages_by_user (
     u : user::Model,
     State(state) : State<AppState>
-) -> Result<Json<Vec<crate::entities::stage::Model>>, Left> {
+) -> Result<Json<Vec<IStage>>, Left> {
     let db = &state.db;
     
     let stages = LinkStageUser::find()
         .filter(link_stage_user::Column::UserId.eq(u.id))
         .find_also_related(stage::Entity).all(db).await?;
 
-    let mut res : Vec<crate::entities::stage::Model> = Vec::with_capacity(stages.len());
+    let mut res : Vec<IStage> = Vec::with_capacity(stages.len());
 
     for (_link, item) in stages { 
         match item {
-            Some(v) => res.push(v),
+            Some(v) => res.push(v.into()),
             _ => {}
         };
     };
@@ -95,7 +100,7 @@ pub async fn list_users_by_stage (
     _u : user::Model, 
     Path(uuid) : Path<Uuid>,
     State(state) : State<AppState>
-) -> Result<Json<Vec<user::Model>>, Left> {
+) -> Result<Json<Vec<IUser>>, Left> {
     let db = &state.db;
     
     let raw = LinkStageUser::find()
@@ -103,11 +108,11 @@ pub async fn list_users_by_stage (
         .find_also_related(user::Entity)
         .all(db).await?;
     
-    let mut res : Vec<user::Model> = Vec::with_capacity(raw.len());
+    let mut res : Vec<IUser> = Vec::with_capacity(raw.len());
 
     for (_, user_item) in raw {
         match user_item {
-            Some(v) => res.push(v),
+            Some(v) => res.push(v.into()),
             _ => {}
         }
     };
@@ -127,9 +132,9 @@ pub async fn query_stage_by_id (
     u : &user::Model,
     uuid : Uuid, 
     db : &DatabaseConnection
-) -> Result<stage::Model, Left> {
+) -> Result<IStage, Left> {
     match Stage::find_by_id(uuid.to_string()).one(db).await? {
-        Some(v) => Ok(v),
+        Some(v) => Ok(v.into()),
         None => {
             debug!("User {} try to get stage {uuid}, but it does not exist", u.id);
             Err(Left { 
@@ -142,7 +147,7 @@ pub async fn query_stage_by_id (
 }
 
 pub async fn join_stage (
-    u : crate::entities::user::Model,
+    u : user::Model,
     Path(uuid) : Path<Uuid>,
     State(state) : State<AppState>
 ) -> Result<impl IntoResponse, Left> {

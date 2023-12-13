@@ -1,0 +1,8 @@
+ts:
+    cargo test
+    rm -rf ../coc-dan-frontend/src/bindings
+    mv ./bindings ../coc-dan-frontend/src/
+    
+migrate:
+    sea-orm-cli migrate
+    sea-orm-cli generate entity --with-serde serialize -o ./src/entities
