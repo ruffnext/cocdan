@@ -9,6 +9,7 @@ import Home from "./pages/Home/Page";
 
 const Login = lazy(() => import('./pages/Login/Page'))
 const Index = lazy(() => import('./pages/Index'))
+const Avatar = lazy(() => import('./pages/Avatar'))
 const Card = lazy(() => import('./pages/Card/Page'))
 
 render(() =>
@@ -20,6 +21,7 @@ render(() =>
         <Route path="/card/:id" component={Card}></Route>
       </Route>
       <Route path="/login" component={Login}></Route>
+      <Route path="/avatar" component={Avatar} />
     </Router>
     <Toaster />
   </>,
