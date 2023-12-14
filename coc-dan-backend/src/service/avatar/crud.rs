@@ -11,11 +11,11 @@ use super::IAvatar;
 pub async fn list_by_user(
     u : user::Model,
     State(state) : State<AppState>
-) -> Result<Json<Vec<crate::entities::avatar::Model>>, Left> {
+) -> Result<Json<Vec<IAvatar>>, Left> {
     let db = state.db;
     let raw = Avatar::find().filter(crate::entities::avatar::Column::Owner.eq(u.id)).all(&db).await?;
     if raw.len() > 0 {
-        Ok(Json(raw))
+        Ok(Json(raw.into_iter().map(|x| x.into()).collect()))
     } else {
         Err(Left { 
             status: http::StatusCode::NO_CONTENT, 
@@ -55,7 +55,7 @@ pub async fn get_by_id_req (
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct CreateAvatar {
     pub name : String,
-    pub description : String,
+    pub detail : Option<crate::def::avatar::Detail>,
     pub stage_id : Uuid,
 }
 
@@ -63,7 +63,7 @@ pub async fn create (
     u : crate::entities::user::Model, 
     State(state) : State<AppState>,
     extract::Json(params) : extract::Json<CreateAvatar>
-) -> Result<Json<crate::entities::avatar::Model>, Left> {
+) -> Result<Json<IAvatar>, Left> {
     let db = &state.db;
     let a = match LinkStageUser::find()
         .filter(link_stage_user::Column::StageId.eq(params.stage_id.to_string()))
@@ -75,7 +75,7 @@ pub async fn create (
                     stage_uuid : ActiveValue::Set(v.stage_id.clone()),
                     owner : ActiveValue::Set(u.id),
                     name : ActiveValue::Set(params.name),
-                    description : ActiveValue::Set(params.description),
+                    detail : ActiveValue::Set(serde_json::to_string(&params.detail.unwrap_or_default()).unwrap()),
                     header : ActiveValue::Set(None),
                     ..Default::default()
                 };
@@ -89,7 +89,7 @@ pub async fn create (
                 })
             }
         };
-    Ok(Json(a))
+    Ok(Json(a.into()))
 }
 
 pub async fn destroy (

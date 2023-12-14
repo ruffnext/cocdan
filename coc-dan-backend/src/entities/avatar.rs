@@ -13,7 +13,7 @@ pub struct Model {
     pub name: String,
     #[sea_orm(column_type = "Binary(BlobSize::Blob(None))", nullable)]
     pub header: Option<Vec<u8>>,
-    pub description: String,
+    pub detail: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

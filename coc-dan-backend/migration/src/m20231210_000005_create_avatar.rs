@@ -31,12 +31,7 @@ impl MigrationTrait for Migration {
                     .not_null()
             )
             .col(ColumnDef::new(Avatar::Header).blob(BlobSize::Medium))
-            .col(
-                ColumnDef::new(Avatar::Description)
-                    .string()
-                    .not_null()
-                    .default("")
-            )
+            .col(ColumnDef::new(Avatar::Detail).json_binary().not_null())
             .to_owned()
         ).await?;
 
@@ -55,6 +50,6 @@ pub enum Avatar {
     StageUuid,
     Owner,
     Name,
-    Header,     // binary image
-    Description
+    Header,    // binary image
+    Detail,
 }

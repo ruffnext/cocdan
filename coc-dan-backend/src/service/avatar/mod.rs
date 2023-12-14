@@ -3,25 +3,8 @@ use axum::{Router, routing::{get, post}, response::IntoResponse, Json};
 mod crud;
 
 pub use crud::clear_user_stage_avatars;
-use ts_rs::TS;
 
-use crate::{AppState, entities::avatar};
-
-#[derive(serde::Deserialize, serde::Serialize, TS, PartialEq)]
-#[ts(export)]
-pub struct IAvatar {
-    pub id: i32,
-    pub stage_uuid: String,
-    pub owner: i32,
-    pub name: String,
-    pub description: String
-}
-
-impl From<avatar::Model> for IAvatar {
-    fn from(value: avatar::Model) -> Self {
-        Self { id: value.id, stage_uuid: value.stage_uuid, owner: value.owner, name: value.name, description: value.description }
-    }
-}
+use crate::{AppState, def::avatar::IAvatar};
 
 impl IntoResponse for IAvatar {
     fn into_response(self) -> axum::response::Response {
@@ -68,7 +51,7 @@ pub (crate) mod tests {
         // create avatar 0
         let res = server.post("/api/avatar/new").json(&CreateAvatar {
             name : "avatar 0".to_string(),
-            description : "avatar description".to_string(),
+            detail : None,
             stage_id : Uuid::from_str(&stage_0.uuid).unwrap()
         }).add_cookie(session.clone()).await;
         assert_eq!(res.status_code(), StatusCode::OK);
@@ -77,7 +60,7 @@ pub (crate) mod tests {
 
         let res = server.post("/api/avatar/new").json(&CreateAvatar {
             name : "avatar 1".to_string(),
-            description : "avatar description".to_string(),
+            detail : None,
             stage_id : Uuid::from_str(&stage_0.uuid).unwrap()
         }).add_cookie(session.clone()).await;
         let avatar_1 : IAvatar = res.json();
