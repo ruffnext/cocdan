@@ -16,19 +16,19 @@ function Sidebar () {
       </li>
       
       <li class="has-subnav">
-        <a href="#">
+        <a href="/card/new">
           <i class="fa fa-person-walking-dashed-line-arrow-right fa-2x"></i>
           <span class="nav-text">
-            My Avatars
+            New Card
           </span>
         </a>
       </li>
       
       <li class="has-subnav">
-        <a href="#">
+        <a href="/stage/new">
           <i class="fa fa-pen-nib fa-2x"></i>
           <span class="nav-text">
-            Stages
+            New Stage
           </span>
         </a>
       </li>

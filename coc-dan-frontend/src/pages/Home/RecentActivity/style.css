@@ -1,0 +1,37 @@
+#recent-toolbar {
+  height: 3em;
+  background-color: gainsboro;
+  border-radius: 10px 10px 0 0;
+  display: flex;
+}
+
+.recent-toolbar-item {
+  padding-left: 1.2em;
+  padding-right: 1.2em;
+  text-align: center;
+  height: 100%;
+  line-height: 3em;
+  user-select: none;
+  cursor: pointer;
+}
+
+.recent-toolbar-item:hover {
+  background-color: lightgray;
+}
+
+.recent-toolbar-item-begin {
+  border-radius: 10px 0 0 0;
+}
+
+.selected {
+  background-color: lightgray;
+}
+
+.recent-toolbar-item-end {
+  border-radius: 0 10px 0 0;
+}
+
+#user-recent-card {
+  height: 41em;
+  background-color: white;
+}

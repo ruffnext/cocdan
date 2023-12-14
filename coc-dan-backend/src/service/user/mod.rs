@@ -29,7 +29,8 @@ where S: Send + Sync,
 pub struct IUser {
     pub id : i32,
     pub name : String,
-    pub nick_name : String
+    pub nick_name : String,
+    pub header : String
 }
 
 impl From<user::Model> for IUser {
@@ -37,7 +38,8 @@ impl From<user::Model> for IUser {
         Self {
             id : value.id,
             name : value.name.clone(),
-            nick_name : value.nick_name.clone()
+            nick_name : value.nick_name.clone(),
+            header : value.header.unwrap_or("/img/default_header.png".to_string())
         }
     }
 }

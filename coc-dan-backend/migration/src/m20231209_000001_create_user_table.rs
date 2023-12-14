@@ -22,6 +22,7 @@ impl MigrationTrait for Migration {
                     .not_null()
             )
             .col(ColumnDef::new(User::NickName).string().not_null())
+            .col(ColumnDef::new(User::Header).string())
             .to_owned()
         ).await
     }
@@ -37,4 +38,5 @@ pub enum User {
     Id,
     Name,
     NickName,
+    Header
 }

@@ -1,10 +1,10 @@
 import { createSignal } from "solid-js"
-import "./Login/style.css"
-import { User, setGlobalUser } from "../core/user";
-import { post } from "../core";
+import "./style.css"
+import { User, setGlobalUser } from "../../core/user";
+import { post } from "../../core";
 import toast from "solid-toast";
-import { try_login } from "../core/user/login";
-import { IUser } from "../bindings/IUser";
+import { try_login } from "../../core/user/login";
+import { IUser } from "../../bindings/IUser";
 import { useNavigate } from "@solidjs/router";
 
 export default () => {

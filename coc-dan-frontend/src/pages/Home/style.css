@@ -1,0 +1,27 @@
+#home-main-container {
+  width: 80vw;
+  height: 80vh;
+  margin: auto;
+  margin-top: 1em;
+  background-color: aqua;
+}
+
+.main-card-container {
+  margin : 1em;
+}
+
+#user-info-card {
+  height: 20em;
+  background-color: white;
+}
+
+#user-header {
+  margin: auto;
+  top: 1em;
+  margin-bottom: 2em;
+}
+
+#user-name {
+  text-align: center;
+}
+
