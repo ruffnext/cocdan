@@ -67,6 +67,7 @@ pub struct Attrs {
     pub int : u32,
     pub mov : u32,
     pub luk : u32,
+    pub mov_adj : Option<f32>
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default)]

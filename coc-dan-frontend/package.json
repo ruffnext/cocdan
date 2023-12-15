@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ark-ui/solid": "^1.1.0",
+    "@solid-primitives/i18n": "^2.0.0",
     "@solidjs/router": "^0.10.1",
     "bulma": "^0.9.4",
     "solid-js": "^1.8.5",

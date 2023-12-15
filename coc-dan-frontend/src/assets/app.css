@@ -5,3 +5,8 @@
 .radius {
   border-radius: 10px;
 }
+
+#root {
+  overflow-x: scroll;
+  height: 100vh;
+}

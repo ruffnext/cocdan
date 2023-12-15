@@ -30,7 +30,7 @@ impl MigrationTrait for Migration {
                     .string()
                     .not_null()
             )
-            .col(ColumnDef::new(Avatar::Header).blob(BlobSize::Medium))
+            .col(ColumnDef::new(Avatar::Header).string())
             .col(ColumnDef::new(Avatar::Detail).json_binary().not_null())
             .to_owned()
         ).await?;
