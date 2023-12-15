@@ -11,8 +11,7 @@ pub struct Model {
     pub stage_uuid: String,
     pub owner: i32,
     pub name: String,
-    #[sea_orm(column_type = "Binary(BlobSize::Blob(None))", nullable)]
-    pub header: Option<Vec<u8>>,
+    pub header: Option<String>,
     pub detail: String,
 }
 

@@ -5,6 +5,7 @@ import newEmpty from "../../core/card/new-empty";
 import Info from "./components/Info";
 import Attrs from "./components/Attrs";
 import Status from "./components/Status";
+import Skills from "./components/Skills";
 import { AvatarProvider } from "./context";
 import "./style.css"
 import * as i18n from "@solid-primitives/i18n";
@@ -39,30 +40,26 @@ export default () => {
   }
 
   return (
-    <div id="container" class="container is-max-widescreen">
+    <div id="container" style="margin : auto">
       <AvatarProvider avatar={avatar()}>
-        <div class="tile is-ancestor" style="margin-top: 1em;">
-          <div style="margin : 1em;" class="tile is-vertical is-9">
-            <div class="tile">
-              <div id="avatar-info" class="box-shadow"><Info /></div>
-              <div id="avatar-attrs" class="box-shadow"><Attrs /></div>
+        <div>
+          <div style="margin-top: 1em; display : flex">
+            <div style="margin : 1em; display : flex; flex-direction : column; width : 75%">
+              <div style="display : flex">
+                <div id="avatar-info" class="box-shadow"><Info /></div>
+                <div id="avatar-attrs" class="box-shadow"><Attrs /></div>
+              </div>
+              <div id="avatar-status" class="box-shadow"><Status /></div>
             </div>
-            <div id="avatar-status" class="tile box-shadow"><Status /></div>
+            <div style="height : auto; width : 25%">
+              <figure id="avatar-header" class="box-shadow">
+                <img style="width: 100%; height: auto;" src="/img/default_avatar_header.png" />
+              </figure>
+            </div>
           </div>
-          <div style="height : 10em" class="tile">
-            <figure id="avatar-header" class="box-shadow">
-              <img style="width: 100%; height: auto;" src="/img/default_avatar_header.png" />
-            </figure>
-          </div>
+          <div id="avatar-skill" class="box-shadow"><Skills /></div>
         </div>
-
       </AvatarProvider>
     </div>
   )
 }
-
-// <div class="tile is-ancestor">
-
-// </div>
-// <div class="status-box"></div>
-// <div class="skill-box"></div>

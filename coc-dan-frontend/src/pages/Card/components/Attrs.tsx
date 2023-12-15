@@ -1,3 +1,4 @@
+import { maxHP, maxMP, maxSan } from "../../../core/card/calc"
 import { useI18N } from "../../../core/i18n"
 import { useAvatar } from "../context"
 import { getCardI18n } from "../i18n/core"
@@ -30,6 +31,32 @@ export default () => {
     return (e : string ) : string => {
       const res = parseIntOrDefault(e, avatar[fieldStr], upperLimit)
       setAvatar(fieldStr, res)
+      console.log(field)
+      if (field == "con" || field == "siz") {
+        const max_hp = maxHP(avatar["detail.attrs.con"], avatar["detail.attrs.siz"])
+        var hp_loss = avatar["detail.status.hp_loss"] == 0 ? 0 : max_hp - avatar["detail.status.hp"]
+        if (hp_loss < 0) {
+          hp_loss = 0
+        }
+        setAvatar("detail.status.hp", max_hp - hp_loss)
+        setAvatar("detail.status.hp_loss", hp_loss)
+      } else if (field == "pow") {
+        const max_san = maxSan(avatar["detail.attrs.pow"])
+        var san_loss = avatar["detail.status.san_loss"] == 0 ? 0 : max_san - avatar["detail.status.san"]
+        if (san_loss < 0) {
+          san_loss = 0
+        }
+        setAvatar("detail.status.san", max_san - san_loss)
+        setAvatar("detail.status.san_loss", san_loss)
+
+        const max_mp = maxMP(avatar["detail.attrs.pow"])
+        var mp_loss = avatar["detail.status.mp_loss"] == 0 ? 0 : max_mp - avatar["detail.status.mp"]
+        if (mp_loss < 0) {
+          mp_loss = 0
+        }
+        setAvatar("detail.status.mp", max_mp - mp_loss)
+        setAvatar("detail.status.mp_loss", mp_loss)
+      }
       return res.toFixed(0)  
     }
   }
@@ -81,9 +108,9 @@ export default () => {
             <td rowspan="2"><CellInput value={avatar["detail.attrs.siz"].toFixed(0)} setValue={setAttr('siz')} /></td>
             <td class="is-small">{Math.floor((avatar["detail.attrs.siz"] / 2)).toFixed()}</td>
 
-            <td rowSpan="2">{t('cardEditor.attribute.app')}</td>
-            <td rowspan="2"><CellInput value={avatar["detail.attrs.app"].toFixed(0)} setValue={setAttr('app')} /></td>
-            <td class="is-small">{Math.floor((avatar["detail.attrs.app"] / 2)).toFixed()}</td>
+            <td rowSpan="2">{t('cardEditor.attribute.int')}</td>
+            <td rowspan="2"><CellInput value={avatar["detail.attrs.int"].toFixed(0)} setValue={setAttr('int')} /></td>
+            <td class="is-small">{Math.floor((avatar["detail.attrs.int"] / 2)).toFixed()}</td>
 
             <td rowSpan="2">{t('cardEditor.attribute.mov')}</td>
             <td rowSpan="2">{ avatar["detail.attrs.int"].toFixed(0) }</td>

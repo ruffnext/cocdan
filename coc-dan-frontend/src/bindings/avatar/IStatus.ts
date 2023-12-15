@@ -2,4 +2,4 @@
 import type { IHealthStatus } from "./IHealthStatus";
 import type { IMentalStatus } from "./IMentalStatus";
 
-export interface IStatus { hp: number, mp: number, san: number, mental_status: IMentalStatus, health_status: IHealthStatus, }
+export interface IStatus { hp: number, mp: number, san: number, hp_loss: number, mp_loss: number, san_loss: number, mental_status: IMentalStatus, health_status: IHealthStatus, }

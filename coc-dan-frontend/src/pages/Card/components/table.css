@@ -5,8 +5,9 @@ table {
 }
 
 th, td {
-  padding: 6px;
-  text-align: left;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  text-align: center;
   border: 1px solid #ddd;
 }
 
@@ -22,4 +23,17 @@ input {
 .is-small {
   padding: 0px;
   font-size: 11px;
+}
+
+.is-middle {
+  padding: 2px;
+  font-size: 15px;
+  vertical-align: middle;
+
+}
+
+.is-big {
+  font-size: 18px;
+  font-weight: 700;
+  vertical-align: middle;
 }

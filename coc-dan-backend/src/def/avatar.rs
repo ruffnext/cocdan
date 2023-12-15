@@ -28,8 +28,9 @@ pub enum MentalStatus {
 pub enum HealthStatus {
     Healthy,
     Ill,
-    Injured { location : Vec<String> },
+    Injured,
     Critical,
+    Dead
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
@@ -38,6 +39,9 @@ pub struct Status {
     pub hp  : u32,
     pub mp  : u32,
     pub san : u32,
+    pub hp_loss : u32,
+    pub mp_loss : u32,
+    pub san_loss : u32,
     pub mental_status : MentalStatus,
     pub health_status : HealthStatus,
 }
@@ -48,6 +52,9 @@ impl Default for Status {
             hp: 0, 
             mp: 0, 
             san: 0, 
+            hp_loss : 0,
+            mp_loss : 0,
+            san_loss : 0,
             mental_status: MentalStatus::Lucid, 
             health_status: HealthStatus::Healthy
         }

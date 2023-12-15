@@ -1,0 +1,19 @@
+.my-dropdown-item {
+  cursor:pointer;
+  padding-top: 6px;
+  padding-bottom:6px;
+}
+
+.my-dropdown-item:hover {
+  background-color: azure;
+}
+
+.trigger {
+  border : none; 
+  padding : 0; 
+  background-color : white;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  font-size: 15px;
+}
