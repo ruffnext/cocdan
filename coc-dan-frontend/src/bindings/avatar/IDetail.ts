@@ -2,6 +2,7 @@
 import type { IAttrs } from "./IAttrs";
 import type { IDescriptor } from "./IDescriptor";
 import type { IOccupation } from "./IOccupation";
+import type { ISkillAssigned } from "./ISkillAssigned";
 import type { IStatus } from "./IStatus";
 
-export interface IDetail { status: IStatus, attrs: IAttrs, descriptor: IDescriptor, skills: Record<string, number>, occupation: IOccupation, }
+export interface IDetail { status: IStatus, attrs: IAttrs, descriptor: IDescriptor, skills: Record<string, ISkillAssigned>, occupation: IOccupation, }

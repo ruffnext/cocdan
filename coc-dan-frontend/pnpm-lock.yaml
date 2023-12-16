@@ -17,12 +17,9 @@ dependencies:
   bulma:
     specifier: ^0.9.4
     version: 0.9.4
-  flat:
-    specifier: ^6.0.1
-    version: 6.0.1
   flatten-type:
-    specifier: ^0.0.2
-    version: 0.0.2
+    specifier: ^1.0.1
+    version: 1.0.1
   solid-js:
     specifier: ^1.8.5
     version: 1.8.7
@@ -1537,8 +1534,8 @@ packages:
     hasBin: true
     dev: false
 
-  /flatten-type@0.0.2:
-    resolution: {integrity: sha512-DZA5xbGVsIQMAxBiJdba+j0mJWpP0MJaY/UJySGTGbe+eAROu+yZRcephzHSD/ZJsbwXZyDavcXN7aaRFtljYA==}
+  /flatten-type@1.0.1:
+    resolution: {integrity: sha512-CmW50yL/cX84FdCZO8b7n4035ZXi6B7EIYWN+F6CpWKllLZDfkAVkT4wekYbLR+ROENkIKEollpyD4RzF3TQ2g==}
     dependencies:
       flat: 6.0.1
     dev: false

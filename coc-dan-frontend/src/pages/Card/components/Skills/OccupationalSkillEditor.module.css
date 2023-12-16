@@ -1,0 +1,49 @@
+.td {
+  font-size: 24px;
+  border-right: none;
+  border-left: none;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+.button_container {
+  padding-right: 1em;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 18px;
+  border-right: none;
+  border-left: none;
+  user-select: none;
+}
+
+.button_item {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  padding-left: 0.4em;
+  padding-right: 0.4em;
+}
+
+.button_item_plus:hover {
+  background-color: palegreen;
+  box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px;
+}
+
+
+.button_item_minus:hover {
+  background-color: rgb(255, 151, 140);
+  box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.1) 0px 8px 24px, rgba(17, 17, 26, 0.1) 0px 16px 56px;
+}
+
+.button_item_minus:active {
+  box-shadow: none;
+}
+
+.button_item_plus:active {
+  box-shadow: none;
+}
+
+.skill_point_input {
+  width: 2em;
+  font-size : 25px;
+}

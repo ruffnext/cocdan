@@ -23,7 +23,7 @@ impl Default for EraEnum {
 #[ts(export, rename = "ISkill", export_to = "bindings/avatar/ISkill.ts")]
 pub struct Skill {
     pub name : String,
-    pub initial : i32,
+    pub initial : u32,
     pub era : EraEnum
 }
 
@@ -31,11 +31,11 @@ pub struct Skill {
 #[ts(export, rename = "IOccupation", export_to = "bindings/avatar/IOccupation.ts")]
 pub struct Occupation {
     pub name : String,
-    pub credit_rating : (i32, i32),
+    pub credit_rating : (u32, u32),
     pub era : EraEnum,
     pub attribute : Vec<Attribute>,
     pub occupational_skills : Vec<String>,
-    pub additional_skill_num : i32
+    pub additional_skill_num : u32
 }
 
 impl Default for Occupation {
@@ -60,4 +60,29 @@ lazy_static! {
     pub static ref OCCUPATIONS : HashMap<String, Occupation> = 
         serde_json::from_str::<Vec<Occupation>>(include_str!("../../resource/occupation.json")).unwrap()
             .into_iter().map(|x| (x.name.to_string(), x)).collect();
+}
+
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug)]
+#[ts(export, rename = "ISkillAssignType", export_to = "bindings/avatar/ISkillAssignType.ts")]
+pub enum SkillAssignType {
+    Occupational,
+    AdditionalOccupational,
+    Interest
+}
+
+impl Default for SkillAssignType {
+    fn default() -> Self {
+        Self::Interest
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default, Debug)]
+#[ts(export, rename = "ISkillAssigned", export_to = "bindings/avatar/ISkillAssigned.ts")]
+pub struct SkillAssigned {
+    pub name : String,
+    pub initial : u32,
+    pub era : EraEnum,
+    pub occupation_skill_point : u32,
+    pub interest_skill_point : u32,
+    pub assign_type : SkillAssignType
 }

@@ -4,7 +4,7 @@ use ts_rs::TS;
 
 use crate::entities::avatar;
 
-use super::skills::{Occupation, OCCUPATIONS};
+use super::skills::{Occupation, OCCUPATIONS, SkillAssigned};
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
 #[ts(export, rename = "IGender", export_to = "bindings/avatar/IGender.ts")]
@@ -114,7 +114,7 @@ pub struct Detail {
     pub status : Status,
     pub attrs : Attrs,
     pub descriptor : Descriptor,
-    pub skills : HashMap<String, u32>,
+    pub skills : HashMap<String, SkillAssigned>,
     pub occupation : Occupation
 }
 

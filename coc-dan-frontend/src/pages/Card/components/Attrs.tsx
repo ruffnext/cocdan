@@ -30,6 +30,7 @@ export default () => {
     const fieldStr : any = "detail.attrs." + field
     return (e : string ) : string => {
       const res = parseIntOrDefault(e, avatar[fieldStr], upperLimit)
+      // @ts-ignore
       setAvatar(fieldStr, res)
       if (field == "con" || field == "siz") {
         const max_hp = maxHP(avatar["detail.attrs.con"], avatar["detail.attrs.siz"])

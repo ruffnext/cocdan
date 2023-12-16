@@ -56,6 +56,9 @@ const dict = {
     Accountant : {
       name : "Accountant"
     }
+  },
+  occupationalSkillPoint : {
+    remain : "Occupational Skill Points Remain : "
   }
 }
 

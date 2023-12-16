@@ -1,5 +1,6 @@
+import OccupationalSkillEditor from "./Skills/OccupationalSkillEditor"
 export default () => {
   return (
-    <div>SKILLS</div>
+    <OccupationalSkillEditor />
   )
 }

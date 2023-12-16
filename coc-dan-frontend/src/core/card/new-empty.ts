@@ -1,7 +1,9 @@
 import { IAvatar } from "../../bindings/IAvatar";
-import { getOccupationOrDefault } from "./resource";
+import { getOccupationOrDefault, initOccupationalSkill } from "./resource";
 
 export default () : IAvatar => {
+  const occupation = getOccupationOrDefault("Accountant")
+  const occupationalSkills = initOccupationalSkill(occupation)
   return {
     id : 0,
     stage_uuid : "",
@@ -30,17 +32,14 @@ export default () : IAvatar => {
         mov : 50,
         luk : 50,
         mov_adj : null
-        
       },
       descriptor : {
         age : 27,
         gender : "Other",
         homeland : "Homeland"
       },
-      skills : {
-
-      },
-      occupation : getOccupationOrDefault("Accountant")
+      skills : occupationalSkills,
+      occupation : occupation
     }
   }
 }

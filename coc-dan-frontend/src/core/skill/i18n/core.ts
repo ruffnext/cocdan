@@ -9,7 +9,7 @@ const dictionaries = {
   "zh-CN" : zh_CN
 };
 
-export function getCardI18n (val : SupportedI18N) {
+export function genSkillI18n (val : SupportedI18N) {
   const dict = createMemo(() => i18n.flatten(dictionaries[val]));
 
   return i18n.translator(dict);  
