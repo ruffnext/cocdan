@@ -14,7 +14,7 @@ export class User {
       const res : Array<IStage> = await get("/api/stage/my_stages", null, false)
       return res
     } catch (error : any) {
-      console.log(error)
+      console.warn(error)
       if (error.status != 204) {
         toast.error(error.message)
       }

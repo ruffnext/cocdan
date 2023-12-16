@@ -1,12 +1,12 @@
 import { useI18N } from "../../../core/i18n"
 import { useAvatar } from "../context"
-import { getCardI18n } from "../i18n/core"
 import Dropdown from "../../../components/Dropdown/Component"
 import { IHealthStatus } from "../../../bindings/avatar/IHealthStatus"
 import { HealthStatus, MentalStatus } from "../../../core/card/enums"
 import { IMentalStatus } from "../../../bindings/avatar/IMentalStatus"
 import { maxHP, maxMP, maxSan } from "../../../core/card/calc"
 import InlineInput from "../../../components/InlineInput"
+import { getCardI18n } from "../../../core/card/i18n/core"
 
 export default () => {
   const { avatar, setAvatar } = useAvatar()
@@ -77,7 +77,6 @@ export default () => {
     })
   }
   const setMentalStatus = (e: IMentalStatus): string => {
-    console.log(avatar)
     setAvatar("detail.status.mental_status", e)
     return getMentalName(e)
   }
@@ -86,49 +85,49 @@ export default () => {
       <tbody>
         <tr>
           <td rowSpan="2" class="is-big" style="width : 10%;">
-            {t("cardEditor.status.hp")}<br />
+            {t("status.hp")}<br />
             <InlineInput 
               value={avatar["detail.status.hp"]} 
               upperLimit={maxHP(avatar["detail.attrs.con"], avatar["detail.attrs.siz"])} setValue={setHP} />
             / {maxHP(avatar["detail.attrs.con"], avatar["detail.attrs.siz"]).toFixed(0)}
           </td>
-          <td class="is-middle">{t("cardEditor.status.statusHp")}</td>
+          <td class="is-middle">{t("status.statusHp")}</td>
 
           <td rowSpan="2" class="is-big" style="width : 12%">
-            {t("cardEditor.status.san")}<br />
+            {t("status.san")}<br />
             <InlineInput 
               value={avatar["detail.status.san"]} 
               upperLimit={maxSan(avatar["detail.attrs.pow"])} 
               setValue={setSAN} /> 
             / {maxSan(avatar["detail.attrs.pow"]).toFixed(0)}
           </td>
-          <td class="is-middle">{t("cardEditor.status.statusSan")}</td>
+          <td class="is-middle">{t("status.statusSan")}</td>
 
           <td rowSpan="2" class="is-big" style="width : 12%">
-            {t("cardEditor.status.luk")}<br />
+            {t("status.luk")}<br />
             <InlineInput 
               value={avatar["detail.attrs.luk"]} 
               upperLimit={99} 
               setValue={setLuck} /> 
             / 99</td>
-          <td class="is-middle">{t("cardEditor.status.luckUsed")}</td>
+          <td class="is-middle">{t("status.luckUsed")}</td>
           
           <td rowSpan="2" class="is-big" style="width : 12%">
-            {t("cardEditor.status.mp")}<br />
+            {t("status.mp")}<br />
             <InlineInput 
               value={avatar["detail.status.mp"]} 
               upperLimit={maxMP(avatar["detail.attrs.pow"])} 
               setValue={setMP} />
             / {maxMP(avatar["detail.attrs.pow"])}</td>
-          <td class="is-middle">{t("cardEditor.status.mpRecovery")}</td>
-          <td rowSpan="2" class="is-big" style="width : 12%">{t("cardEditor.status.arm")}<br /> (Place)</td>
+          <td class="is-middle">{t("status.mpRecovery")}</td>
+          <td rowSpan="2" class="is-big" style="width : 12%">{t("status.arm")}<br /> (Place)</td>
         </tr>
         <tr>
           <td class="is-middle">
-            <Dropdown items={hpStatus} initialValue={getHealthName(avatar["detail.status.health_status"])} setValue={setHpStatus}></Dropdown>
+            <Dropdown items={hpStatus} initialLabel={getHealthName(avatar["detail.status.health_status"])} setValue={setHpStatus}></Dropdown>
           </td>
           <td class="is-middle">
-            <Dropdown items={mentalStatus} initialValue={getMentalName(avatar["detail.status.mental_status"])} setValue={setMentalStatus}></Dropdown>
+            <Dropdown items={mentalStatus} initialLabel={getMentalName(avatar["detail.status.mental_status"])} setValue={setMentalStatus}></Dropdown>
           </td>
           <td class="is-middle">0</td>
           <td class="is-middle">1</td>

@@ -1,40 +1,46 @@
 import { IAvatar } from "../../bindings/IAvatar";
+import { getOccupationOrDefault } from "./resource";
 
 export default () : IAvatar => {
   return {
     id : 0,
     stage_uuid : "",
     owner : 0,
-    name : "new avatar",
+    name : "My Name",
     detail : {
       status : {
-        hp : 0,
-        mp : 0,
-        san : 0,
+        hp : 10,
+        mp : 10,
+        san : 50,
+        hp_loss : 0,
+        mp_loss : 0,
+        san_loss : 0,
         mental_status : "Lucid",
         health_status : "Healthy"
       },
       attrs : {
-        str : 0,
-        dex : 0,
-        pow : 0,
-        con : 0,
-        app : 0,
-        edu : 0,
-        siz : 0,
-        int : 0,
-        mov : 0,
-        luk : 0,
+        str : 50,
+        dex : 50,
+        pow : 50,
+        con : 50,
+        app : 50,
+        edu : 50,
+        siz : 50,
+        int : 50,
+        mov : 50,
+        luk : 50,
+        mov_adj : null
+        
       },
       descriptor : {
-        age : 0,
-        career : "",
-        gender : "unknown",
-        homeland : ""
+        age : 27,
+        gender : "Other",
+        homeland : "Homeland"
       },
       skills : {
 
-      }
+      },
+      occupation : getOccupationOrDefault("Accountant")
     }
   }
 }

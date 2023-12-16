@@ -1,34 +1,40 @@
-import { For, Show, createSignal } from "solid-js"
+import { For, createSignal } from "solid-js"
 import "./dropdown.css"
 
 interface Props {
   items: Array<{label : string, value : any}>,
-  initialValue: string,
+  initialLabel: string,
   setValue: (e: any) => string
 }
 
 export default (props: Props) => {
-  const [val, setVal] = createSignal(props.initialValue)
+  const [val, setVal] = createSignal(props.initialLabel)
   const [active, setActive] = createSignal(false)
   const update = (e: any) => {
     setVal(props.setValue(e))
     setActive(false)
   }
+  let dropdown : any;
   const triggerDisplay = (show: boolean | undefined) => {
     if (show == undefined) {
       setActive(!active())
     } else {
       setActive(show)
     }
+    if (active() && dropdown != undefined) {
+      dropdown.focus()
+      console.log(dropdown)
+    }
   }
+
   return (
-    <div style="position : relative">
-      <p class="trigger" aria-haspopup="true" aria-controls="dropdown-menu3"
-        onClick={() => triggerDisplay(undefined)} >
+    <div style="position : relative; user-select : none">
+      <p class="trigger" onClick={() => triggerDisplay(undefined)}>
         {val()}
       </p>
-      <Show when={active()}>
-        <div style="position : absolute; top : 100%; margin-top : 0.5em; z-index : 20; width: 6em" role="menu">
+      <div ref={dropdown}
+        style={active() ? "display : block;" : "display : none"} tabIndex={active() ? "-1" : ""} class="my-dropdown-menu"
+          onBlur={() => triggerDisplay(false)}>
           <div class="dropdown-content" style="padding : 0">
             <For each={props.items}>
               {(item, _i) => {
@@ -39,7 +45,6 @@ export default (props: Props) => {
             </For>
           </div>
         </div>
-      </Show>
     </div>
   )
 }

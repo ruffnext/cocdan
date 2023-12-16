@@ -4,12 +4,27 @@ use ts_rs::TS;
 
 use crate::entities::avatar;
 
+use super::skills::{Occupation, OCCUPATIONS};
+
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[ts(export, rename = "IGender", export_to = "bindings/avatar/IGender.ts")]
+pub enum Gender {
+    Other,
+    Male,
+    Female
+}
+
+impl Default for Gender {
+    fn default() -> Self {
+        Self::Other
+    }
+}
+
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default)]
 #[ts(export, rename = "IDescriptor", export_to = "bindings/avatar/IDescriptor.ts")]
 pub struct Descriptor {
     age : u32,
-    career : String,
-    gender : String,
+    gender : Gender,
     homeland : String,
 }
 
@@ -77,13 +92,46 @@ pub struct Attrs {
     pub mov_adj : Option<f32>
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default)]
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
+#[ts(export, rename = "IAttrsEnum", export_to = "bindings/avatar/IAttrsEnum.ts")]
+#[serde(rename_all = "lowercase")]
+pub enum Attribute {
+    Str,
+    Dex,
+    Pow,
+    Con,
+    App,
+    Edu,
+    Siz,
+    Int,
+    Mov,
+    Luk
+}
+
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
 #[ts(export, rename = "IDetail", export_to = "bindings/avatar/IDetail.ts")]
 pub struct Detail {
     pub status : Status,
     pub attrs : Attrs,
     pub descriptor : Descriptor,
-    pub skills : HashMap<String, u32>
+    pub skills : HashMap<String, u32>,
+    pub occupation : Occupation
+}
+
+impl Default for Detail {
+    fn default() -> Self {
+        let occupation: Occupation = match OCCUPATIONS.get("Accountant") {
+            Some(v) => v.clone(),
+            None => Occupation::default()
+        };
+        Self { 
+            status: Default::default(), 
+            attrs: Default::default(), 
+            descriptor: Default::default(), 
+            skills: Default::default(), 
+            occupation
+        }
+    }
 }
 
 #[derive(serde::Deserialize, serde::Serialize, TS, PartialEq)]

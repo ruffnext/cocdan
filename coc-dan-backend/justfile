@@ -2,6 +2,8 @@ ts:
     cargo test
     rm -rf ../coc-dan-frontend/src/bindings
     mv ./bindings ../coc-dan-frontend/src/
+    cp ./resource/skills.json ../coc-dan-frontend/src/core/card/
+    cp ./resource/occupation.json ../coc-dan-frontend/src/core/card/
     
 migrate:
     sea-orm-cli migrate

@@ -1,3 +1,4 @@
+import { IGender } from "../../bindings/avatar/IGender";
 import { IHealthStatus } from "../../bindings/avatar/IHealthStatus";
 import { IMentalStatus } from "../../bindings/avatar/IMentalStatus";
 
@@ -15,4 +16,10 @@ export const MentalStatus : IMentalStatus[] = [
   "TemporaryInsanity",
   "IntermittentInsanity",
   "PermanentInsanity"
+]
+
+export const Genders : IGender[] = [
+  "Female",
+  "Male",
+  "Other"
 ]

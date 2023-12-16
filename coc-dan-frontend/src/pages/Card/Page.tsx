@@ -8,7 +8,7 @@ import Status from "./components/Status";
 import Skills from "./components/Skills";
 import { AvatarProvider } from "./context";
 import "./style.css"
-import * as i18n from "@solid-primitives/i18n";
+import * as flat from "flatten-type"
 
 enum PageStatus {
   IsLoading,
@@ -16,14 +16,10 @@ enum PageStatus {
   LoadError,
 }
 
-// @ts-ignore
-type FlattenAvatar = Flatten<IAvatar>
-
-
 export default () => {
   const params = useParams()
-  const initialAvatar = i18n.flatten(newEmpty() as any)
-  const [avatar, setAvatar] = createSignal<FlattenAvatar>(initialAvatar)
+  const initialAvatar = flat.flatten(newEmpty())
+  const [avatar, setAvatar] = createSignal(initialAvatar)
 
   const [pageStatus, setPageStatus] = createSignal<PageStatus>(params.id == "new" ? PageStatus.LoadDone : PageStatus.IsLoading)
 
@@ -33,10 +29,9 @@ export default () => {
 
   if (params.id != "new") {
     load_avatar(params.id).then((val: IAvatar) => {
-      setAvatar(i18n.flatten(val as any))
+      setAvatar(flat.flatten(val))
     })
   } else {
-    console.log("new avatar")
   }
 
   return (

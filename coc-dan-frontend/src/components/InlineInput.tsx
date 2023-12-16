@@ -7,7 +7,6 @@ interface InlineInputProps {
 }
 
 export default (props: InlineInputProps) => {
-  console.log("init")
   const [val, setVal] = createSignal(props.value.toFixed(0))
   createEffect(() => {
     setVal(props.value.toFixed(0))
@@ -15,7 +14,6 @@ export default (props: InlineInputProps) => {
   const updateVal = (e: any) => {
     const fp = parseInt(e.target.value)
     if (isNaN(fp) || fp < 0 || fp > props.upperLimit) {
-      console.log(props.value.toFixed(0))
       setVal(props.value.toFixed(0))
     } else {
       setVal(props.setValue(fp).toFixed(0))

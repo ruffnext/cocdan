@@ -1,0 +1,17 @@
+[
+    {
+        "name" : "Accountant",
+        "era" : "None",
+        "credit_rating" : [30, 70],
+        "attribute" : ["edu"],
+        "occupational_skills" : [
+            "Accounting", 
+            "Law", 
+            "Library Use",
+            "Listen",
+            "Persuade",
+            "Spot Hidden"
+        ],
+        "additional_skill_num" : 2
+    }
+]
