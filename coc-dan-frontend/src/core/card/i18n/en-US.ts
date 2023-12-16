@@ -57,8 +57,9 @@ const dict = {
       name : "Accountant"
     }
   },
-  occupationalSkillPoint : {
-    remain : "Occupational Skill Points Remain : "
+  occupationalSkillEditor : {
+    title : "Occupational Skills",
+    remain : (num : number) => `(Remain : ${num.toFixed(0)})`
   }
 }
 

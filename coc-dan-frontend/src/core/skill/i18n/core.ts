@@ -9,8 +9,22 @@ const dictionaries = {
   "zh-CN" : zh_CN
 };
 
+export type ISkillDictionary = typeof en_US
+export type ISkillTranslator = i18n.Translator<i18n.Flatten<ISkillDictionary>>
+
 export function genSkillI18n (val : SupportedI18N) {
   const dict = createMemo(() => i18n.flatten(dictionaries[val]));
 
   return i18n.translator(dict);  
+}
+
+export function getSkillI18nName (name: string, translator : ISkillTranslator): string {
+  // @ts-ignore
+  const res = translator(name + ".name")
+  if (res == undefined) {
+    return name
+  } else {
+    // @ts-ignore
+    return res
+  }
 }

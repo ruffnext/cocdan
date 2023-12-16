@@ -59,8 +59,9 @@ const dict : ICardI18NRaw = {
       name : "会计师"
     }
   },
-  occupationalSkillPoint : {
-    remain : "剩余的本职技能点："
+  occupationalSkillEditor : {
+    title : "本职技能",
+    remain : (num : number) => `（剩余： ${num.toFixed(0)}）`
   }
 }
 

@@ -5,10 +5,10 @@ import newEmpty from "../../core/card/new-empty";
 import Info from "./components/Info";
 import Attrs from "./components/Attrs";
 import Status from "./components/Status";
-import Skills from "./components/Skills";
 import { AvatarProvider } from "./context";
 import "./style.css"
 import * as flat from "flatten-type"
+import OccupationalSkillEditor from "./components/Skills/OccupationalSkillEditor";
 
 enum PageStatus {
   IsLoading,
@@ -52,7 +52,9 @@ export default () => {
               </figure>
             </div>
           </div>
-          <div id="avatar-skill" class="box-shadow"><Skills /></div>
+          <div style="display : flex; margin : 1em">
+            <OccupationalSkillEditor />
+          </div>
         </div>
       </AvatarProvider>
     </div>
