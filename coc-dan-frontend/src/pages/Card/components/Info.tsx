@@ -6,6 +6,8 @@ import Dropdown from "../../../components/Dropdown/Component"
 import "./table.css"
 import { OCCUPATIONS, getOccupationOrDefault } from "../../../core/card/resource"
 import { Genders } from "../../../core/card/enums"
+import { resetSkill } from "./utils"
+import { deepClone } from "../../../core/utils"
 
 export default () => {
   const { avatar, setAvatar } = useAvatar()  
@@ -18,9 +20,9 @@ export default () => {
   const setAge = (val : string) : string => {
     const newVal = parseInt(val)
     if (isNaN(newVal) || newVal < 0) {
-      return avatar["detail.descriptor.age"].toFixed(0)
+      return avatar.detail.descriptor.age.toFixed(0)
     }
-    setAvatar("detail.descriptor.age", newVal)
+    setAvatar("detail", "descriptor", "age", newVal)
     return newVal.toFixed(0)
   }
 
@@ -41,12 +43,10 @@ export default () => {
 
   const setOccupation = (val : string) : string => {
     const occupation = getOccupationOrDefault(val)
-    setAvatar("detail.occupation.name", occupation.name)
-    setAvatar("detail.occupation.additional_skills", occupation.additional_skills)
-    setAvatar("detail.occupation.attribute", occupation.attribute)
-    setAvatar("detail.occupation.credit_rating", occupation.credit_rating)
-    setAvatar("detail.occupation.era", occupation.era)
-    setAvatar("detail.occupation.occupational_skills", occupation.occupational_skills)
+    setAvatar("detail", "occupation", occupation)
+    const newAvatar = deepClone(avatar)
+    newAvatar.detail.occupation = occupation
+    resetSkill(newAvatar, setAvatar)
     return getOccupationName(val)
   }
 
@@ -71,7 +71,6 @@ export default () => {
     setAvatar("detail.descriptor.gender", val)
     return getGenderName(val)
   }
-  
   return (
     <>
       <p class="box-edit-header">{t("investor.title")}</p>
@@ -84,18 +83,18 @@ export default () => {
           <tr>
             <td style="width : 17%">{t("investor.gender")}</td>
             <td style="width : 33%">
-              <Dropdown items={genders} initialLabel={getGenderName(avatar["detail.descriptor.gender"])} setValue={setGender}/>
+              <Dropdown items={genders} initialLabel={getGenderName(avatar.detail.descriptor.gender)} setValue={setGender}/>
             </td>
             <td style="width : 17%">{t("investor.age")}</td>
-            <td style="width : 33%"><CellInput value={avatar["detail.descriptor.age"].toFixed(0)} setValue={setAge} /></td>
+            <td style="width : 33%"><CellInput value={avatar.detail.descriptor.age.toFixed(0)} setValue={setAge} /></td>
           </tr>
           <tr>
             <td>{t("investor.career")}</td>
             <td>
-              <Dropdown items={occupations} initialLabel={getOccupationName(avatar["detail.occupation.name"])} setValue={setOccupation} />
+              <Dropdown items={occupations} initialLabel={getOccupationName(avatar.detail.occupation.name)} setValue={setOccupation} />
             </td>
             <td>{t("investor.homeland")}</td>
-            <td><CellInput value={avatar["detail.descriptor.homeland"]} setValue={setHomeland} /></td>
+            <td><CellInput value={avatar.detail.descriptor.homeland} setValue={setHomeland} /></td>
           </tr>
         </tbody>
       </table>

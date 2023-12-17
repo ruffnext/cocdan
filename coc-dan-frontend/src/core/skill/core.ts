@@ -1,7 +1,12 @@
 import { IAvatar } from "../../bindings/IAvatar"
 import { IAttrs } from "../../bindings/avatar/IAttrs"
 import { IOccupation } from "../../bindings/avatar/IOccupation"
+import { IOptionalOccupationalSkill } from "../../bindings/avatar/IOptionalOccupationalSkill"
+import { ISkill } from "../../bindings/avatar/ISkill"
+import { ISkillAssigned } from "../../bindings/avatar/ISkillAssigned"
 import { ISkillCategory } from "../../bindings/avatar/ISkillCategory"
+import { SKILLS, SKILL_BY_CATEGORY } from "../card/resource"
+import { deepClone } from "../utils"
 
 export function maximumOccupationalSkillPoint(
   occupation: IOccupation,
@@ -30,17 +35,83 @@ export function remainingOccupationalSkillPoints(raw: IAvatar): number {
   return maximum - res
 }
 
-export function getOccupationAvailableSkillCategories(occupation: IOccupation): Map<ISkillCategory, number> {
-  const available: Map<ISkillCategory, number> = new Map()
-  for (const item of occupation.additional_skills) {
-    const res = available.get(item)
-    if (res == undefined) {
-      available.set(item, 1)
+export function genAvatarAvailableOptionalOccupationSkills(avatar : IAvatar) : Map<ISkillCategory, [Array<ISkill>, number]> {
+  const available : Array<IOptionalOccupationalSkill> = getOccupationAvailableSkillCategories(deepClone(avatar.detail.occupation))
+  const selected : Map<string, ISkillAssigned> = new Map()
+
+  // setup additional selected
+  for (const key in avatar.detail.skills) {
+    const item = avatar.detail.skills[key]
+    selected.set(item.name, item)
+  }
+  const resRaw : Map<ISkillCategory, [Array<ISkill>, number]> = new Map()
+
+  // handle category specified skills
+  for (const item of available) {
+    var remainNum = item.limit
+    var remainSelectable : Array<ISkill> = []
+
+    if (item.candidates.length == 0) {
+      if (item.category != "Any") {
+        remainSelectable = SKILL_BY_CATEGORY.get(item.category) || []
+      } else {
+        for (const [_name, val] of SKILLS) {
+          remainSelectable.push(deepClone(val))
+        }
+      }
     } else {
-      available.set(item, res + 1)
+      for (const key of item.candidates) {
+        const skill = SKILLS.get(key)
+        if (skill == undefined) continue
+        remainSelectable.push(deepClone(skill))
+      }
+    }
+
+    // remove selected
+    if (item.category == "Any") {
+      resRaw.set(item.category, [remainSelectable, remainNum])
+      continue
+    }
+    const newCandidates : Array<ISkill> = []
+    for (const remain of remainSelectable) {
+      const val = selected.get(remain.name)
+      if (val == undefined) {
+        newCandidates.push(remain)
+        continue
+      } else {
+        if (val.category == item.category) {
+          remainNum -= 1
+        }
+      }
+    }
+
+    if (remainNum > 0 && newCandidates.length > 0) {
+      resRaw.set(item.category, [newCandidates, remainNum])
     }
   }
-  return available
+
+  const anyRes = resRaw.get("Any")
+  if (anyRes != undefined) {
+    const newCandidates : ISkill[] = []
+    for (const item of anyRes[0]) {
+      if (selected.has(item.name)) continue
+      newCandidates.push(item)
+    }
+    resRaw.set("Any", [newCandidates, anyRes[1]])
+  }
+
+  return resRaw
+}
+
+export function getOccupationAvailableSkillCategories(occupation: IOccupation) : Array<IOptionalOccupationalSkill> {
+  const res : Array<IOptionalOccupationalSkill> = []
+  for (const item of occupation.occupational_skills) {
+    if (typeof item == "string") {
+      continue
+    }
+    res.push(item)
+  }
+  return res
 }
 
 

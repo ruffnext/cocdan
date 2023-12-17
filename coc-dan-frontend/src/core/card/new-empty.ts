@@ -1,9 +1,23 @@
 import { IAvatar } from "../../bindings/IAvatar";
+import { IAttrs } from "../../bindings/avatar/IAttrs";
 import { getOccupationOrDefault, initOccupationalSkill } from "./resource";
 
 export default () : IAvatar => {
-  const occupation = getOccupationOrDefault("Accountant")
-  const occupationalSkills = initOccupationalSkill(occupation)
+  const attrs : IAttrs = {
+    str : 50,
+    dex : 50,
+    pow : 50,
+    con : 50,
+    app : 50,
+    edu : 50,
+    siz : 50,
+    int : 50,
+    mov : 50,
+    luk : 50,
+    mov_adj : null
+  }
+  const occupation = getOccupationOrDefault("Secretary")
+  const occupationalSkills = initOccupationalSkill(attrs, occupation)
   return {
     id : 0,
     stage_uuid : "",
@@ -20,19 +34,7 @@ export default () : IAvatar => {
         mental_status : "Lucid",
         health_status : "Healthy"
       },
-      attrs : {
-        str : 50,
-        dex : 50,
-        pow : 50,
-        con : 50,
-        app : 50,
-        edu : 50,
-        siz : 50,
-        int : 50,
-        mov : 50,
-        luk : 50,
-        mov_adj : null
-      },
+      attrs : attrs,
       descriptor : {
         age : 27,
         gender : "Other",

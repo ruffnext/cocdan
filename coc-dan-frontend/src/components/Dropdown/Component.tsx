@@ -29,10 +29,10 @@ export default (props: Props) => {
   }
 
   return (
-    <div style="position : relative; user-select : none">
-      <p class="trigger" onClick={() => triggerDisplay(undefined)}>
+    <div style="position : relative; user-select : none;">
+      <div class="trigger" onClick={() => triggerDisplay(undefined)}>
         {val()}
-      </p>
+      </div>
       <div ref={dropdown}
         style={active() ? "display : block;" : "display : none"} tabIndex={active() ? "-1" : ""} class="my-dropdown-menu"
           onBlur={() => triggerDisplay(false)}>

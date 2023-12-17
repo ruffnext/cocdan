@@ -57,11 +57,15 @@ const dict : ICardI18NRaw = {
   occupation : {
     Accountant : {
       name : "会计师"
+    },
+    "Secretary" : {
+      "name" : "秘书"
     }
   },
   occupationalSkillEditor : {
     title : "本职技能",
-    remain : (num : number) => `（剩余： ${num.toFixed(0)}）`
+    remain : (num : number) => `（剩余： ${num.toFixed(0)} 点）`,
+    reset : "重置"
   },
   additionalOccupationalSkillEditor : {
     select : (num : number, category : string) => `选择额外 ${num.toFixed(0)} 项${category}技能`

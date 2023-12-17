@@ -32,7 +32,9 @@ pub struct Skill {
 #[ts(export, rename = "ISkillCategory", export_to = "bindings/avatar/ISkillCategory.ts")]
 pub enum SkillCategory {
     Any,
-    Social
+    Social,
+    ArtAndCraft,
+    Custom
 }
 
 impl Default for SkillCategory {
@@ -42,14 +44,29 @@ impl Default for SkillCategory {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
+#[ts(export, rename = "IOptionalOccupationalSkill", export_to = "bindings/avatar/IOptionalOccupationalSkill.ts")]
+pub struct OptionalOccupationalSkill {
+    pub category : SkillCategory,
+    pub candidates : Vec<String>,       // if candidates is empty, it mean all skill under this category can be selected
+    pub limit : u32
+}
+
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
+#[ts(export, rename = "IOccupationalSkill", export_to = "bindings/avatar/IOccupationalSkill.ts")]
+#[serde(untagged)]
+pub enum OccupationalSkill {
+    Identity (String),
+    Enumeration (OptionalOccupationalSkill)
+}
+
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IOccupation", export_to = "bindings/avatar/IOccupation.ts")]
 pub struct Occupation {
     pub name : String,
     pub credit_rating : (u32, u32),
     pub era : EraEnum,
     pub attribute : Vec<Attribute>,
-    pub occupational_skills : Vec<String>,
-    pub additional_skills : Vec<SkillCategory>
+    pub occupational_skills : Vec<OccupationalSkill>,
 }
 
 impl Default for Occupation {
@@ -60,7 +77,6 @@ impl Default for Occupation {
             era : EraEnum::None,
             attribute : vec![Attribute::Edu],
             occupational_skills : Vec::new(),
-            additional_skills : vec![]
         }
     }
 }

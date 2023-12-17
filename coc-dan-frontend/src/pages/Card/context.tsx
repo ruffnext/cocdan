@@ -1,18 +1,14 @@
 import { createContext, useContext } from "solid-js";
 import newEmpty from "../../core/card/new-empty";
 import { IAvatar } from "../../bindings/IAvatar";
-import * as i18n from "@solid-primitives/i18n";
 import { createStore } from "solid-js/store";
-import * as flat from "flatten-type"
 
 function newContext(params : IAvatar) {
   const raw : IAvatar = (params || newEmpty())
-  const flattenAvatar = i18n.flatten(raw as any) as any
-  const [avatar, setAvatar] = createStore<FlattenAvatar>(flattenAvatar)
+  const [avatar, setAvatar] = createStore<IAvatar>(raw)
   return { avatar, setAvatar }
 }
 
-export type FlattenAvatar = flat.Flatten<IAvatar>
 export const AvatarContext = createContext<ReturnType<typeof newContext>>();
 
 export function AvatarProvider (props : any) {

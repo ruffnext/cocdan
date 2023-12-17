@@ -29,11 +29,28 @@ const dict = {
     },
     "Intimidate" : {
       "name" : "Intimidate"
+    },
+    "Language" : {
+      "name" : "Language"
+    },
+    "Psychoanalysis" : {
+      "name" : "Psychoanalysis"
+    },
+    "Computer Use" : {
+      "name" : "Computer Use"
+    },
+    "Typing" : {
+      "name" : "Typing"
+    },
+    "Short Hand" : {
+      "name" : "Short Hand"
     }
   },
   "category" : {
     "Any" : "arbitrary",
-    "Social" : "social"
+    "Social" : "social",
+    "ArtAndCraft" : "Art & Craft",
+    "Custom" : "Custom"
   }
 }
 

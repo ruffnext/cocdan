@@ -262,5 +262,17 @@
         "initial" : 10,
         "era" : "None",
         "category" : "None"
+    },
+    {
+        "name" : "Typing",
+        "initial" : 9,
+        "era" : "Modern",
+        "category" : "ArtAndCraft"
+    },
+    {
+        "name" : "Short Hand",
+        "initial" : 9,
+        "era" : "None",
+        "category" : "ArtAndCraft"
     }
 ]

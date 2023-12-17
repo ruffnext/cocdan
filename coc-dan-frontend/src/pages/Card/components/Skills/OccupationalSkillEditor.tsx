@@ -1,69 +1,52 @@
-import { For } from "solid-js"
+import { For, Show } from "solid-js"
 import { IAvatar } from "../../../../bindings/IAvatar"
 import { ISkillAssigned } from "../../../../bindings/avatar/ISkillAssigned"
 import { useI18N } from "../../../../core/i18n"
 import { useAvatar } from "../../context"
-import * as flat from "flatten-type"
 import { genSkillI18n } from "../../../../core/skill/i18n/core"
 import { getCardI18n } from "../../../../core/card/i18n/core"
 import { removeSkill, setSkill } from "./core"
-import { getOccupationAvailableSkillCategories, remainingOccupationalSkillPoints } from "../../../../core/skill/core"
+import { genAvatarAvailableOptionalOccupationSkills, remainingOccupationalSkillPoints } from "../../../../core/skill/core"
 import SkillRowEditor from "./SkillRowEditor"
 import { ISkillCategory } from "../../../../bindings/avatar/ISkillCategory"
 import Dropdown, { IDropdownItem } from "../../../../components/Dropdown/Component"
-import { SKILLS, SKILL_BY_CATEGORY } from "../../../../core/card/resource"
+import { SKILLS } from "../../../../core/card/resource"
 import styles from "./OccupationalSkillEditor.module.css"
+import { ISkill } from "../../../../bindings/avatar/ISkill"
+import { resetSkill } from "../utils"
+import { deepClone } from "../../../../core/utils"
 
-function genAvailable(raw : flat.Flatten<IAvatar>) : Array<[ISkillCategory, number]> {
-  const avatar : IAvatar = flat.unflatten(raw)
-  const available : Map<ISkillCategory, number> = getOccupationAvailableSkillCategories(avatar.detail.occupation)
 
-  for (const key in avatar.detail.skills) {
-    const item = avatar.detail.skills[key]
-    if (item.assign_type == "AdditionalOccupational") {
-      const remain = available.get(item.category)
-      available.set(item.category, (remain == undefined || remain <= 1) ? 0 : remain - 1)
-    }
-  }
-  const res : Array<[ISkillCategory, number]> = []
-  for (const [key, val] of available) {
-    if (val > 0) {
-      res.push([key, val])
-    }
-  }
-  return res
-}
 
 export default () => {
   const { avatar, setAvatar } = useAvatar()
   const i18n = useI18N()()
   const ts = genSkillI18n(i18n)
   const t = getCardI18n(i18n)
+  
 
-  const raw : IAvatar = flat.unflatten(avatar)
-
-  const AdditionalOccupationalSelector = (prop : {category : ISkillCategory, remain : number}) => {
-    // @ts-ignore
-    const categoryName : string = ts("category." + prop.category) || prop.category
-    const categoryCandidates = SKILL_BY_CATEGORY.get(prop.category) || []
+  const AdditionalOccupationalSelector = (prop : {category : ISkillCategory, candidates : Array<ISkill>, remain : number}) => {
     const items : Array<IDropdownItem> = []
-    for (const item of categoryCandidates) {
+    for (const item of prop.candidates) {
       items.push({
         // @ts-ignore
         label : ts("skill." + item.name + ".name") || item.name,
         value : item.name
       })
     }
-    const text = t("additionalOccupationalSkillEditor.select", prop.remain, categoryName)
-
+    // @ts-ignore
+    const text = t("additionalOccupationalSkillEditor.select", prop.remain, ts("category." + prop.category))
     const insertAdditionalOccupationalSkill = (val : string) : string => {
-      const isExists = raw.detail.skills[val]
+      const isExists = avatar.detail.skills[val]
       if (isExists) {
+        if (isExists.assign_type == "Occupational") {
+          return text
+        }
         isExists.assign_type = "AdditionalOccupational"
         setSkill(isExists, avatar, setAvatar)
         return ""
       } else {
-        const newSkill = SKILLS.get(val)
+        const newSkill = deepClone(SKILLS.get(val))
         if (newSkill == undefined) {
           return text
         }
@@ -73,7 +56,7 @@ export default () => {
           era : newSkill.era,
           occupation_skill_point : 0,
           interest_skill_point : 0,
-          category : newSkill.category,
+          category : prop.category,
           assign_type : "AdditionalOccupational"
         }
         setSkill(newAssigned, avatar, setAvatar)
@@ -82,7 +65,7 @@ export default () => {
     }
     return (
       <tr style="height : 46px;">
-        <td class={styles.td} colSpan={3} style="vertical-align : middle">
+        <td class={`${styles.td} ${styles.tr_clickable}`} colSpan={3} style="vertical-align : middle; padding : 0; height : 46px;">
           <Dropdown items={items} initialLabel={text} setValue={insertAdditionalOccupationalSkill}/>
         </td>
       </tr>
@@ -90,10 +73,9 @@ export default () => {
   }
 
   const getOccupationalSkills = (): Array<ISkillAssigned> => {
-    const raw: IAvatar = flat.unflatten(avatar)
     const res: Array<ISkillAssigned> = []
-    for (const key in raw.detail.skills) {
-      const item = raw.detail.skills[key]
+    for (const key in avatar.detail.skills) {
+      const item = avatar.detail.skills[key]
       if (item.assign_type == "Occupational" || item.assign_type == "AdditionalOccupational") {
         res.push(item)
       }
@@ -112,18 +94,36 @@ export default () => {
     }
   }
 
+  const genCandidate = (val : IAvatar) : Array<[ISkillCategory, ISkill[], number]> => {
+    const raw = genAvatarAvailableOptionalOccupationSkills(val)
+    const res : Array<[ISkillCategory, ISkill[], number]> = []
+    for (const [category, [candidates, remain]] of raw) {
+      res.push([category, candidates, remain])
+    }
+    return res
+  }
+
   return (
     <div>
-      <p class="box-edit-header">{t("occupationalSkillEditor.title") + t("occupationalSkillEditor.remain", remainingOccupationalSkillPoints(flat.unflatten(avatar)))}</p>
+      <p class="box-edit-header">{t("occupationalSkillEditor.title") + t("occupationalSkillEditor.remain", remainingOccupationalSkillPoints(avatar))}</p>
       <div id="avatar-skill" class="box-shadow">
         <table>
           <tbody>
             <For each={getOccupationalSkills()}>{
               (item, _i) => <SkillRowEditor removable={item.assign_type == "AdditionalOccupational"} item={item} updateSkillPointEditor={updateSkillPointEditor} translator={ts} />
             }</For>
-            <For each={genAvailable(avatar)}>{
-              ([category, remain], _i) => <AdditionalOccupationalSelector category={category} remain={remain} />
+            <For each={genCandidate(avatar)}>{
+              ([category, candidates, remain], _i) => <Show when={remain > 0}>
+                <AdditionalOccupationalSelector candidates={candidates} category={category} remain={remain} />
+              </Show>
             }</For>
+            <tr>
+              <td class={`${styles.td} ${styles.tr_clickable_danger}`} 
+                  colSpan={3} style="vertical-align : middle"
+                  onclick={() => resetSkill(avatar, setAvatar)}>
+                {t("occupationalSkillEditor.reset")}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>

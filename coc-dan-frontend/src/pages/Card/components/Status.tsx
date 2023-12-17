@@ -13,37 +13,37 @@ export default () => {
   const t = getCardI18n(useI18N()())
 
   const setHP = (val: number): number => {
-    const max_hp = maxHP(avatar["detail.attrs.con"], avatar["detail.attrs.siz"])
+    const max_hp = maxHP(avatar.detail.attrs.con, avatar.detail.attrs.siz)
     if (val > max_hp) {
       val = max_hp
     }
-    setAvatar("detail.status.hp", val)
-    setAvatar("detail.status.hp_loss", max_hp - val)
+    setAvatar("detail", "status", "hp", val)
+    setAvatar("detail", "status", "hp_loss", max_hp - val)
     return val
   }
 
   const setSAN = (val: number): number => {
-    const max_san = maxSan(avatar["detail.attrs.pow"])
+    const max_san = maxSan(avatar.detail.attrs.pow)
     if (val > max_san) {
       val = max_san
     }
-    setAvatar("detail.status.san", val)
-    setAvatar("detail.status.san_loss", max_san - val)
+    setAvatar("detail", "status", "san", val)
+    setAvatar("detail", "status", "san_loss", max_san - val)
     return val
   }
 
   const setLuck = (val: number): number => {
-    setAvatar("detail.attrs.luk", val)
+    setAvatar("detail", "attrs", "luk", val)
     return val
   }
 
   const setMP = (val: number): number => {
-    const max_mp = maxMP(avatar["detail.attrs.pow"])
+    const max_mp = maxMP(avatar.detail.attrs.pow)
     if (val > max_mp) {
       val = max_mp
     }
-    setAvatar("detail.status.mp", val)
-    setAvatar("detail.status.mp_loss", max_mp - val)
+    setAvatar("detail", "status", "mp", val)
+    setAvatar("detail", "status", "mp_loss", max_mp - val)
     return val
   }
 
@@ -65,7 +65,8 @@ export default () => {
     })
   }
   const setHpStatus = (e: IHealthStatus): string => {
-    setAvatar("detail.status.health_status", e)
+    console.log(avatar)
+    setAvatar("detail", "status", "health_status", e)
     return getHealthName(e)
   }
 
@@ -77,7 +78,7 @@ export default () => {
     })
   }
   const setMentalStatus = (e: IMentalStatus): string => {
-    setAvatar("detail.status.mental_status", e)
+    setAvatar("detail", "status", "mental_status", e)
     return getMentalName(e)
   }
   return (
@@ -87,26 +88,26 @@ export default () => {
           <td rowSpan="2" class="is-big" style="width : 10%;">
             {t("status.hp")}<br />
             <InlineInput 
-              value={avatar["detail.status.hp"]} 
-              upperLimit={maxHP(avatar["detail.attrs.con"], avatar["detail.attrs.siz"])} setValue={setHP} />
-            / {maxHP(avatar["detail.attrs.con"], avatar["detail.attrs.siz"]).toFixed(0)}
+              value={avatar.detail.status.hp} 
+              upperLimit={maxHP(avatar.detail.attrs.con, avatar.detail.attrs.siz)} setValue={setHP} />
+            / {maxHP(avatar.detail.attrs.con, avatar.detail.attrs.siz).toFixed(0)}
           </td>
           <td class="is-middle">{t("status.statusHp")}</td>
 
           <td rowSpan="2" class="is-big" style="width : 12%">
             {t("status.san")}<br />
             <InlineInput 
-              value={avatar["detail.status.san"]} 
-              upperLimit={maxSan(avatar["detail.attrs.pow"])} 
+              value={avatar.detail.status.san} 
+              upperLimit={maxSan(avatar.detail.attrs.pow)} 
               setValue={setSAN} /> 
-            / {maxSan(avatar["detail.attrs.pow"]).toFixed(0)}
+            / {maxSan(avatar.detail.attrs.pow).toFixed(0)}
           </td>
           <td class="is-middle">{t("status.statusSan")}</td>
 
           <td rowSpan="2" class="is-big" style="width : 12%">
             {t("status.luk")}<br />
             <InlineInput 
-              value={avatar["detail.attrs.luk"]} 
+              value={avatar.detail.attrs.luk} 
               upperLimit={99} 
               setValue={setLuck} /> 
             / 99</td>
@@ -115,19 +116,19 @@ export default () => {
           <td rowSpan="2" class="is-big" style="width : 12%">
             {t("status.mp")}<br />
             <InlineInput 
-              value={avatar["detail.status.mp"]} 
-              upperLimit={maxMP(avatar["detail.attrs.pow"])} 
+              value={avatar.detail.status.mp} 
+              upperLimit={maxMP(avatar.detail.attrs.pow)} 
               setValue={setMP} />
-            / {maxMP(avatar["detail.attrs.pow"])}</td>
+            / {maxMP(avatar.detail.attrs.pow)}</td>
           <td class="is-middle">{t("status.mpRecovery")}</td>
           <td rowSpan="2" class="is-big" style="width : 12%">{t("status.arm")}<br /> (Place)</td>
         </tr>
         <tr>
           <td class="is-middle">
-            <Dropdown items={hpStatus} initialLabel={getHealthName(avatar["detail.status.health_status"])} setValue={setHpStatus}></Dropdown>
+            <Dropdown items={hpStatus} initialLabel={getHealthName(avatar.detail.status.health_status)} setValue={setHpStatus}></Dropdown>
           </td>
           <td class="is-middle">
-            <Dropdown items={mentalStatus} initialLabel={getMentalName(avatar["detail.status.mental_status"])} setValue={setMentalStatus}></Dropdown>
+            <Dropdown items={mentalStatus} initialLabel={getMentalName(avatar.detail.status.mental_status)} setValue={setMentalStatus}></Dropdown>
           </td>
           <td class="is-middle">0</td>
           <td class="is-middle">1</td>

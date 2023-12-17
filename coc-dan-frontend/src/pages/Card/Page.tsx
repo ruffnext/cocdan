@@ -7,7 +7,6 @@ import Attrs from "./components/Attrs";
 import Status from "./components/Status";
 import { AvatarProvider } from "./context";
 import "./style.css"
-import * as flat from "flatten-type"
 import OccupationalSkillEditor from "./components/Skills/OccupationalSkillEditor";
 
 enum PageStatus {
@@ -18,8 +17,7 @@ enum PageStatus {
 
 export default () => {
   const params = useParams()
-  const initialAvatar = flat.flatten(newEmpty())
-  const [avatar, setAvatar] = createSignal(initialAvatar)
+  const [avatar, setAvatar] = createSignal(newEmpty())
 
   const [pageStatus, setPageStatus] = createSignal<PageStatus>(params.id == "new" ? PageStatus.LoadDone : PageStatus.IsLoading)
 
@@ -29,7 +27,7 @@ export default () => {
 
   if (params.id != "new") {
     load_avatar(params.id).then((val: IAvatar) => {
-      setAvatar(flat.flatten(val))
+      setAvatar(val)
     })
   } else {
   }

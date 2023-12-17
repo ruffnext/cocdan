@@ -50,7 +50,7 @@
 
 .skill_point_input {
   width: 2em;
-  font-size : 25px;
+  font-size: 25px;
 }
 
 .removable {
@@ -60,4 +60,41 @@
 
 .removable:hover {
   color: orangered;
+}
+
+.tr_clickable {
+  user-select: none;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.tr_clickable:hover {
+  background-color: aquamarine;
+}
+
+.tr_clickable_danger {
+  user-select: none;
+  cursor: pointer;
+  vertical-align: middle;
+  color: orangered;
+}
+
+.tr_clickable_danger:hover {
+  background-color: lightcoral;
+  color: white;
+}
+
+.div_dummy_table_clickable {
+  line-height: 1.5;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  text-align: center;
+}
+
+.div_dummy_table_clickable:hover {
+  background-color: aquamarine;
+}
+
+.div_dummy_table_clickable_begin {
+  border-top: 1px solid #ddd;
 }

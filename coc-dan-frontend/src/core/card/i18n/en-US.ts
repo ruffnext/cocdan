@@ -53,13 +53,17 @@ const dict = {
     PermanentInsanity : "PermInsane"
   },
   occupation : {
-    Accountant : {
+    "Accountant" : {
       name : "Accountant"
+    },
+    "Secretary" : {
+      "name" : "Secretary"
     }
   },
   occupationalSkillEditor : {
     title : "Occupational Skills",
-    remain : (num : number) => `(Remain : ${num.toFixed(0)})`
+    remain : (num : number) => `(Remain : ${num.toFixed(0)})`,
+    reset : "Reset"
   },
   additionalOccupationalSkillEditor : {
     select : (num : number, category : string) => `Select additional ${num.toFixed(0)} ${category} skills`

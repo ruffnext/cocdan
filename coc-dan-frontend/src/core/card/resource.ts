@@ -4,6 +4,8 @@ import rawSkills from "./skills.json"
 import rawOccupations from "./occupation.json"
 import { ISkillAssigned } from "../../bindings/avatar/ISkillAssigned"
 import { ISkillCategory } from "../../bindings/avatar/ISkillCategory"
+import { IAttrs } from "../../bindings/avatar/IAttrs"
+import { deepClone } from "../utils"
 
 const SKILLS : Map<string, ISkill> = new Map()
 const SKILL_BY_CATEGORY : Map<ISkillCategory, ISkill[]> = new Map()
@@ -32,25 +34,24 @@ for (const item of rawOccupations) {
 export function getOccupationOrDefault(name : string) : IOccupation {
   const raw = OCCUPATIONS.get(name)
   if (raw != undefined) {
-    return raw
+    return deepClone(raw)
   } else {
-    return {
+    return deepClone({
       name : "Custom",
       credit_rating : [0, 100],
       era : "None",
       attribute : ["edu"],
       occupational_skills : [],
-      additional_skills : [
-        "Any",
-        "Any"
-      ]
-    }
+    })
   }
 }
 
-export function initOccupationalSkill(occupation : IOccupation) : Record<string, ISkillAssigned> {
+export function initOccupationalSkill(attrs : IAttrs, occupation : IOccupation) : Record<string, ISkillAssigned> {
   const res : Record<string, ISkillAssigned> = {}
   for (const skill of occupation.occupational_skills) {
+    if (typeof skill != "string") {
+      continue
+    }
     const item = SKILLS.get(skill)
     if (item != undefined) {
       res[item.name] = {
@@ -69,12 +70,26 @@ export function initOccupationalSkill(occupation : IOccupation) : Record<string,
   if (creditRating == undefined) {
     throw Error("Credit Rating not found")
   }
+  const language = SKILLS.get("Language")
+  if (language == undefined) {
+    throw Error("Language not found")
+  }
   
   res[creditRating.name] = {
     name : creditRating.name,
     era : creditRating.era,
     initial : creditRating.initial,
     occupation_skill_point : occupation.credit_rating[0],
+    interest_skill_point : 0,
+    assign_type : "Occupational",
+    category : "Any"
+  }
+
+  res[language.name] = {
+    name : language.name,
+    era : language.era,
+    initial : attrs.edu,
+    occupation_skill_point : 0,
     interest_skill_point : 0,
     assign_type : "Occupational",
     category : "Any"
