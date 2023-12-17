@@ -27,12 +27,10 @@ export default () => {
   const { avatar, setAvatar } = useAvatar()
   const t = getCardI18n(useI18N()())
   const setAttr = (field : any, upperLimit = 100) => {
-    const fieldStr : any = "detail.attrs." + field
     return (e : string ) : string => {
       // @ts-ignore
       const res = parseIntOrDefault(e, avatar.detail.attrs[field], upperLimit)
-      // @ts-ignore
-      setAvatar(fieldStr, res)
+      setAvatar("detail", "attrs", field, res)
       if (field == "con" || field == "siz") {
         const max_hp = maxHP(avatar.detail.attrs.con, avatar.detail.attrs.siz)
         var hp_loss = avatar.detail.status.hp_loss == 0 ? 0 : max_hp - avatar.detail.status.hp
