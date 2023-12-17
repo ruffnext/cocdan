@@ -60,6 +60,9 @@ const dict = {
   occupationalSkillEditor : {
     title : "Occupational Skills",
     remain : (num : number) => `(Remain : ${num.toFixed(0)})`
+  },
+  additionalOccupationalSkillEditor : {
+    select : (num : number, category : string) => `Select additional ${num.toFixed(0)} ${category} skills`
   }
 }
 

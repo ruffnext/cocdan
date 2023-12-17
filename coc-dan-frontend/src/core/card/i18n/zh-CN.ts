@@ -62,6 +62,9 @@ const dict : ICardI18NRaw = {
   occupationalSkillEditor : {
     title : "本职技能",
     remain : (num : number) => `（剩余： ${num.toFixed(0)}）`
+  },
+  additionalOccupationalSkillEditor : {
+    select : (num : number, category : string) => `选择额外 ${num.toFixed(0)} 项${category}技能`
   }
 }
 

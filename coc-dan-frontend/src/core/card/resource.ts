@@ -3,12 +3,24 @@ import { ISkill } from "../../bindings/avatar/ISkill"
 import rawSkills from "./skills.json"
 import rawOccupations from "./occupation.json"
 import { ISkillAssigned } from "../../bindings/avatar/ISkillAssigned"
+import { ISkillCategory } from "../../bindings/avatar/ISkillCategory"
 
 const SKILLS : Map<string, ISkill> = new Map()
+const SKILL_BY_CATEGORY : Map<ISkillCategory, ISkill[]> = new Map()
+SKILL_BY_CATEGORY.set("Any", [])
+
 const skill_names = []
-for (const item of rawSkills) {
+for (const val of rawSkills) {
+  const item = val as ISkill
   SKILLS.set(item.name, item as ISkill)
   skill_names.push(item.name)
+  if (! (SKILL_BY_CATEGORY.has(item.category))) {
+    SKILL_BY_CATEGORY.set(item.category, [])
+  }
+  // @ts-ignore
+  SKILL_BY_CATEGORY.get(item.category).push(item)
+  // @ts-ignore
+  SKILL_BY_CATEGORY.get("Any").push(item)
 }
 
 
@@ -28,7 +40,10 @@ export function getOccupationOrDefault(name : string) : IOccupation {
       era : "None",
       attribute : ["edu"],
       occupational_skills : [],
-      additional_skill_num : 2
+      additional_skills : [
+        "Any",
+        "Any"
+      ]
     }
   }
 }
@@ -44,7 +59,8 @@ export function initOccupationalSkill(occupation : IOccupation) : Record<string,
         initial : item.initial,
         occupation_skill_point : 0,
         interest_skill_point : 0,
-        assign_type : "Occupational"
+        assign_type : "Occupational",
+        category : "Any"
       }
     }
   }
@@ -60,10 +76,11 @@ export function initOccupationalSkill(occupation : IOccupation) : Record<string,
     initial : creditRating.initial,
     occupation_skill_point : occupation.credit_rating[0],
     interest_skill_point : 0,
-    assign_type : "Occupational"
+    assign_type : "Occupational",
+    category : "Any"
   }
 
   return res
 }
 
-export {SKILLS, OCCUPATIONS}
+export {SKILLS, OCCUPATIONS, SKILL_BY_CATEGORY}

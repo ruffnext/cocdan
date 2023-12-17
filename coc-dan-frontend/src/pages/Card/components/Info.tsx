@@ -42,7 +42,7 @@ export default () => {
   const setOccupation = (val : string) : string => {
     const occupation = getOccupationOrDefault(val)
     setAvatar("detail.occupation.name", occupation.name)
-    setAvatar("detail.occupation.additional_skill_num", occupation.additional_skill_num)
+    setAvatar("detail.occupation.additional_skills", occupation.additional_skills)
     setAvatar("detail.occupation.attribute", occupation.attribute)
     setAvatar("detail.occupation.credit_rating", occupation.credit_rating)
     setAvatar("detail.occupation.era", occupation.era)

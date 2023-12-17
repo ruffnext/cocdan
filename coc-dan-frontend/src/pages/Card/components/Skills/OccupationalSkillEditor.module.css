@@ -6,6 +6,11 @@
   padding-right: 1em;
 }
 
+.no_padding {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .button_container {
   padding-right: 1em;
   padding-top: 0;
@@ -46,4 +51,13 @@
 .skill_point_input {
   width: 2em;
   font-size : 25px;
+}
+
+.removable {
+  user-select: none;
+  cursor: pointer;
+}
+
+.removable:hover {
+  color: orangered;
 }

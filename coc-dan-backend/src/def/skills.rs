@@ -24,7 +24,21 @@ impl Default for EraEnum {
 pub struct Skill {
     pub name : String,
     pub initial : u32,
-    pub era : EraEnum
+    pub era : EraEnum,
+    pub category : SkillCategory
+}
+
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
+#[ts(export, rename = "ISkillCategory", export_to = "bindings/avatar/ISkillCategory.ts")]
+pub enum SkillCategory {
+    Any,
+    Social
+}
+
+impl Default for SkillCategory {
+    fn default() -> Self {
+        Self::Any
+    }
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
@@ -35,7 +49,7 @@ pub struct Occupation {
     pub era : EraEnum,
     pub attribute : Vec<Attribute>,
     pub occupational_skills : Vec<String>,
-    pub additional_skill_num : u32
+    pub additional_skills : Vec<SkillCategory>
 }
 
 impl Default for Occupation {
@@ -46,7 +60,7 @@ impl Default for Occupation {
             era : EraEnum::None,
             attribute : vec![Attribute::Edu],
             occupational_skills : Vec::new(),
-            additional_skill_num : 2
+            additional_skills : vec![]
         }
     }
 }
@@ -84,5 +98,6 @@ pub struct SkillAssigned {
     pub era : EraEnum,
     pub occupation_skill_point : u32,
     pub interest_skill_point : u32,
+    pub category : SkillCategory,
     pub assign_type : SkillAssignType
 }

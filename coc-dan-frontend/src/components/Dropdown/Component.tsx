@@ -1,11 +1,13 @@
 import { For, createSignal } from "solid-js"
 import "./dropdown.css"
 
+export type IDropdownItem = {label : string, value : any}
 interface Props {
-  items: Array<{label : string, value : any}>,
+  items: Array<IDropdownItem>,
   initialLabel: string,
   setValue: (e: any) => string
 }
+
 
 export default (props: Props) => {
   const [val, setVal] = createSignal(props.initialLabel)
@@ -23,7 +25,6 @@ export default (props: Props) => {
     }
     if (active() && dropdown != undefined) {
       dropdown.focus()
-      console.log(dropdown)
     }
   }
 
@@ -35,7 +36,7 @@ export default (props: Props) => {
       <div ref={dropdown}
         style={active() ? "display : block;" : "display : none"} tabIndex={active() ? "-1" : ""} class="my-dropdown-menu"
           onBlur={() => triggerDisplay(false)}>
-          <div class="dropdown-content" style="padding : 0">
+          <div class="dropdown-content" style="padding : 0; max-height : 20vh; overflow-y : auto">
             <For each={props.items}>
               {(item, _i) => {
                 return (

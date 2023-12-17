@@ -2,6 +2,10 @@ import { Flatten, unflatten } from "flatten-type"
 import { IAvatar } from "../../../../bindings/IAvatar"
 import { ISkillAssigned } from "../../../../bindings/avatar/ISkillAssigned"
 import { SetStoreFunction } from "solid-js/store"
+import { ISkillCategory } from "../../../../bindings/avatar/ISkillCategory"
+import { getOccupationAvailableSkillCategories } from "../../../../core/skill/core"
+
+
 
 export function setSkill (item : ISkillAssigned, avatar : Flatten<IAvatar>, setAvatar : SetStoreFunction<Flatten<IAvatar>>) : boolean {
   const total = item.occupation_skill_point + item.initial + item.interest_skill_point
@@ -25,33 +29,50 @@ export function setSkill (item : ISkillAssigned, avatar : Flatten<IAvatar>, setA
     }
   }
   if (found == false) {
+    // assign a new occupational skill
     if (item.assign_type == "AdditionalOccupational") {
-      var assigned = 0
+
+      // initialize total available skill slot
+      const available : Map<ISkillCategory, number> = getOccupationAvailableSkillCategories(raw.detail.occupation)
+
+      // minus used
       for (const key in raw.detail.skills) {
-        if (raw.detail.skills[key].assign_type == "AdditionalOccupational") {
-          assigned ++
+        const val = raw.detail.skills[key]
+        if (val.assign_type == "AdditionalOccupational") {
+          const prev = available.get(val.category)
+          if (prev != undefined) {
+            available.set(val.category, Math.max(prev - 1, 0))
+          }
         }
       }
-      if (assigned >= raw.detail.occupation.additional_skill_num) {
-        return false
+      const res = available.get(item.category)
+      if (res == undefined || res <= 0) {
+        const extra = available.get("Any")
+        if (extra == undefined || extra == 0) {
+          return false
+        } else {
+          item.category = "Any"
+        }
       }
     }
     raw.detail.skills[item.name] = item
   }
 
-  // @ts-ignore
-  setAvatar("detail.skills." + item.name + ".occupation_skill_point", res)
-  if (!found) {
+  const prefix = "detail.skills." + item.name + "."
+
+  if (found) {
     // @ts-ignore
-    setAvatar("detail.skills." + item.name + ".name", item.name)
-    // @ts-ignore
-    setAvatar("detail.skills." + item.name + ".initial", item.initial)
-    // @ts-ignore
-    setAvatar("detail.skills." + item.name + ".era", item.era)
-    // @ts-ignore
-    setAvatar("detail.skills." + item.name + ".interest_skill_point", item.interest_skill_point)
-    // @ts-ignore
-    setAvatar("detail.skills." + item.name + ".assign_type", item.assign_type)
+    setAvatar(prefix + "occupation_skill_point", res)
+  } else {
+    const merge : any = {}
+    merge[prefix + "name"] = item.name
+    merge[prefix + "assign_type"] = item.assign_type
+    merge[prefix + "era"] = item.era
+    merge[prefix + "initial"] = item.initial
+    merge[prefix + "interest_skill_point"] = item.interest_skill_point
+    merge[prefix + "occupation_skill_point"] = item.occupation_skill_point
+    merge[prefix + "category"] = item.category
+    setAvatar(merge)
   }
   return true
 }
@@ -61,16 +82,20 @@ export function removeSkill (item : ISkillAssigned, _avatar : Flatten<IAvatar>, 
     return false
   } else {
     const prefix = "detail.skills." + item.name + "."
-    // @ts-ignore
-    setAvatar(prefix + "assign_type", undefined)
-    // @ts-ignore
-    setAvatar(prefix + "era", undefined)
-    // @ts-ignore
-    setAvatar(prefix + "initial", undefined)
-    // @ts-ignore
-    setAvatar(prefix + "interest_skill_point", undefined)
-    // @ts-ignore
-    setAvatar(prefix + "occupation_skill_point", undefined)
+    if (item.assign_type == "AdditionalOccupational" && item.interest_skill_point != 0) {
+      // @ts-ignore
+      setAvatar(prefix + "assign_type", "Interest")
+    } else {
+      const merge : any = {}
+      merge[prefix + "name"] = undefined
+      merge[prefix + "assign_type"] = undefined
+      merge[prefix + "era"] = undefined
+      merge[prefix + "initial"] = undefined
+      merge[prefix + "interest_skill_point"] = undefined
+      merge[prefix + "occupation_skill_point"] = undefined
+      merge[prefix + "category"] = undefined
+      setAvatar(merge)
+    }
     return true
   }
 }

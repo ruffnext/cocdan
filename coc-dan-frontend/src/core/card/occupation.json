@@ -12,6 +12,9 @@
             "Persuade",
             "Spot Hidden"
         ],
-        "additional_skill_num" : 2
+        "additional_skills" : [
+            "Social",
+            "Any"
+        ]
     }
 ]

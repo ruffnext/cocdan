@@ -7,7 +7,8 @@ import { deepClone } from "../../../../core/utils"
 interface Props {
   item : ISkillAssigned,
   translator : ISkillTranslator,
-  updateSkillPointEditor : (original : ISkillAssigned, modified : ISkillAssigned | undefined) => string
+  updateSkillPointEditor : (original : ISkillAssigned, modified : ISkillAssigned | undefined) => string,
+  removable? : boolean
 }
 
 interface ISkillPointEditor {
@@ -15,31 +16,32 @@ interface ISkillPointEditor {
   updateItem : (original : ISkillAssigned, modified : ISkillAssigned) => string
 }
 
-function SkillPointEditor (prop : ISkillPointEditor) {
-  const [val, setVal] = createSignal((prop.item.initial + prop.item.interest_skill_point + prop.item.occupation_skill_point).toFixed(0))
-  const submit = () => {
-    var fp = parseInt(val())
-    const initialStr = (prop.item.initial + prop.item.occupation_skill_point + prop.item.interest_skill_point).toFixed(0)
-    if (isNaN(fp) || fp < 0 || fp >= 100) {
-      setVal(initialStr)
-    }
-    fp = fp - prop.item.interest_skill_point - prop.item.initial
-    const modified = deepClone(prop.item)
-    modified.occupation_skill_point = fp
-    const res = prop.updateItem(prop.item, modified)
-    setVal(res)
-  }
-  return (
-    <input 
-      class={styles.skill_point_input}
-      value={val()} 
-      onChange={(e) => setVal(e.target.value)} 
-      onBlur={() => submit()}
-    />
-  )
-}
-
 export default (prop : Props) => {
+  const SkillPointEditor = (prop : ISkillPointEditor) => {
+    const [val, setVal] = createSignal((prop.item.initial + prop.item.interest_skill_point + prop.item.occupation_skill_point).toFixed(0))
+    const submit = () => {
+      var fp = parseInt(val())
+      const initialStr = (prop.item.initial + prop.item.occupation_skill_point + prop.item.interest_skill_point).toFixed(0)
+      if (isNaN(fp) || fp < 0 || fp >= 100) {
+        setVal(initialStr)
+      }
+      fp = fp - prop.item.interest_skill_point - prop.item.initial
+      const modified = deepClone(prop.item)
+      modified.occupation_skill_point = fp
+      const res = prop.updateItem(prop.item, modified)
+      setVal(res)
+    }
+    
+    return (
+      <input 
+        class={styles.skill_point_input}
+        value={val()} 
+        onChange={(e) => setVal(e.target.value)} 
+        onBlur={() => submit()}
+      />
+    )
+  }
+
   const increaseSkill = () => {
     const val = deepClone(prop.item)
     val.occupation_skill_point += 1
@@ -54,10 +56,11 @@ export default (prop : Props) => {
 
   return (
     <tr>
-      <td class={styles.td} onClick={() => prop.updateSkillPointEditor(prop.item, undefined)}>
+      <td style={"vertical-align: middle;"} 
+        class={`${styles.td} ${(prop.removable == true) ? styles.removable : ""}`} onClick={() => prop.updateSkillPointEditor(prop.item, undefined)}>
         {getSkillI18nName(prop.item.name, prop.translator)}
       </td>
-      <td class={`${styles.td} ${styles.skill_point_input}`}>
+      <td class={`${styles.td} ${styles.no_padding} ${styles.skill_point_input}`}>
         <SkillPointEditor item={prop.item} updateItem={prop.updateSkillPointEditor} />
       </td>
       <td class={styles.button_container}>

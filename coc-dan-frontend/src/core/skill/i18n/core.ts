@@ -20,7 +20,7 @@ export function genSkillI18n (val : SupportedI18N) {
 
 export function getSkillI18nName (name: string, translator : ISkillTranslator): string {
   // @ts-ignore
-  const res = translator(name + ".name")
+  const res = translator("skill." + name + ".name")
   if (res == undefined) {
     return name
   } else {

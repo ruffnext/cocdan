@@ -2,221 +2,265 @@
     {
         "name" : "Accounting",
         "initial" : 5,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Anthropology",
         "initial" : 1,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Appraise",
         "initial" : 1,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
-        "name" : "charm",
+        "name" : "Charm",
         "initial" : 15,
-        "era" : "None"
+        "era" : "None",
+        "category" : "Social"
     },
     {
         "name" : "Climb",
         "initial" : 20,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Computer Use",
         "initial" : 5,
-        "era" : "Contemporary"
+        "era" : "Contemporary",
+        "category" : "None"
     },
     {
         "name" : "Credit Rating",
         "initial" : 0,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Cthulhu Mythos",
         "initial" : 0,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Disguise",
         "initial" : 5,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Dodge",
         "initial" : 0,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Drive Auto",
         "initial" : 20,
-        "era" : "Modern"
+        "era" : "Modern",
+        "category" : "None"
     },
     {
         "name" : "Electrical Repair",
         "initial" : 10,
-        "era" : "Modern"
+        "era" : "Modern",
+        "category" : "None"
     },
     {
         "name" : "Electronics",
         "initial" : 1,
-        "era" : "Contemporary"
+        "era" : "Contemporary",
+        "category" : "None"
     },
     {
         "name" : "Fast Talk",
         "initial" : 5,
-        "era" : "None"
+        "era" : "None",
+        "category" : "Social"
     },
     {
         "name" : "Fighting",
         "initial" : 25,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Firearms",
         "initial" : 20,
-        "era" : "Modern"
+        "era" : "Modern",
+        "category" : "None"
     },
     {
         "name" : "First Aid",
         "initial" : 30,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "History",
         "initial" : 5,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Intimidate",
         "initial" : 15,
-        "era" : "None"
+        "era" : "None",
+        "category" : "Social"
     },
     {
         "name" : "Jump",
         "initial" : 20,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Language",
         "initial" : 0,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Language (Other)",
         "initial" : 1,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Law",
         "initial" : 5,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Library Use",
         "initial" : 20,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Listen",
         "initial" : 20,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Locksmith",
         "initial" : 1,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Mechanical Repair",
         "initial" : 10,
-        "era" : "Modern"
+        "era" : "Modern",
+        "category" : "None"
     },
     {
         "name" : "Medicine",
         "initial" : 1,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Natural World",
         "initial" : 10,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Navigate",
         "initial" : 10,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Occult",
         "initial" : 5,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Operate Heavy Machinery",
         "initial" : 1,
-        "era" : "Modern"
+        "era" : "Modern",
+        "category" : "None"
     },
     {
         "name" : "Persuade",
         "initial" : 10,
-        "era" : "None"
+        "era" : "None",
+        "category" : "Social"
     },
     {
         "name" : "Pilot",
         "initial" : 1,
-        "era" : "Modern"
+        "era" : "Modern",
+        "category" : "None"
     },
     {
         "name" : "Psychoanalysis",
         "initial" : 1,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Psychology",
         "initial" : 10,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Ride",
         "initial" : 5,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Science",
         "initial" : 1,
-        "era" : "Modern"
+        "era" : "Modern",
+        "category" : "None"
     },
     {
         "name" : "Sleight of Hand",
         "initial" : 10,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Spot Hidden",
         "initial" : 25,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Stealth",
         "initial" : 20,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Swim",
         "initial" : 20,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Throw",
         "initial" : 20,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     },
     {
         "name" : "Track",
         "initial" : 10,
-        "era" : "None"
+        "era" : "None",
+        "category" : "None"
     }
 ]

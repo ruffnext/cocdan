@@ -8,7 +8,7 @@ export default () : IAvatar => {
     id : 0,
     stage_uuid : "",
     owner : 0,
-    name : "My Name",
+    name : "Chris Redfield",
     detail : {
       status : {
         hp : 10,
