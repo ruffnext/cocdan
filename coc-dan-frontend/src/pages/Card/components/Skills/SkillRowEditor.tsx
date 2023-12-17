@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js"
+import { createEffect, createSignal } from "solid-js"
 import { ISkillAssigned } from "../../../../bindings/avatar/ISkillAssigned"
 import { ISkillTranslator, getSkillI18nName } from "../../../../core/skill/i18n/core"
 import styles from "./OccupationalSkillEditor.module.css"
@@ -31,6 +31,9 @@ export default (prop : Props) => {
       const res = prop.updateItem(prop.item, modified)
       setVal(res)
     }
+    createEffect(() => {
+      setVal((prop.item.initial + prop.item.occupation_skill_point + prop.item.interest_skill_point).toFixed(0))
+    })
     
     return (
       <input 
