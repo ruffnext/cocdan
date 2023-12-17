@@ -92,12 +92,19 @@ export function genAvatarAvailableOptionalOccupationSkills(avatar : IAvatar) : M
 
   const anyRes = resRaw.get("Any")
   if (anyRes != undefined) {
+    var remains = anyRes[1]
     const newCandidates : ISkill[] = []
     for (const item of anyRes[0]) {
-      if (selected.has(item.name)) continue
+      const selectedItem = selected.get(item.name)
+      if (selectedItem != undefined) {
+        if (selectedItem.assign_type == "AdditionalOccupational" && selectedItem.category == "Any") {
+          remains -= 1
+        }
+        continue
+      }
       newCandidates.push(item)
     }
-    resRaw.set("Any", [newCandidates, anyRes[1]])
+    resRaw.set("Any", [newCandidates, Math.max(remains, 0)])
   }
 
   return resRaw
