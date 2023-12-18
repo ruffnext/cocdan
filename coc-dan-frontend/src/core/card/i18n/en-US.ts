@@ -67,6 +67,12 @@ const dict = {
   },
   additionalOccupationalSkillEditor : {
     select : (num : number, category : string) => `Select additional ${num.toFixed(0)} ${category} skills`
+  },
+  interestSkillEditor : {
+    title : "Interest Skills",
+    remain : (num : number) => `(Remain : ${num.toFixed(0)})`,
+    reset : "Reset",
+    add : "Add"
   }
 }
 

@@ -11,9 +11,9 @@ import SkillRowEditor from "./SkillRowEditor"
 import { ISkillCategory } from "../../../../bindings/avatar/ISkillCategory"
 import Dropdown, { IDropdownItem } from "../../../../components/Dropdown/Component"
 import { SKILLS } from "../../../../core/card/resource"
-import styles from "./OccupationalSkillEditor.module.css"
+import styles from "./SkillEditor.module.css"
 import { ISkill } from "../../../../bindings/avatar/ISkill"
-import { resetSkill } from "../utils"
+import { resetSkill as resetOccupationalSkill } from "../utils"
 import { deepClone } from "../../../../core/utils"
 
 
@@ -120,7 +120,7 @@ export default () => {
             <tr>
               <td class={`${styles.td} ${styles.tr_clickable_danger}`} 
                   colSpan={3} style="vertical-align : middle"
-                  onclick={() => resetSkill(avatar, setAvatar)}>
+                  onclick={() => resetOccupationalSkill(avatar, setAvatar)}>
                 {t("occupationalSkillEditor.reset")}
               </td>
             </tr>

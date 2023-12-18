@@ -9,15 +9,18 @@ export function setSkill(item: ISkillAssigned, avatar: IAvatar, setAvatar: SetSt
   const total = item.occupation_skill_point + item.initial + item.interest_skill_point
   if (total < 0) return false
   if (total > 99) return false
-  const res = item.occupation_skill_point
   if (item.name == "Credit Rating" && total < avatar.detail.occupation.credit_rating[0]) return false
   if (item.name == "Credit Rating" && total > avatar.detail.occupation.credit_rating[1]) return false
-  if (res < 0) return false
+  if (item.interest_skill_point < 0 || item.occupation_skill_point < 0) return false
 
   for (const key in avatar.detail.skills) {
     const val = avatar.detail.skills[key]
     if (val.name == item.name) {
-      setAvatar("detail", "skills", key, "occupation_skill_point", res)
+      if (item.assign_type != "Interest") {
+        setAvatar("detail", "skills", key, "occupation_skill_point", item.occupation_skill_point)
+      } else {
+        setAvatar("detail", "skills", key, "interest_skill_point", item.interest_skill_point)
+      }
       return true
     }
   }

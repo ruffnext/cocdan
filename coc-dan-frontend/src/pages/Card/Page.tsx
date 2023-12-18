@@ -8,6 +8,7 @@ import Status from "./components/Status";
 import { AvatarProvider } from "./context";
 import "./style.css"
 import OccupationalSkillEditor from "./components/Skills/OccupationalSkillEditor";
+import InterestSkillEditor from "./components/Skills/InterestSkillEditor";
 
 enum PageStatus {
   IsLoading,
@@ -52,6 +53,7 @@ export default () => {
           </div>
           <div style="display : flex; margin : 1em">
             <OccupationalSkillEditor />
+            <InterestSkillEditor />
           </div>
         </div>
       </AvatarProvider>

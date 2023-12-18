@@ -1,7 +1,7 @@
 import { createEffect, createSignal } from "solid-js"
 import { ISkillAssigned } from "../../../../bindings/avatar/ISkillAssigned"
 import { ISkillTranslator, getSkillI18nName } from "../../../../core/skill/i18n/core"
-import styles from "./OccupationalSkillEditor.module.css"
+import styles from "./SkillEditor.module.css"
 import { deepClone } from "../../../../core/utils"
 
 interface Props {
@@ -47,13 +47,21 @@ export default (prop : Props) => {
 
   const increaseSkill = () => {
     const val = deepClone(prop.item)
-    val.occupation_skill_point += 1
+    if (val.assign_type == "Interest") {
+      val.interest_skill_point += 1
+    } else {
+      val.occupation_skill_point += 1
+    }
     prop.updateSkillPointEditor(prop.item, val)
   }
 
   const decreaseSkill = () => {
     const val = deepClone(prop.item)
-    val.occupation_skill_point -= 1
+    if (val.assign_type == "Interest") {
+      val.interest_skill_point -= 1
+    } else {
+      val.occupation_skill_point -= 1
+    }
     prop.updateSkillPointEditor(prop.item, val)
   }
 
