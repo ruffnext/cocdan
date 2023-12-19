@@ -19,6 +19,13 @@ pub enum ExtraEffect {
 
 pub struct WeaponDamage {
     pub dice : Dice,            // Dice command like 1d3, 2d6, 4D6+2/2D6+1/1D4, etc...
+    pub side_effect : ExtraEffect
+}
+
+pub struct Weapon {
+    pub name : String,
+    pub skill_name : String,
+    pub damage : WeaponDamage,
     pub range : WeaponRange,
     pub penetration : bool,
     pub rate_of_fire : f32,     // num per round
@@ -31,11 +38,4 @@ pub struct WeaponDamage {
                                 // price, and various parameters may differ.
     pub price : f64,
     pub category : String,      // e.g. pistol, rifle, knife....
-    pub side_effect : ExtraEffect
-}
-
-pub struct Weapon {
-    pub name : String,
-    pub skill_name : String,
-    pub damage : WeaponDamage
 }
