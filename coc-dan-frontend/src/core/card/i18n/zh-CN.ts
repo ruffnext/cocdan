@@ -75,6 +75,19 @@ const dict : ICardI18NRaw = {
     remain : (num : number) => `（剩余：${num.toFixed(0)} 点）`,
     reset : "重置",
     add : "新增"
+  },
+  Weapons : {
+    title: "武器表",
+    name: "武器名称",
+    type: "类型",
+    skill: "使用技能",
+    successRate: "成功率",
+    damage: "伤害",
+    range: "射程",
+    puncture: "穿刺",
+    frequency: "次数",
+    loadingCapacity: "装弹量",
+    fault: "故障值"
   }
 }
 

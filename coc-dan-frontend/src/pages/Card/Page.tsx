@@ -9,6 +9,7 @@ import { AvatarProvider } from "./context";
 import "./style.css"
 import OccupationalSkillEditor from "./components/Skills/OccupationalSkillEditor";
 import InterestSkillEditor from "./components/Skills/InterestSkillEditor";
+import Weapons from "./components/Weapons";
 
 enum PageStatus {
   IsLoading,
@@ -54,6 +55,9 @@ export default () => {
           <div style="display : flex; margin : 1em">
             <OccupationalSkillEditor />
             <InterestSkillEditor />
+          </div>
+          <div style="display : flex; margin : 1em">
+            <Weapons />
           </div>
         </div>
       </AvatarProvider>

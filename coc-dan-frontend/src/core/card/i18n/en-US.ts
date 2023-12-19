@@ -73,6 +73,19 @@ const dict = {
     remain : (num : number) => `(Remain : ${num.toFixed(0)})`,
     reset : "Reset",
     add : "Add"
+  },
+  Weapons : {
+    title: "Weapon List",
+    name: "Name",
+    type: "Type",
+    skill: "Use Skills",
+    successRate: "Success rate",
+    damage: "Damage",
+    range: "Range",
+    puncture: "Puncture",
+    frequency: "Frequency",
+    loadingCapacity: "Ammunition loading capacity",
+    fault: "Fault value"
   }
 }
 
