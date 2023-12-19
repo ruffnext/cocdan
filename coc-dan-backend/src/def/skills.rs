@@ -3,21 +3,7 @@ use std::collections::HashMap;
 use lazy_static::lazy_static;
 use ts_rs::TS;
 
-use super::avatar::Attribute;
-
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
-#[ts(export, rename = "IEraEnum", export_to = "bindings/IEraEnum.ts")]
-pub enum EraEnum {
-    None,
-    Modern,
-    Contemporary
-}
-
-impl Default for EraEnum {
-    fn default() -> Self {
-        Self::None
-    }
-}
+use super::{avatar::Attribute, common::EraEnum};
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default, Debug)]
 #[ts(export, rename = "ISkill", export_to = "bindings/avatar/ISkill.ts")]

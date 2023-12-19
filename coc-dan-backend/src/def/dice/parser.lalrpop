@@ -1,0 +1,28 @@
+use std::str::FromStr;
+use crate::def::dice::def::SimpleDice;
+
+grammar;
+
+Term: f64 = {
+    <n:Num> => n.into(),                // u32 into f64
+    "(" <t:Term> ")" => t,
+    <d:SimpleDice> => d.dice().into()   // u32 into f64
+};
+
+pub Expr:f64 = {
+    <e:Expr> "+" <f:Factor> => e+f,
+    <e:Expr> "-" <f:Factor> => e-f,
+    "-" <f:Factor> => -f,
+    "+" <f:Factor> => f,
+    <Factor>
+};
+
+Factor:f64 = {
+    <f:Factor> "*" <t:Term> => f*t,
+    <f:Factor> "/" <t:Term> => f/t,
+    <Term>
+};
+
+
+Num: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();
+SimpleDice: SimpleDice = <s:r"[0-9]+[dD]{1}[0-9]+"> => SimpleDice::try_from(s).unwrap();

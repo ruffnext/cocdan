@@ -20,6 +20,12 @@ http = "1.0.0"
 uuid = { version = "1.6.1", features = ["v4"] }
 dotenv = "0.15.0"
 ts-rs = "7.0.0"
+lalrpop-util = { version = "0.20.0", features = ["lexer"] }
+getrandom = { version = "0.2", features = ["js"] }
+rand = "0.8.5"
+
+[build-dependencies]
+lalrpop = "0.20.0"
 
 [dev-dependencies]
 migration = { path = "./migration" }
