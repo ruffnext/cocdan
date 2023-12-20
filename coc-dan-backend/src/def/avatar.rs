@@ -6,6 +6,8 @@ use crate::entities::avatar;
 
 use super::skills::{Occupation, OCCUPATIONS, SkillAssigned};
 
+use super::weapon::Weapon;
+
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
 #[ts(export, rename = "IGender", export_to = "bindings/avatar/IGender.ts")]
 pub enum Gender {
@@ -115,7 +117,8 @@ pub struct Detail {
     pub attrs : Attrs,
     pub descriptor : Descriptor,
     pub skills : HashMap<String, SkillAssigned>,
-    pub occupation : Occupation
+    pub occupation : Occupation,
+    pub weapons: Vec<Weapon>,
 }
 
 impl Default for Detail {
@@ -129,7 +132,8 @@ impl Default for Detail {
             attrs: Default::default(), 
             descriptor: Default::default(), 
             skills: Default::default(), 
-            occupation
+            occupation: Default::default(),
+            weapons: Default::default()
         }
     }
 }
