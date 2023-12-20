@@ -47,6 +47,9 @@ const dict : ICardI18NRaw = {
     },
     "Short Hand" : {
       "name" : "速记"
+    },
+    "Dodge" : {
+      "name": "闪避"
     }
   },
   "category" : {

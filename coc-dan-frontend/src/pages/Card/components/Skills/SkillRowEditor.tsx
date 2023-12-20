@@ -3,12 +3,14 @@ import { ISkillAssigned } from "../../../../bindings/avatar/ISkillAssigned"
 import { ISkillTranslator, getSkillI18nName } from "../../../../core/skill/i18n/core"
 import styles from "./SkillEditor.module.css"
 import { deepClone } from "../../../../core/utils"
+import { ISkillAssignType } from "../../../../core/skill/def"
 
 interface Props {
   item : ISkillAssigned,
   translator : ISkillTranslator,
   updateSkillPointEditor : (original : ISkillAssigned, modified : ISkillAssigned | undefined) => string,
-  removable? : boolean
+  removable? : boolean,
+  assignType : ISkillAssignType
 }
 
 interface ISkillPointEditor {
@@ -47,7 +49,7 @@ export default (prop : Props) => {
 
   const increaseSkill = () => {
     const val = deepClone(prop.item)
-    if (val.assign_type == "Interest") {
+    if (prop.assignType == ISkillAssignType.Interest) {
       val.interest_skill_point += 1
     } else {
       val.occupation_skill_point += 1
@@ -57,7 +59,7 @@ export default (prop : Props) => {
 
   const decreaseSkill = () => {
     const val = deepClone(prop.item)
-    if (val.assign_type == "Interest") {
+    if (prop.assignType == ISkillAssignType.Interest) {
       val.interest_skill_point -= 1
     } else {
       val.occupation_skill_point -= 1

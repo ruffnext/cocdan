@@ -78,12 +78,10 @@ lazy_static! {
             .into_iter().map(|x| (x.name.to_string(), x)).collect();
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug)]
-#[ts(export, rename = "ISkillAssignType", export_to = "bindings/avatar/ISkillAssignType.ts")]
 pub enum SkillAssignType {
-    Occupational,
-    AdditionalOccupational,
-    Interest
+    Occupational = 1,
+    Optional = 2,
+    Interest = 4
 }
 
 impl Default for SkillAssignType {
@@ -101,5 +99,5 @@ pub struct SkillAssigned {
     pub occupation_skill_point : u32,
     pub interest_skill_point : u32,
     pub category : SkillCategory,
-    pub assign_type : SkillAssignType
+    pub assign_type : u32       // SkillAssignType
 }
