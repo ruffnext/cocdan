@@ -15,7 +15,8 @@ interface Props {
 
 interface ISkillPointEditor {
   item : ISkillAssigned,
-  updateItem : (original : ISkillAssigned, modified : ISkillAssigned) => string
+  updateItem : (original : ISkillAssigned, modified : ISkillAssigned) => string,
+  assignType : ISkillAssignType
 }
 
 export default (prop : Props) => {
@@ -27,9 +28,14 @@ export default (prop : Props) => {
       if (isNaN(fp) || fp < 0 || fp >= 100) {
         setVal(initialStr)
       }
-      fp = fp - prop.item.interest_skill_point - prop.item.initial
       const modified = deepClone(prop.item)
-      modified.occupation_skill_point = fp
+      if (prop.assignType == ISkillAssignType.Interest) {
+        fp = fp - prop.item.occupation_skill_point - prop.item.initial
+        modified.interest_skill_point = fp
+      } else {
+        fp = fp - prop.item.interest_skill_point - prop.item.initial
+        modified.occupation_skill_point = fp
+      }
       const res = prop.updateItem(prop.item, modified)
       setVal(res)
     }
@@ -74,7 +80,7 @@ export default (prop : Props) => {
         {getSkillI18nName(prop.item.name, prop.translator)}
       </td>
       <td class={`${styles.td} ${styles.no_padding} ${styles.skill_point_input}`}>
-        <SkillPointEditor item={prop.item} updateItem={prop.updateSkillPointEditor} />
+        <SkillPointEditor assignType={prop.assignType} item={prop.item} updateItem={prop.updateSkillPointEditor} />
       </td>
       <td class={styles.button_container}>
         <p class={`${styles.button_item} ${styles.button_item_plus}`} onClick={() => increaseSkill()}>+</p>
