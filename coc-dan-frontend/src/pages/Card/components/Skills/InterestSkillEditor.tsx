@@ -12,6 +12,26 @@ import { deepClone } from "../../../../core/utils"
 import { SKILLS } from "../../../../core/card/resource"
 import { IDropdownItem } from "../../../../components/Dropdown/Component"
 import Dropdown from "../../../../components/Dropdown/Component"
+import { ISkillAssignType } from "../../../../core/skill/def"
+import { IAvatar } from "../../../../bindings/IAvatar"
+import { SetStoreFunction } from "solid-js/store"
+
+function resetInterestSkill(avatar : IAvatar, setAvatar : SetStoreFunction<IAvatar>) : Partial<IAvatar> {
+  const res : any = deepClone(avatar.detail.skills)
+  for (const key in avatar.detail.skills) {
+    const item = avatar.detail.skills[key]
+    if (item.assign_type & ISkillAssignType.Interest) {
+      if (item.assign_type & ISkillAssignType.Occupational) {
+        res[key]['interest_skill_point'] = 0
+        res[key]['assign_type'] = item.assign_type & (~ ISkillAssignType.Interest)
+      } else {
+        res[key] = undefined
+      }
+    }
+  }
+  setAvatar("detail", "skills", res)
+  return res
+}
 
 export default () => {
   const { avatar, setAvatar } = useAvatar()
@@ -24,7 +44,7 @@ export default () => {
     const res : ISkillAssigned[] = []
     for (const key in avatar.detail.skills) {
       const item = avatar.detail.skills[key]
-      if (item.assign_type == "Interest") {
+      if (item.assign_type & ISkillAssignType.Interest) {
         res.push(deepClone(item))
       }
     }
@@ -33,12 +53,13 @@ export default () => {
 
   const getAvailableInterestSkills = () : Array<IDropdownItem> => {
     const res : Array<IDropdownItem> = []
-    const selected : Set<string> = new Set()
+    const selected : Map<string, ISkillAssigned> = new Map()
     for (const key in avatar.detail.skills) {
-      selected.add(key)
+      selected.set(key, avatar.detail.skills[key])
     }
-    for (const [_key, val] of SKILLS) {
-      if (selected.has(val.name)) continue
+    for (const [key, val] of SKILLS) {
+      const isSelected = selected.get(key)
+      if (isSelected != undefined && isSelected.assign_type & ISkillAssignType.Interest) continue
       res.push({
         // @ts-ignore
         label : ts("skill." + val.name + ".name") || val.name,
@@ -60,16 +81,24 @@ export default () => {
   }
 
   const setInterestSkill = (skillName : string) : string => {
-    const raw = SKILLS.get(skillName)
+    var raw = deepClone(SKILLS.get(skillName))
+    var assignType = ISkillAssignType.Interest
+    var occupation_initial = 0
     if (raw == undefined) return buttonLabel
+    if (skillName in avatar.detail.skills) {
+      const ori = avatar.detail.skills[skillName]
+      raw = ori
+      occupation_initial = ori.occupation_skill_point
+      assignType = assignType | ori.assign_type
+    }
     setSkill({
       name : raw.name,
       initial : raw.initial,
       era : raw.era,
-      occupation_skill_point : 0,
+      occupation_skill_point : occupation_initial,
       interest_skill_point : 0,
       category : raw.category,
-      assign_type : "Interest"
+      assign_type : assignType
     }, avatar, setAvatar)
     return buttonLabel
   }
@@ -82,7 +111,7 @@ export default () => {
         <table style="width : 100%">
           <tbody>
             <For each={getInterestSkills()}>{
-              (item, _i) => <SkillRowEditor removable={true} item={item} updateSkillPointEditor={updateSkillPointEditor} translator={ts} />
+              (item, _i) => <SkillRowEditor assignType={ISkillAssignType.Interest} removable={true} item={item} updateSkillPointEditor={updateSkillPointEditor} translator={ts} />
             }</For>
             <tr>
               <td class={`${styles.td} ${styles.tr_clickable}`} 
@@ -94,7 +123,7 @@ export default () => {
             <tr>
               <td class={`${styles.td} ${styles.tr_clickable_danger}`} 
                   colSpan="3" style="vertical-align : middle"
-                  onclick={() => {}}>
+                  onclick={() => resetInterestSkill(avatar, setAvatar)}>
                 {t("interestSkillEditor.reset")}
               </td>
             </tr>

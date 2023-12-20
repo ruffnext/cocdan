@@ -6,6 +6,7 @@ import { ISkillAssigned } from "../../bindings/avatar/ISkillAssigned"
 import { ISkillCategory } from "../../bindings/avatar/ISkillCategory"
 import { IAttrs } from "../../bindings/avatar/IAttrs"
 import { deepClone } from "../utils"
+import { ISkillAssignType } from "../skill/def"
 
 const SKILLS : Map<string, ISkill> = new Map()
 const SKILL_BY_CATEGORY : Map<ISkillCategory, ISkill[]> = new Map()
@@ -60,7 +61,7 @@ export function initOccupationalSkill(attrs : IAttrs, occupation : IOccupation) 
         initial : item.initial,
         occupation_skill_point : 0,
         interest_skill_point : 0,
-        assign_type : "Occupational",
+        assign_type : ISkillAssignType.Occupational,
         category : "Any"
       }
     }
@@ -81,7 +82,7 @@ export function initOccupationalSkill(attrs : IAttrs, occupation : IOccupation) 
     initial : creditRating.initial,
     occupation_skill_point : occupation.credit_rating[0],
     interest_skill_point : 0,
-    assign_type : "Occupational",
+    assign_type : ISkillAssignType.Occupational,
     category : "Any"
   }
 
@@ -91,7 +92,7 @@ export function initOccupationalSkill(attrs : IAttrs, occupation : IOccupation) 
     initial : attrs.edu,
     occupation_skill_point : 0,
     interest_skill_point : 0,
-    assign_type : "Occupational",
+    assign_type : ISkillAssignType.Occupational,
     category : "Any"
   }
 

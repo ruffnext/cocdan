@@ -7,6 +7,7 @@ import { ISkillAssigned } from "../../bindings/avatar/ISkillAssigned"
 import { ISkillCategory } from "../../bindings/avatar/ISkillCategory"
 import { SKILLS, SKILL_BY_CATEGORY } from "../card/resource"
 import { deepClone } from "../utils"
+import { ISkillAssignType } from "./def"
 
 export function maximumOccupationalSkillPoint(
   occupation: IOccupation,
@@ -84,13 +85,12 @@ export function genAvatarAvailableOptionalOccupationSkills(avatar : IAvatar) : M
     const newCandidates : Array<ISkill> = []
     for (const remain of remainSelectable) {
       const val = selected.get(remain.name)
-      if (val == undefined) {
+      if (val != undefined && (val.category == item.category && val.assign_type & ISkillAssignType.Occupational)) {
+        remainNum -= 1
+      } else {
         newCandidates.push(remain)
         continue
-      } else {
-        if (val.category == item.category) {
-          remainNum -= 1
-        }
+
       }
     }
 
@@ -106,7 +106,9 @@ export function genAvatarAvailableOptionalOccupationSkills(avatar : IAvatar) : M
     for (const item of anyRes[0]) {
       const selectedItem = selected.get(item.name)
       if (selectedItem != undefined) {
-        if (selectedItem.assign_type == "AdditionalOccupational" && selectedItem.category == "Any") {
+        if ((selectedItem.assign_type & ISkillAssignType.Optional) != 0
+           && (selectedItem.assign_type & ISkillAssignType.Occupational) != 0
+           && selectedItem.category == "Any") {
           remains -= 1
         }
         continue

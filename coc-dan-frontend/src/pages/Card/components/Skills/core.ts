@@ -2,6 +2,7 @@ import { IAvatar } from "../../../../bindings/IAvatar"
 import { ISkillAssigned } from "../../../../bindings/avatar/ISkillAssigned"
 import { SetStoreFunction } from "solid-js/store"
 import { genAvatarAvailableOptionalOccupationSkills } from "../../../../core/skill/core"
+import { ISkillAssignType } from "../../../../core/skill/def"
 
 
 
@@ -15,18 +16,15 @@ export function setSkill(item: ISkillAssigned, avatar: IAvatar, setAvatar: SetSt
 
   for (const key in avatar.detail.skills) {
     const val = avatar.detail.skills[key]
+    // if modify existing skill
     if (val.name == item.name) {
-      if (item.assign_type != "Interest") {
-        setAvatar("detail", "skills", key, "occupation_skill_point", item.occupation_skill_point)
-      } else {
-        setAvatar("detail", "skills", key, "interest_skill_point", item.interest_skill_point)
-      }
+      setAvatar("detail", "skills", key, item)
       return true
     }
   }
 
-  // assign a new occupational skill
-  if (item.assign_type == "AdditionalOccupational") {
+  // assign a new occupational skill, check is it available
+  if (item.assign_type == (ISkillAssignType.Optional | ISkillAssignType.Occupational)) {
 
     // initialize total available skill slot
     const available = genAvatarAvailableOptionalOccupationSkills(avatar)
@@ -61,11 +59,11 @@ export function setSkill(item: ISkillAssigned, avatar: IAvatar, setAvatar: SetSt
 }
 
 export function removeSkill(item: ISkillAssigned, _avatar: IAvatar, setAvatar: SetStoreFunction<IAvatar>): boolean {
-  if (item.assign_type == "Occupational") {
+  if (item.assign_type == ISkillAssignType.Occupational) {
     return false
   } else {
-    if (item.assign_type == "AdditionalOccupational" && item.interest_skill_point != 0) {
-      setAvatar("detail", "skills", item.name, "assign_type", "Interest")
+    if (item.assign_type & ISkillAssignType.Optional && item.assign_type & ISkillAssignType.Interest) {
+      setAvatar("detail", "skills", item.name, "assign_type", ISkillAssignType.Interest)
     } else {
       // @ts-ignore
       setAvatar("detail", "skills", item.name, undefined)

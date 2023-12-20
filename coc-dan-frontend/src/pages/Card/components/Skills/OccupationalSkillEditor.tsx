@@ -15,6 +15,7 @@ import styles from "./SkillEditor.module.css"
 import { ISkill } from "../../../../bindings/avatar/ISkill"
 import { resetSkill as resetOccupationalSkill } from "../utils"
 import { deepClone } from "../../../../core/utils"
+import { ISkillAssignType } from "../../../../core/skill/def"
 
 
 
@@ -37,12 +38,12 @@ export default () => {
     // @ts-ignore
     const text = t("additionalOccupationalSkillEditor.select", prop.remain, ts("category." + prop.category))
     const insertAdditionalOccupationalSkill = (val : string) : string => {
-      const isExists = avatar.detail.skills[val]
+      const isExists = deepClone(avatar.detail.skills[val])
       if (isExists) {
-        if (isExists.assign_type == "Occupational") {
+        if (isExists.assign_type & ISkillAssignType.Occupational) {
           return text
         }
-        isExists.assign_type = "AdditionalOccupational"
+        isExists.assign_type = isExists.assign_type | (ISkillAssignType.Optional | ISkillAssignType.Occupational)
         setSkill(isExists, avatar, setAvatar)
         return ""
       } else {
@@ -57,7 +58,7 @@ export default () => {
           occupation_skill_point : 0,
           interest_skill_point : 0,
           category : prop.category,
-          assign_type : "AdditionalOccupational"
+          assign_type : (ISkillAssignType.Optional | ISkillAssignType.Occupational)
         }
         setSkill(newAssigned, avatar, setAvatar)
         return text
@@ -76,7 +77,7 @@ export default () => {
     const res: Array<ISkillAssigned> = []
     for (const key in avatar.detail.skills) {
       const item = avatar.detail.skills[key]
-      if (item.assign_type == "Occupational" || item.assign_type == "AdditionalOccupational") {
+      if (item.assign_type & ISkillAssignType.Occupational) {
         res.push(item)
       }
     }
@@ -110,7 +111,7 @@ export default () => {
         <table>
           <tbody>
             <For each={getOccupationalSkills()}>{
-              (item, _i) => <SkillRowEditor removable={item.assign_type == "AdditionalOccupational"} item={item} updateSkillPointEditor={updateSkillPointEditor} translator={ts} />
+              (item, _i) => <SkillRowEditor assignType={ISkillAssignType.Occupational} removable={(item.assign_type & ISkillAssignType.Optional) != 0} item={item} updateSkillPointEditor={updateSkillPointEditor} translator={ts} />
             }</For>
             <For each={genCandidate(avatar)}>{
               ([category, candidates, remain], _i) => <Show when={remain > 0}>

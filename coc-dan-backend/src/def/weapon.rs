@@ -1,4 +1,4 @@
-use super::{dice::Dice, skills::EraEnum};
+use super::common::EraEnum;
 use ts_rs::TS;
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
@@ -45,7 +45,7 @@ impl Default for ExtraEffect {
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default, Debug)]
 #[ts(export, rename = "IWeaponDamage", export_to = "bindings/avatar/IWeaponDamage.ts")]
 pub struct WeaponDamage {
-    pub dice : Dice,            // Dice command like 1d3, 2d6, 4D6+2/2D6+1/1D4, etc...
+    pub dice : String,            // Dice command like 1d3, 2d6, 4D6+2/2D6+1/1D4, etc...
     pub side_effect : ExtraEffect
 }
 
