@@ -111,6 +111,26 @@ pub enum Attribute {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[ts(export, rename = "ICustomEquipment", export_to = "bindings/ICustomEquipment.ts")]
+pub struct CustomEquipment {
+    pub description : String
+}
+
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[ts(export, rename = "IEquipmentItem", export_to = "bindings/IEquipmentItem.ts")]
+pub enum EquipmentItem {
+    Weapon(Weapon),
+    Custom(CustomEquipment)
+}
+
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[ts(export, rename = "IEquipment", export_to = "bindings/IEquipment.ts")]
+pub struct Equipment {
+    pub name : String,
+    pub item : EquipmentItem
+}
+
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
 #[ts(export, rename = "IDetail", export_to = "bindings/avatar/IDetail.ts")]
 pub struct Detail {
     pub status : Status,
@@ -118,7 +138,7 @@ pub struct Detail {
     pub descriptor : Descriptor,
     pub skills : HashMap<String, SkillAssigned>,
     pub occupation : Occupation,
-    pub weapons: Vec<Weapon>,
+    pub equipments : Vec<Equipment>
 }
 
 impl Default for Detail {
@@ -132,8 +152,8 @@ impl Default for Detail {
             attrs: Default::default(), 
             descriptor: Default::default(), 
             skills: Default::default(), 
-            occupation: Default::default(),
-            weapons: Default::default()
+            occupation,
+            equipments: Default::default()
         }
     }
 }

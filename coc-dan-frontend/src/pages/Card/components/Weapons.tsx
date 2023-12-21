@@ -5,7 +5,10 @@ import "./table.css";
 import CellInput from "./CellInput";
 
 import InlineInput from "../../../components/InlineInput";
-import { IWeapon } from "../../../bindings/avatar/IWeapon";
+import { IWeapon } from "../../../bindings/weapon/IWeapon";
+import { For } from "solid-js";
+import { IEquipment } from "../../../bindings/IEquipment";
+import { IEquipmentItem } from "../../../bindings/IEquipmentItem";
 
 export default () => {
   const { avatar, setAvatar } = useAvatar();
@@ -28,7 +31,7 @@ export default () => {
 
   const insertWeapon = () => {
     const weapon : IWeapon = {
-      name: "",
+      name : "",
       skill_name: "",
       damage: {
         dice: "",
@@ -41,12 +44,28 @@ export default () => {
       reliability: 0,
       era: "None",
       price: 0,
-      category: ""
+      category: []
     };
-    const weapons = Array<IWeapon>();
-    weapons.push(weapon);
-    setAvatar("detail", "weapons", weapons);
+    const weaponEquipment : IEquipmentItem = {
+      "Weapon" : weapon
+    }
+    const equipment : IEquipment = {
+      name : "weapon name",
+      item : weaponEquipment
+    }
+    setAvatar("detail", "equipments", [equipment]);
   };
+
+  const getWeapons = () : Array<IWeapon> => {
+    const res : Array<IWeapon> = []
+    for (const item of avatar.detail.equipments) {
+      const weapon = item.item
+      if (weapon != undefined && 'Weapon' in weapon) {
+        res.push(weapon.Weapon)
+      }
+    }
+    return res
+  }
 
   return (
     <div class="box-shadow" style="width: 100%">
@@ -65,7 +84,7 @@ export default () => {
             <th>{t("Weapons.loadingCapacity")}</th>
             <th>{t("Weapons.fault")}</th>
           </tr>
-          <For each={avatar.detail.weapons}>
+          <For each={getWeapons()}>
             {(item, _) => (
               <tr>
                 <td>
@@ -75,7 +94,7 @@ export default () => {
                 </td>
                 <td>
                   <CellInput
-                    value={item.category}
+                    value={item.category.toString()}
                     setValue={setCategory} />
                 </td>
                 <td>todo</td>

@@ -1,0 +1,22 @@
+[
+    {
+        "name" : "small knife",
+        "skill_name" : "Fighting",
+        "damage" : {
+            "dice" : "1D4+DB",
+            "side_effect" : "None"
+        },
+        "penetration" : true,
+        "rate_of_fire" : 1,
+        "ammo_capacity" : "None",
+        "range" : "Melee", 
+        "reliability" : 100,
+        "era" : "Modern",
+        "price" : 2,
+        "category" : [
+            "Basic",
+            "Knife",
+            "Small"
+        ]
+    }
+]
