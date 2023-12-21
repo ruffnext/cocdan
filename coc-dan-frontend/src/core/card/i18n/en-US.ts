@@ -74,7 +74,7 @@ const dict = {
     reset : "Reset",
     add : "Add"
   },
-  Weapons : {
+  weaponEditor : {
     title: "Weapon List",
     name: "Name",
     type: "Type",
@@ -83,7 +83,7 @@ const dict = {
     damage: "Damage",
     range: "Range",
     puncture: "Puncture",
-    frequency: "Frequency",
+    frequency: "Rate Of Fire",
     loadingCapacity: "Ammunition loading capacity",
     fault: "Fault value"
   }

@@ -76,7 +76,7 @@ const dict : ICardI18NRaw = {
     reset : "重置",
     add : "新增"
   },
-  Weapons : {
+  weaponEditor : {
     title: "武器表",
     name: "武器名称",
     type: "类型",
@@ -85,7 +85,7 @@ const dict : ICardI18NRaw = {
     damage: "伤害",
     range: "射程",
     puncture: "穿刺",
-    frequency: "次数",
+    frequency: "开火频率",
     loadingCapacity: "装弹量",
     fault: "故障值"
   }

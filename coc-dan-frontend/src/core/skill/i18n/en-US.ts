@@ -47,6 +47,9 @@ const dict = {
     },
     "Dodge" : {
       "name" : "Dodge"
+    }, 
+    "Fighting" : {
+      "name" : "Fighting"
     }
   },
   "category" : {

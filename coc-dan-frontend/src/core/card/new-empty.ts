@@ -1,6 +1,8 @@
 import { IAvatar } from "../../bindings/IAvatar";
 import { IAttrs } from "../../bindings/avatar/IAttrs";
-import { getOccupationOrDefault, initOccupationalSkill } from "./resource";
+import { IWeapon } from "../../bindings/weapon/IWeapon";
+import { deepClone } from "../utils";
+import { WEAPONS, getOccupationOrDefault, initOccupationalSkill } from "./resource";
 
 export default () : IAvatar => {
   const attrs : IAttrs = {
@@ -16,8 +18,10 @@ export default () : IAvatar => {
     luk : 50,
     mov_adj : null
   }
-  const occupation = getOccupationOrDefault("Secretary")
+  const occupation = deepClone(getOccupationOrDefault("Secretary"))
   const occupationalSkills = initOccupationalSkill(attrs, occupation)
+  // @ts-ignore
+  const weapon : IWeapon = deepClone(WEAPONS.get("small knife"))
   return {
     id : 0,
     stage_uuid : "",
@@ -41,7 +45,15 @@ export default () : IAvatar => {
         homeland : "Homeland"
       },
       skills : occupationalSkills,
-      occupation : occupation
+      occupation : occupation,
+      equipments : [
+        {
+          "name" : "My Knife",
+          "item" : {
+            "Weapon" : weapon
+          }
+        }
+      ]
     }
   }
 }

@@ -2,14 +2,17 @@ import { IOccupation } from "../../bindings/avatar/IOccupation"
 import { ISkill } from "../../bindings/avatar/ISkill"
 import rawSkills from "./skills.json"
 import rawOccupations from "./occupation.json"
+import rawWeapons from "./weapons.json"
 import { ISkillAssigned } from "../../bindings/avatar/ISkillAssigned"
 import { ISkillCategory } from "../../bindings/avatar/ISkillCategory"
 import { IAttrs } from "../../bindings/avatar/IAttrs"
 import { deepClone } from "../utils"
 import { ISkillAssignType } from "../skill/def"
+import { IWeapon } from "../../bindings/weapon/IWeapon"
 
 const SKILLS : Map<string, ISkill> = new Map()
 const SKILL_BY_CATEGORY : Map<ISkillCategory, ISkill[]> = new Map()
+const WEAPONS : Map<string, IWeapon> = new Map()
 SKILL_BY_CATEGORY.set("Any", [])
 
 const skill_names = []
@@ -30,6 +33,11 @@ for (const val of rawSkills) {
 const OCCUPATIONS : Map<string, IOccupation> = new Map()
 for (const item of rawOccupations) {
   OCCUPATIONS.set(item.name, item as IOccupation)
+}
+
+for (const val of rawWeapons) {
+  const item = val as IWeapon
+  WEAPONS.set(item.name, item)
 }
 
 export function getOccupationOrDefault(name : string) : IOccupation {
@@ -99,4 +107,4 @@ export function initOccupationalSkill(attrs : IAttrs, occupation : IOccupation) 
   return res
 }
 
-export {SKILLS, OCCUPATIONS, SKILL_BY_CATEGORY}
+export {SKILLS, OCCUPATIONS, SKILL_BY_CATEGORY, WEAPONS}

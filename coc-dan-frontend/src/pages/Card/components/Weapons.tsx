@@ -9,10 +9,19 @@ import { IWeapon } from "../../../bindings/weapon/IWeapon";
 import { For } from "solid-js";
 import { IEquipment } from "../../../bindings/IEquipment";
 import { IEquipmentItem } from "../../../bindings/IEquipmentItem";
+import { genSkillI18n } from "../../../core/skill/i18n/core";
+import { getWeaponI18n, getWeaponName } from "../../../core/weapon/i18n/core";
+import { SKILLS } from "../../../core/card/resource";
+import { ISkill } from "../../../bindings/avatar/ISkill";
+import { ISkillAssigned } from "../../../bindings/avatar/ISkillAssigned";
 
 export default () => {
   const { avatar, setAvatar } = useAvatar();
-  const t = getCardI18n(useI18N()());
+  const i18n = useI18N()();
+  const t = getCardI18n(i18n);
+  const ts = genSkillI18n(i18n)
+  const tw = getWeaponI18n(i18n)
+
   const setName = (val: string): string => {
     return val;
   };
@@ -64,62 +73,70 @@ export default () => {
         res.push(weapon.Weapon)
       }
     }
+    console.log(res)
     return res
+  }
+
+  const getSkillI18nName = (name : string) : string => {
+    // @ts-ignore
+    return ts("skill." + name + ".name") || name
+  }
+
+  const getWeaponSkillSuccessPossibility = (skill : string) : string => {
+    const avatarSkill : ISkillAssigned | undefined = avatar.detail.skills[skill]
+    if (avatarSkill != undefined) {
+      return (avatarSkill.initial + avatarSkill.interest_skill_point + avatarSkill.occupation_skill_point).toFixed(0)
+    } else {
+      const defaultSkill : ISkill | undefined = SKILLS.get(skill)
+      if (defaultSkill != undefined) {
+        return defaultSkill.initial.toFixed(0)
+      }
+    }
+    return "0"
   }
 
   return (
     <div class="box-shadow" style="width: 100%">
-      <p class="box-edit-header">{t("Weapons.title")}</p>
+      <p class="box-edit-header">{t("weaponEditor.title")}</p>
       <table style="width: 100%">
         <tbody>
           <tr>
-            <th>{t("Weapons.name")}</th>
-            <th>{t("Weapons.type")}</th>
-            <th>{t("Weapons.skill")}</th>
-            <th>{t("Weapons.successRate")}</th>
-            <th>{t("Weapons.damage")}</th>
-            <th>{t("Weapons.range")}</th>
-            <th>{t("Weapons.puncture")}</th>
-            <th>{t("Weapons.frequency")}</th>
-            <th>{t("Weapons.loadingCapacity")}</th>
-            <th>{t("Weapons.fault")}</th>
+            <th>{t("weaponEditor.name")}</th>
+            <th>{t("weaponEditor.skill")}</th>
+            <th>{t("weaponEditor.successRate")}</th>
+            <th>{t("weaponEditor.damage")}</th>
+            <th>{t("weaponEditor.range")}</th>
+            <th>{t("weaponEditor.puncture")}</th>
+            <th>{t("weaponEditor.frequency")}</th>
+            <th>{t("weaponEditor.loadingCapacity")}</th>
+            <th>{t("weaponEditor.fault")}</th>
           </tr>
           <For each={getWeapons()}>
             {(item, _) => (
               <tr>
                 <td>
                   <CellInput 
-                    value={item.name} 
+                    value={getWeaponName(item.name, tw)} 
                     setValue={setName} />
                 </td>
-                <td>
-                  <CellInput
-                    value={item.category.toString()}
-                    setValue={setCategory} />
-                </td>
-                <td>todo</td>
+                <td>{getSkillI18nName(item.skill_name)}</td>
+                <td>{getWeaponSkillSuccessPossibility(item.skill_name) + "%"}</td>
+                <td>{item.damage.dice}</td>
+                <td>{tw("range.name", item.range)}</td>
+                <td>{tw("penetration.name", item.penetration)}</td>
+                <td>{item.rate_of_fire.toFixed(0)}</td>
+                <td>{tw("capacity.value", item.ammo_capacity)}</td>
                 <td>
                   <InlineInput
                     value={item.reliability}
-                    upperLimit={100}
+                    upperLimit={101}
                     setValue={setReliability} />
-                </td>
-                <td>todo</td>
-                <td>todo</td>
-                <td>todo</td>
-                <td>todo</td>
-                <td>todo</td>
-                <td>
-                  <InlineInput 
-                    value={item.rate_of_fire} 
-                    upperLimit={100}
-                    setValue={setRateOfFire} />
                 </td>
               </tr>
             )}
           </For>
           <tr>
-            <td colSpan="10" onClick={() => insertWeapon()}>Add</td>
+            <td colSpan="9" onClick={() => insertWeapon()}>Add</td>
           </tr>
         </tbody>
       </table>

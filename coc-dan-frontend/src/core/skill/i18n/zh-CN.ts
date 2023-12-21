@@ -50,6 +50,9 @@ const dict : ICardI18NRaw = {
     },
     "Dodge" : {
       "name": "闪避"
+    },
+    "Fighting" : {
+      "name" : "斗殴"
     }
   },
   "category" : {
