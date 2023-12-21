@@ -6,6 +6,9 @@ interface InlineInputProps {
   upperLimit: number
 }
 
+/**
+ * inline number editor
+ */
 export default (props: InlineInputProps) => {
   const [val, setVal] = createSignal(props.value.toFixed(0))
   createEffect(() => {
@@ -20,7 +23,7 @@ export default (props: InlineInputProps) => {
     }
   }
   return (
-    <input style="width : 1.5em; padding-bottom : 5px; padding-right : 6px; text-align : right;" class="is-big"
+    <input style={`width : ${(props.value.toFixed(0).length * 0.9).toFixed(1)}em; padding-bottom : 5px; padding-right : 6px; text-align : center;`} class="is-big"
       type="text" value={val()} onBlur={updateVal} onChange={(e) => setVal(e.target.value)} />
   )
 }
