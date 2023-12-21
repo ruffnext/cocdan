@@ -58,8 +58,8 @@ export default () => {
 
   const getWeapons = () : Array<IWeapon> => {
     const res : Array<IWeapon> = []
-    for (const item of avatar.detail.equipments) {
-      const weapon = item.item
+    for (const key in avatar.detail.equipments) {
+      const weapon = avatar.detail.equipments[key].item
       if (weapon != undefined && 'Weapon' in weapon) {
         res.push(weapon.Weapon)
       }
