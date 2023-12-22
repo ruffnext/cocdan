@@ -10,7 +10,7 @@ export function resetSkill(raw: IAvatar, setAvatar: SetStoreFunction<IAvatar>) {
   const original = deepClone(raw.detail.skills)
   const setSkill = (skill: ISkillAssigned) => {
     if (skill.name == "Language") {
-      skill.initial = raw.detail.attrs.edu
+      skill.initial = raw.detail.characteristics.edu
     }
     modifies[skill.name] = skill
   }

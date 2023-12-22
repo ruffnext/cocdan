@@ -47,7 +47,7 @@ export default () => {
         side_effect: "Burning",
       },
       range: "Melee",
-      penetration: false,
+      impale: false,
       rate_of_fire: 0,
       ammo_capacity: "None",
       reliability: 0,
@@ -112,10 +112,10 @@ export default () => {
             <th>{t("weaponEditor.successRate")}</th>
             <th>{t("weaponEditor.damage")}</th>
             <th>{t("weaponEditor.range")}</th>
-            <th>{t("weaponEditor.puncture")}</th>
-            <th>{t("weaponEditor.frequency")}</th>
-            <th>{t("weaponEditor.loadingCapacity")}</th>
-            <th>{t("weaponEditor.fault")}</th>
+            <th>{t("weaponEditor.impale")}</th>
+            <th>{t("weaponEditor.rate_of_fire")}</th>
+            <th>{t("weaponEditor.ammo_capacity")}</th>
+            <th>{t("weaponEditor.reliability")}</th>
           </tr>
           <For each={getWeapons()}>
             {(item, _) => (
@@ -129,7 +129,7 @@ export default () => {
                 <td>{getWeaponSkillSuccessPossibility(item.skill_name) + "%"}</td>
                 <td>{item.damage.dice}</td>
                 <td>{tw("range.name", item.range)}</td>
-                <td>{tw("penetration.name", item.penetration)}</td>
+                <td>{tw("impale.name", item.impale)}</td>
                 <td>{item.rate_of_fire.toFixed(0)}</td>
                 <td>{tw("capacity.value", item.ammo_capacity)}</td>
                 <td>

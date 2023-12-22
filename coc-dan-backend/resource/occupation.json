@@ -3,7 +3,7 @@
         "name" : "Accountant",
         "era" : "None",
         "credit_rating" : [30, 70],
-        "attribute" : ["edu"],
+        "characteristics" : ["edu"],
         "occupational_skills" : [
             "Accounting", 
             "Law", 
@@ -22,7 +22,7 @@
         "name" : "Secretary",
         "era" : "Modern",
         "credit_rating" : [9, 30],
-        "attribute" : ["dex", "app"],
+        "characteristics" : ["dex", "app"],
         "occupational_skills" : [
             "Accounting",
             {

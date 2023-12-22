@@ -36,7 +36,7 @@ pub enum MentalStatus {
     Lucid,
     Fainting,
     TemporaryInsanity,
-    IntermittentInsanity,
+    IndefiniteInsanity,
     PermanentInsanity
 }
 
@@ -79,8 +79,8 @@ impl Default for Status {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default)]
-#[ts(export, rename = "IAttrs", export_to = "bindings/avatar/IAttrs.ts")]
-pub struct Attrs {
+#[ts(export, rename = "ICharacteristics", export_to = "bindings/avatar/ICharacteristics.ts")]
+pub struct Characteristics {
     pub str : u32,
     pub dex : u32,
     pub pow : u32,
@@ -95,9 +95,9 @@ pub struct Attrs {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
-#[ts(export, rename = "IAttrsEnum", export_to = "bindings/avatar/IAttrsEnum.ts")]
+#[ts(export, rename = "ICharacteristicEnum", export_to = "bindings/avatar/ICharacteristicEnum.ts")]
 #[serde(rename_all = "lowercase")]
-pub enum Attribute {
+pub enum Characteristic {
     Str,
     Dex,
     Pow,
@@ -134,7 +134,7 @@ pub struct Equipment {
 #[ts(export, rename = "IDetail", export_to = "bindings/avatar/IDetail.ts")]
 pub struct Detail {
     pub status : Status,
-    pub attrs : Attrs,
+    pub characteristics : Characteristics,
     pub descriptor : Descriptor,
     pub skills : HashMap<String, SkillAssigned>,
     pub occupation : Occupation,
@@ -149,7 +149,7 @@ impl Default for Detail {
         };
         Self { 
             status: Default::default(), 
-            attrs: Default::default(), 
+            characteristics: Default::default(), 
             descriptor: Default::default(), 
             skills: Default::default(), 
             occupation,

@@ -13,7 +13,7 @@ export default () => {
   const t = getCardI18n(useI18N()())
 
   const setHP = (val: number): number => {
-    const max_hp = maxHP(avatar.detail.attrs.con, avatar.detail.attrs.siz)
+    const max_hp = maxHP(avatar.detail.characteristics.con, avatar.detail.characteristics.siz)
     if (val > max_hp) {
       val = max_hp
     }
@@ -23,7 +23,7 @@ export default () => {
   }
 
   const setSAN = (val: number): number => {
-    const max_san = maxSan(avatar.detail.attrs.pow)
+    const max_san = maxSan(avatar.detail.characteristics.pow)
     if (val > max_san) {
       val = max_san
     }
@@ -33,12 +33,12 @@ export default () => {
   }
 
   const setLuck = (val: number): number => {
-    setAvatar("detail", "attrs", "luk", val)
+    setAvatar("detail", "characteristics", "luk", val)
     return val
   }
 
   const setMP = (val: number): number => {
-    const max_mp = maxMP(avatar.detail.attrs.pow)
+    const max_mp = maxMP(avatar.detail.characteristics.pow)
     if (val > max_mp) {
       val = max_mp
     }
@@ -89,8 +89,8 @@ export default () => {
             {t("status.hp")}<br />
             <InlineInput 
               value={avatar.detail.status.hp} 
-              upperLimit={maxHP(avatar.detail.attrs.con, avatar.detail.attrs.siz)} setValue={setHP} />
-            / {maxHP(avatar.detail.attrs.con, avatar.detail.attrs.siz).toFixed(0)}
+              upperLimit={maxHP(avatar.detail.characteristics.con, avatar.detail.characteristics.siz)} setValue={setHP} />
+            / {maxHP(avatar.detail.characteristics.con, avatar.detail.characteristics.siz).toFixed(0)}
           </td>
           <td class="is-middle">{t("status.statusHp")}</td>
 
@@ -98,16 +98,16 @@ export default () => {
             {t("status.san")}<br />
             <InlineInput 
               value={avatar.detail.status.san} 
-              upperLimit={maxSan(avatar.detail.attrs.pow)} 
+              upperLimit={maxSan(avatar.detail.characteristics.pow)} 
               setValue={setSAN} /> 
-            / {maxSan(avatar.detail.attrs.pow).toFixed(0)}
+            / {maxSan(avatar.detail.characteristics.pow).toFixed(0)}
           </td>
           <td class="is-middle">{t("status.statusSan")}</td>
 
           <td rowSpan="2" class="is-big" style="width : 12%">
             {t("status.luk")}<br />
             <InlineInput 
-              value={avatar.detail.attrs.luk} 
+              value={avatar.detail.characteristics.luk} 
               upperLimit={99} 
               setValue={setLuck} /> 
             / 99</td>
@@ -117,9 +117,9 @@ export default () => {
             {t("status.mp")}<br />
             <InlineInput 
               value={avatar.detail.status.mp} 
-              upperLimit={maxMP(avatar.detail.attrs.pow)} 
+              upperLimit={maxMP(avatar.detail.characteristics.pow)} 
               setValue={setMP} />
-            / {maxMP(avatar.detail.attrs.pow)}</td>
+            / {maxMP(avatar.detail.characteristics.pow)}</td>
           <td class="is-middle">{t("status.mpRecovery")}</td>
           <td rowSpan="2" class="is-big" style="width : 12%">{t("status.arm")}<br /> (Place)</td>
         </tr>

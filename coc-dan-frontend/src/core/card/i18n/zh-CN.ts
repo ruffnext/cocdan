@@ -14,7 +14,7 @@ const dict : ICardI18NRaw = {
     career  : "职业",
     homeland: "家乡"
   },
-  attribute : {
+  characteristic : {
     title   : "属性",
     str     : "力量",
     dex     : "敏捷",
@@ -51,7 +51,7 @@ const dict : ICardI18NRaw = {
     Lucid : "清醒",
     Fainting : "昏迷",
     TemporaryInsanity : "临时疯狂",
-    IntermittentInsanity : "不定疯狂",
+    IndefiniteInsanity : "不定疯狂",
     PermanentInsanity : "永久疯狂"
   },
   occupation : {
@@ -84,10 +84,10 @@ const dict : ICardI18NRaw = {
     successRate: "成功率",
     damage: "伤害",
     range: "射程",
-    puncture: "穿刺",
-    frequency: "开火频率",
-    loadingCapacity: "装弹量",
-    fault: "故障值"
+    impale: "穿刺",
+    rate_of_fire: "开火频率",
+    ammo_capacity: "装弹量",
+    reliability: "可靠性"
   }
 }
 

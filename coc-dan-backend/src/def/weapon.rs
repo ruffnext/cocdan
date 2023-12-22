@@ -57,7 +57,7 @@ pub struct Weapon {
     pub skill_name : String,
     pub damage : WeaponDamage,
     pub range : WeaponRange,
-    pub penetration : bool,
+    pub impale : bool,
     pub rate_of_fire : f32,     // num per round
     pub ammo_capacity : AmmoCapacity,
     pub reliability : u32,

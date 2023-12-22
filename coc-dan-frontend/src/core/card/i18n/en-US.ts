@@ -12,7 +12,7 @@ const dict = {
     career  : "Career",
     homeland: "Homeland"
   },
-  attribute : {
+  characteristic : {
     title : "Attribute",
     str   : "STR",
     dex   : "DEX",
@@ -49,7 +49,7 @@ const dict = {
     Lucid : "Lucid",
     Fainting : "Fainting",
     TemporaryInsanity : "TempInsane",
-    IntermittentInsanity : "InterInsane",
+    IndefiniteInsanity : "IndefInsane",
     PermanentInsanity : "PermInsane"
   },
   occupation : {
@@ -82,10 +82,10 @@ const dict = {
     successRate: "Success rate",
     damage: "Damage",
     range: "Range",
-    puncture: "Puncture",
-    frequency: "Rate Of Fire",
-    loadingCapacity: "Ammunition loading capacity",
-    fault: "Fault value"
+    impale: "Puncture",
+    rate_of_fire: "Rate Of Fire",
+    ammo_capacity: "Ammunition loading capacity",
+    reliability: "Reliability"
   }
 }
 

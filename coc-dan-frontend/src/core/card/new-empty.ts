@@ -1,11 +1,11 @@
 import { IAvatar } from "../../bindings/IAvatar";
-import { IAttrs } from "../../bindings/avatar/IAttrs";
-import { IWeapon } from "../../bindings/weapon/IWeapon";
 import { deepClone } from "../utils";
+import { ICharacteristics } from "../../bindings/avatar/ICharacteristics";
 import { WEAPONS, getOccupationOrDefault, initOccupationalSkill } from "./resource";
+import { IEquipment } from "../../bindings/IEquipment";
 
 export default () : IAvatar => {
-  const attrs : IAttrs = {
+  const characteristics : ICharacteristics = {
     str : 50,
     dex : 50,
     pow : 50,
@@ -19,9 +19,26 @@ export default () : IAvatar => {
     mov_adj : null
   }
   const occupation = deepClone(getOccupationOrDefault("Secretary"))
-  const occupationalSkills = initOccupationalSkill(attrs, occupation)
-  // @ts-ignore
-  const weapon : IWeapon = deepClone(WEAPONS.get("small knife"))
+  const occupationalSkills = initOccupationalSkill(characteristics, occupation)
+  const weapons : Array<IEquipment> = []
+
+  weapons.push({
+    name : "Punch",
+    item : {
+      // @ts-ignore
+      "Weapon" : deepClone(WEAPONS.get("Punch"))
+    }
+  })
+  
+  weapons.push({
+    name : "Small Knife",
+    item : {
+      // @ts-ignore
+      "Weapon" : deepClone(WEAPONS.get("Small Knife"))
+    }
+  })
+
+  
   return {
     id : 0,
     stage_uuid : "",
@@ -38,7 +55,7 @@ export default () : IAvatar => {
         mental_status : "Lucid",
         health_status : "Healthy"
       },
-      attrs : attrs,
+      characteristics : characteristics,
       descriptor : {
         age : 27,
         gender : "Other",
@@ -46,14 +63,7 @@ export default () : IAvatar => {
       },
       skills : occupationalSkills,
       occupation : occupation,
-      equipments : [
-        {
-          "name" : "My Knife",
-          "item" : {
-            "Weapon" : weapon
-          }
-        }
-      ]
+      equipments : weapons
     }
   }
 }

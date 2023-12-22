@@ -4,4 +4,4 @@ import type { IEraEnum } from "../IEraEnum";
 import type { IWeaponDamage } from "./IWeaponDamage";
 import type { IWeaponRange } from "./IWeaponRange";
 
-export interface IWeapon { name: string, skill_name: string, damage: IWeaponDamage, range: IWeaponRange, penetration: boolean, rate_of_fire: number, ammo_capacity: IAmmoCapacity, reliability: number, era: IEraEnum, price: number, category: Array<string>, }
+export interface IWeapon { name: string, skill_name: string, damage: IWeaponDamage, range: IWeaponRange, impale: boolean, rate_of_fire: number, ammo_capacity: IAmmoCapacity, reliability: number, era: IEraEnum, price: number, category: Array<string>, }

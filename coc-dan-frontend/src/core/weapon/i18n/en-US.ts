@@ -3,8 +3,11 @@ import { IWeaponRange } from "../../../bindings/weapon/IWeaponRange"
 
 const dict = {
   "weapon" : {
-    "small knife" : {
-      "name" : "small knife"
+    "Punch" : {
+      "name" : "Punch"
+    },
+    "Small Knife" : {
+      "name" : "Small Knife"
     }
   },
   "range" : {
@@ -29,7 +32,7 @@ const dict = {
       }
     }
   },
-  "penetration" : {
+  "impale" : {
     "name" : (val : boolean) : string => {
       if (val == true) {
         return "Yes"

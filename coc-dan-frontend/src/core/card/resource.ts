@@ -5,10 +5,10 @@ import rawOccupations from "./occupation.json"
 import rawWeapons from "./weapons.json"
 import { ISkillAssigned } from "../../bindings/avatar/ISkillAssigned"
 import { ISkillCategory } from "../../bindings/avatar/ISkillCategory"
-import { IAttrs } from "../../bindings/avatar/IAttrs"
 import { deepClone } from "../utils"
 import { ISkillAssignType } from "../skill/def"
 import { IWeapon } from "../../bindings/weapon/IWeapon"
+import { ICharacteristics } from "../../bindings/avatar/ICharacteristics"
 
 const SKILLS : Map<string, ISkill> = new Map()
 const SKILL_BY_CATEGORY : Map<ISkillCategory, ISkill[]> = new Map()
@@ -49,13 +49,13 @@ export function getOccupationOrDefault(name : string) : IOccupation {
       name : "Custom",
       credit_rating : [0, 100],
       era : "None",
-      attribute : ["edu"],
+      characteristics : ["edu"],
       occupational_skills : [],
     })
   }
 }
 
-export function initOccupationalSkill(attrs : IAttrs, occupation : IOccupation) : Record<string, ISkillAssigned> {
+export function initOccupationalSkill(attrs : ICharacteristics, occupation : IOccupation) : Record<string, ISkillAssigned> {
   const res : Record<string, ISkillAssigned> = {}
   for (const skill of occupation.occupational_skills) {
     if (typeof skill != "string") {

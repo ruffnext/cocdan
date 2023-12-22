@@ -87,7 +87,13 @@
         "name" : "Fighting",
         "initial" : 25,
         "era" : "None",
-        "category" : "None"
+        "category" : "Fighting"
+    },
+    {
+        "name" : "Sword",
+        "initial" : 20,
+        "era" : "None",
+        "category" : "Fighting"
     },
     {
         "name" : "Firearms",

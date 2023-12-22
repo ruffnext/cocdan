@@ -1,12 +1,30 @@
 [
     {
-        "name" : "small knife",
+        "name" : "Punch",
+        "skill_name" : "Fighting",
+        "damage" : {
+            "dice" : "1D3+DB",
+            "side_effect" : "None"
+        },
+        "impale" : false,
+        "rate_of_fire" : 1,
+        "ammo_capacity" : "None",
+        "range" : "Melee",
+        "reliability" : 100,
+        "era" : "None",
+        "price" : 0,
+        "category" : [
+            "Basic"
+        ]
+    },
+    {
+        "name" : "Small Knife",
         "skill_name" : "Fighting",
         "damage" : {
             "dice" : "1D4+DB",
             "side_effect" : "None"
         },
-        "penetration" : true,
+        "impale" : true,
         "rate_of_fire" : 1,
         "ammo_capacity" : "None",
         "range" : "Melee", 
@@ -17,6 +35,26 @@
             "Basic",
             "Knife",
             "Small"
+        ]
+    },
+    {
+        "name" : "Light Sword",
+        "skill_name" : "Sword",
+        "damage" : {
+            "dice" : "1D6+DB",
+            "side_effect" : "None"
+        },
+        "impale" : true,
+        "rate_of_fire" : 1,
+        "ammo_capacity" : "None",
+        "range" : "Melee", 
+        "reliability" : 100,
+        "era" : "Modern",
+        "price" : 25,
+        "category" : [
+            "Basic",
+            "Sword",
+            "Light"
         ]
     }
 ]

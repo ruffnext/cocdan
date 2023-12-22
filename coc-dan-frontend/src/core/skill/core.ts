@@ -1,5 +1,5 @@
 import { IAvatar } from "../../bindings/IAvatar"
-import { IAttrs } from "../../bindings/avatar/IAttrs"
+import { ICharacteristics } from "../../bindings/avatar/ICharacteristics"
 import { IOccupation } from "../../bindings/avatar/IOccupation"
 import { IOptionalOccupationalSkill } from "../../bindings/avatar/IOptionalOccupationalSkill"
 import { ISkill } from "../../bindings/avatar/ISkill"
@@ -11,14 +11,14 @@ import { ISkillAssignType } from "./def"
 
 export function maximumOccupationalSkillPoint(
   occupation: IOccupation,
-  attrs: IAttrs
+  characteristics: ICharacteristics
 ): number {
-  if (occupation.attribute.length == 1) {
-    return attrs[occupation.attribute[0]] * 4
-  } else if (occupation.attribute.length >= 2) {
+  if (occupation.characteristics.length == 1) {
+    return characteristics[occupation.characteristics[0]] * 4
+  } else if (occupation.characteristics.length >= 2) {
     const attrValues: Array<number> = []
-    for (const attr of occupation.attribute) {
-      attrValues.push(attrs[attr])
+    for (const attr of occupation.characteristics) {
+      attrValues.push(characteristics[attr])
     }
     const sorted = attrValues.sort().reverse()
     return sorted[0] * 2 + sorted[1] * 2
@@ -27,7 +27,7 @@ export function maximumOccupationalSkillPoint(
 }
 
 export function remainingOccupationalSkillPoints(raw: IAvatar): number {
-  const maximum = maximumOccupationalSkillPoint(raw.detail.occupation, raw.detail.attrs)
+  const maximum = maximumOccupationalSkillPoint(raw.detail.occupation, raw.detail.characteristics)
   var res = 0
   for (const key in raw.detail.skills) {
     const item = raw.detail.skills[key]
@@ -37,7 +37,7 @@ export function remainingOccupationalSkillPoints(raw: IAvatar): number {
 }
 
 export function remainInterestSkillPoints(raw : IAvatar) : number {
-  var res = raw.detail.attrs.int * 2
+  var res = raw.detail.characteristics.int * 2
   for (const key in raw.detail.skills) {
     const item = raw.detail.skills[key]
     res -= item.interest_skill_point

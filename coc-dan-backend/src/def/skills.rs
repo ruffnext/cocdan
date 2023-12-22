@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use lazy_static::lazy_static;
 use ts_rs::TS;
 
-use super::{avatar::Attribute, common::EraEnum};
+use super::{avatar::Characteristic, common::EraEnum};
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default, Debug)]
 #[ts(export, rename = "ISkill", export_to = "bindings/avatar/ISkill.ts")]
@@ -51,7 +51,7 @@ pub struct Occupation {
     pub name : String,
     pub credit_rating : (u32, u32),
     pub era : EraEnum,
-    pub attribute : Vec<Attribute>,
+    pub characteristics : Vec<Characteristic>,
     pub occupational_skills : Vec<OccupationalSkill>,
 }
 
@@ -61,7 +61,7 @@ impl Default for Occupation {
             name : "Custom".to_string(),
             credit_rating : (0, 100),
             era : EraEnum::None,
-            attribute : vec![Attribute::Edu],
+            characteristics : vec![Characteristic::Edu],
             occupational_skills : Vec::new(),
         }
     }

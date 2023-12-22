@@ -4,7 +4,10 @@ import { IWeaponI18NRaw } from "./def"
 
 const dict : IWeaponI18NRaw = {
   "weapon" : {
-    "small knife" : {
+    "Punch" : {
+      "name" : "拳头"
+    },
+    "Small Knife" : {
       "name" : "小刀"
     }
   },
@@ -30,7 +33,7 @@ const dict : IWeaponI18NRaw = {
       }
     }
   },
-  "penetration" : {
+  "impale" : {
     "name" : (val : boolean) : string => {
       if (val == true) {
         return "是"

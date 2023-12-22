@@ -108,7 +108,7 @@ export default () => {
     <div>
       <p class="box-edit-header">{t("occupationalSkillEditor.title") + t("occupationalSkillEditor.remain", remainingOccupationalSkillPoints(avatar))}</p>
       <div id="avatar-skill" class="box-shadow">
-        <table>
+        <table style="width : 100%">
           <tbody>
             <For each={getOccupationalSkills()}>{
               (item, _i) => <SkillRowEditor assignType={ISkillAssignType.Occupational} removable={(item.assign_type & ISkillAssignType.Optional) != 0} item={item} updateSkillPointEditor={updateSkillPointEditor} translator={ts} />
