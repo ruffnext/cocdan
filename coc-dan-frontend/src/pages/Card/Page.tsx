@@ -10,6 +10,7 @@ import "./style.css"
 import OccupationalSkillEditor from "./components/Skills/OccupationalSkillEditor";
 import InterestSkillEditor from "./components/Skills/InterestSkillEditor";
 import Weapons from "./components/Weapons";
+import FightingSkillEditor from "./components/Skills/FightingSkillEditor";
 
 enum PageStatus {
   IsLoading,
@@ -55,6 +56,7 @@ export default () => {
           <div style="display : flex; margin : 1em">
             <OccupationalSkillEditor />
             <InterestSkillEditor />
+            <FightingSkillEditor />
           </div>
           <div style="display : flex; margin : 1em">
             <Weapons />

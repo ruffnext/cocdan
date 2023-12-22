@@ -20,6 +20,7 @@ pub enum SkillCategory {
     Any,
     Social,
     ArtAndCraft,
+    Fighting,
     Custom
 }
 

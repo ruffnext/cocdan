@@ -53,6 +53,9 @@ const dict : ICardI18NRaw = {
     },
     "Fighting" : {
       "name" : "斗殴"
+    },
+    "Sword" : {
+      "name" : "剑术"
     }
   },
   "category" : {

@@ -50,6 +50,9 @@ const dict = {
     }, 
     "Fighting" : {
       "name" : "Fighting"
+    },
+    "Sword" : {
+      "name" : "Sword"
     }
   },
   "category" : {

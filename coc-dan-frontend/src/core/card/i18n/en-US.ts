@@ -74,6 +74,9 @@ const dict = {
     reset : "Reset",
     add : "Add"
   },
+  fightingSkillEditor : {
+    title : "Fighting Skills"
+  },
   weaponEditor : {
     title: "Weapon List",
     name: "Name",

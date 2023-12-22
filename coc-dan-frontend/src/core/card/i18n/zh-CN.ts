@@ -76,6 +76,9 @@ const dict : ICardI18NRaw = {
     reset : "重置",
     add : "新增"
   },
+  fightingSkillEditor : {
+    title : "战斗技能"
+  },
   weaponEditor : {
     title: "武器表",
     name: "武器名称",
