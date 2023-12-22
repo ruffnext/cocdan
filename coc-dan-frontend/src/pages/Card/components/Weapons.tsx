@@ -4,14 +4,14 @@ import { useAvatar } from "../context";
 import "./table.css";
 import CellInput from "./CellInput";
 
-import InlineInput from "../../../components/InlineInput";
+
 import { IWeapon } from "../../../bindings/weapon/IWeapon";
 import { For } from "solid-js";
 import { IEquipment } from "../../../bindings/IEquipment";
 import { IEquipmentItem } from "../../../bindings/IEquipmentItem";
 import { genSkillI18n } from "../../../core/skill/i18n/core";
 import { getWeaponI18n, getWeaponName } from "../../../core/weapon/i18n/core";
-import { SKILLS } from "../../../core/card/resource";
+import { SKILLS, WEAPONS } from "../../../core/card/resource";
 import { ISkill } from "../../../bindings/avatar/ISkill";
 import { ISkillAssigned } from "../../../bindings/avatar/ISkillAssigned";
 
@@ -22,21 +22,23 @@ export default () => {
   const ts = genSkillI18n(i18n)
   const tw = getWeaponI18n(i18n)
 
-  const setName = (val: string): string => {
-    return val;
-  };
-  
-  const setCategory = (val: string): string => {
+  const setName = (i: number, val: string): string => {
+    // @ts-ignore
+    setAvatar("detail", "equipments", i, "item", "Weapon", "name", val);
     return val;
   };
 
-  const setRateOfFire = (val: number): number => {
-    return val;
-  }
+  // const setSkillName = (i: number, val: ISkill)  => {
+  //   // @ts-ignore
+  //   setAvatar("detail", "equipments", i, "item", "Weapon", "skill_name", val.name);
+  //   return getSkillI18nName(val.name);
+  // }
 
-  const setReliability = (val: number): number => {
-    return val;
-  }
+  // const setReliability = (i:number, val: number): number => {
+  //   // @ts-ignore
+  //   setAvatar("detail", "equipments", i, "item", "Weapon", "reliability", val);
+  //   return val;
+  // }
 
   const insertWeapon = () => {
     const weapon : IWeapon = {
@@ -62,16 +64,16 @@ export default () => {
       name : "weapon name",
       item : weaponEquipment
     }
-    setAvatar("detail", "equipments", [equipment]);
+    setAvatar("detail", "equipments", (equipments: Array<IEquipment>) => [...equipments, equipment]);
   };
 
   // filter out all weapons of avatar
-  const getWeapons = () : Array<IWeapon> => {
-    const res : Array<IWeapon> = []
+  const getWeapons = () : Array<[IWeapon, string]> => {
+    const res : Array<[IWeapon, string]> = []
     for (const key in avatar.detail.equipments) {
       const weapon = avatar.detail.equipments[key].item
       if (weapon != undefined && 'Weapon' in weapon) {
-        res.push(weapon.Weapon)
+        res.push([weapon.Weapon, key])
       }
     }
     return res
@@ -80,6 +82,22 @@ export default () => {
   const getSkillI18nName = (name : string) : string => {
     // @ts-ignore
     return ts("skill." + name + ".name") || name
+  }
+
+  const weapons :Array<{label: string, value: IWeapon}> = []
+  for (const [name, weapon] of WEAPONS) {
+    weapons.push({
+      label: getWeaponName(name, tw),
+      value: weapon
+    });
+  }
+
+  const weaponSkills: Array<{label: string, value: ISkill}> = []
+  for (const [name, skill] of SKILLS) {
+    weaponSkills.push({
+      label: getSkillI18nName(name),
+      value: skill
+    });
   }
 
   const getWeaponSkillSuccessPossibility = (skill : string) : string => {
@@ -118,12 +136,12 @@ export default () => {
             <th>{t("weaponEditor.reliability")}</th>
           </tr>
           <For each={getWeapons()}>
-            {(item, _) => (
+            {([item, i]) => (
               <tr>
                 <td>
                   <CellInput 
                     value={getWeaponName(item.name, tw)} 
-                    setValue={setName} />
+                    setValue={(val) => setName(Number.parseInt(i), val)} />
                 </td>
                 <td>{getSkillI18nName(item.skill_name)}</td>
                 <td>{getWeaponSkillSuccessPossibility(item.skill_name) + "%"}</td>
@@ -132,20 +150,18 @@ export default () => {
                 <td>{tw("impale.name", item.impale)}</td>
                 <td>{item.rate_of_fire.toFixed(0)}</td>
                 <td>{tw("capacity.value", item.ammo_capacity)}</td>
-                <td>
-                  <InlineInput
-                    value={item.reliability}
-                    upperLimit={101}
-                    setValue={setReliability} />
-                </td>
+                <td>{item.reliability}</td>
               </tr>
             )}
           </For>
           <tr>
-            <td colSpan="9" onClick={() => insertWeapon()}>Add</td>
+            <td colSpan="9">
+              新增武器
+            </td>
           </tr>
         </tbody>
       </table>
+      
     </div>
   );
 };
