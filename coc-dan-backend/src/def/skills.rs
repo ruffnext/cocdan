@@ -91,7 +91,7 @@ impl Default for SkillAssignType {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default, Debug, Clone)]
 #[ts(export, rename = "ISkillAssigned", export_to = "bindings/avatar/ISkillAssigned.ts")]
 pub struct SkillAssigned {
     pub name : String,

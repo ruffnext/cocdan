@@ -6,7 +6,7 @@ const dict = {
     "Law" : {
       "name" : "Law"
     },
-    "Library Use" : {
+    "LibraryUse" : {
       "name" : "Library Use"
     },
     "Listen" : {
@@ -15,16 +15,16 @@ const dict = {
     "Persuade" : {
       "name" : "Persuade"
     },
-    "Spot Hidden" : {
+    "SpotHidden" : {
       "name" : "Spot Hidden"
     },
-    "Credit Rating" : {
-      "name" : "Credit Rating"
+    "CreditRating" : {
+      "name" : "CreditRating"
     },
     "Charm" : {
       "name" : "Charm"
     },
-    "Fast Talk" : {
+    "FastTalk" : {
       "name" : "Fast Talk"
     },
     "Intimidate" : {
@@ -36,13 +36,13 @@ const dict = {
     "Psychoanalysis" : {
       "name" : "Psychoanalysis"
     },
-    "Computer Use" : {
+    "ComputerUse" : {
       "name" : "Computer Use"
     },
     "Typing" : {
       "name" : "Typing"
     },
-    "Short Hand" : {
+    "ShortHand" : {
       "name" : "Short Hand"
     },
     "Dodge" : {

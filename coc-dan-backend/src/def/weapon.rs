@@ -43,14 +43,14 @@ impl Default for ExtraEffect {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default, Debug, Clone)]
 #[ts(export, rename = "IWeaponDamage", export_to = "bindings/weapon/IWeaponDamage.ts")]
 pub struct WeaponDamage {
     pub dice : String,            // Dice command like 1d3, 2d6, 4D6+2/2D6+1/1D4, etc...
     pub side_effect : Option<ExtraEffect>
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default, Debug, Clone)]
 #[ts(export, rename = "IWeapon", export_to = "bindings/weapon/IWeapon.ts")]
 pub struct Weapon {
     pub name : String,

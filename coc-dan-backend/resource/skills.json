@@ -30,19 +30,19 @@
         "category" : "None"
     },
     {
-        "name" : "Computer Use",
+        "name" : "ComputerUse",
         "initial" : 5,
         "era" : "Contemporary",
         "category" : "None"
     },
     {
-        "name" : "Credit Rating",
+        "name" : "CreditRating",
         "initial" : 0,
         "era" : "None",
         "category" : "None"
     },
     {
-        "name" : "Cthulhu Mythos",
+        "name" : "CthulhuMythos",
         "initial" : 0,
         "era" : "None",
         "category" : "None"
@@ -66,7 +66,7 @@
         "category" : "None"
     },
     {
-        "name" : "Electrical Repair",
+        "name" : "ElectricalRepair",
         "initial" : 10,
         "era" : "Modern",
         "category" : "None"
@@ -78,7 +78,7 @@
         "category" : "None"
     },
     {
-        "name" : "Fast Talk",
+        "name" : "FastTalk",
         "initial" : 5,
         "era" : "None",
         "category" : "Social"
@@ -102,7 +102,7 @@
         "category" : "None"
     },
     {
-        "name" : "First Aid",
+        "name" : "FirstAid",
         "initial" : 30,
         "era" : "None",
         "category" : "None"
@@ -132,7 +132,7 @@
         "category" : "None"
     },
     {
-        "name" : "Language (Other)",
+        "name" : "Language(Other)",
         "initial" : 1,
         "era" : "None",
         "category" : "None"
@@ -144,7 +144,7 @@
         "category" : "None"
     },
     {
-        "name" : "Library Use",
+        "name" : "LibraryUse",
         "initial" : 20,
         "era" : "None",
         "category" : "None"
@@ -162,7 +162,7 @@
         "category" : "None"
     },
     {
-        "name" : "Mechanical Repair",
+        "name" : "MechanicalRepair",
         "initial" : 10,
         "era" : "Modern",
         "category" : "None"
@@ -174,7 +174,7 @@
         "category" : "None"
     },
     {
-        "name" : "Natural World",
+        "name" : "NaturalWorld",
         "initial" : 10,
         "era" : "None",
         "category" : "None"
@@ -192,7 +192,7 @@
         "category" : "None"
     },
     {
-        "name" : "Operate Heavy Machinery",
+        "name" : "OperateHeavyMachinery",
         "initial" : 1,
         "era" : "Modern",
         "category" : "None"
@@ -234,13 +234,13 @@
         "category" : "None"
     },
     {
-        "name" : "Sleight of Hand",
+        "name" : "SleightOfHand",
         "initial" : 10,
         "era" : "None",
         "category" : "None"
     },
     {
-        "name" : "Spot Hidden",
+        "name" : "SpotHidden",
         "initial" : 25,
         "era" : "None",
         "category" : "None"
@@ -276,7 +276,7 @@
         "category" : "ArtAndCraft"
     },
     {
-        "name" : "Short Hand",
+        "name" : "ShortHand",
         "initial" : 9,
         "era" : "None",
         "category" : "ArtAndCraft"

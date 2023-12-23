@@ -27,8 +27,8 @@ export function resetSkill(raw: IAvatar, setAvatar: SetStoreFunction<IAvatar>) {
     }
   }
 
-  // @ts-ignore  reset Credit Rating
-  const credit_rating: ISkill = deepClone(SKILLS.get("Credit Rating"))
+  // @ts-ignore  reset CreditRating
+  const credit_rating: ISkill = deepClone(SKILLS.get("CreditRating"))
   setSkill({
     name: credit_rating.name,
     initial: 0,

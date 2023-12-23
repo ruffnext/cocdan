@@ -19,6 +19,7 @@ impl MigrationTrait for Migration {
                     .primary_key()
                     .auto_increment()
             )
+            .col(ColumnDef::new(Transaction::TxId).integer().not_null())
             .col(
                 ColumnDef::new(Transaction::StageUuid)
                     .uuid()
@@ -29,6 +30,8 @@ impl MigrationTrait for Migration {
                     .integer()
                     .not_null()
             )
+            .col(ColumnDef::new(Transaction::Time).date_time().not_null())
+            .col(ColumnDef::new(Transaction::Tx).json().not_null())
             .foreign_key(
                 ForeignKey::create()
                     .name("fk-tx-user_id")
@@ -56,6 +59,9 @@ impl MigrationTrait for Migration {
 pub enum Transaction {
     Table,
     Id,
+    TxId,
     StageUuid,
     UserId,
+    Time,
+    Tx
 }

@@ -7,10 +7,10 @@
         "occupational_skills" : [
             "Accounting", 
             "Law", 
-            "Library Use",
+            "LibraryUse",
             "Listen",
             "Persuade",
-            "Spot Hidden",
+            "SpotHidden",
             {
                 "category" : "Any",
                 "candidates" : [],
@@ -27,7 +27,7 @@
             "Accounting",
             {
                 "category" : "ArtAndCraft",
-                "candidates" : ["Typing", "Short Hand"],
+                "candidates" : ["Typing", "ShortHand"],
                 "limit" : 1
             },
             {
@@ -38,7 +38,7 @@
             "Language",
             {
                 "category" : "Custom",
-                "candidates" : ["Library Use", "Computer Use"],
+                "candidates" : ["LibraryUse", "ComputerUse"],
                 "limit" : 1
             },
             "Psychoanalysis",

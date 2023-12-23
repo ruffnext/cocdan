@@ -10,8 +10,8 @@ export function setSkill(item: ISkillAssigned, avatar: IAvatar, setAvatar: SetSt
   const total = item.occupation_skill_point + item.initial + item.interest_skill_point
   if (total < 0) return false
   if (total > 99) return false
-  if (item.name == "Credit Rating" && total < avatar.detail.occupation.credit_rating[0]) return false
-  if (item.name == "Credit Rating" && total > avatar.detail.occupation.credit_rating[1]) return false
+  if (item.name == "CreditRating" && total < avatar.detail.occupation.credit_rating[0]) return false
+  if (item.name == "CreditRating" && total > avatar.detail.occupation.credit_rating[1]) return false
   if (item.interest_skill_point < 0 || item.occupation_skill_point < 0) return false
 
   for (const key in avatar.detail.skills) {

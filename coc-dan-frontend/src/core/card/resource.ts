@@ -75,9 +75,9 @@ export function initOccupationalSkill(attrs : ICharacteristics, occupation : IOc
     }
   }
 
-  const creditRating = SKILLS.get("Credit Rating")
+  const creditRating = SKILLS.get("CreditRating")
   if (creditRating == undefined) {
-    throw Error("Credit Rating not found")
+    throw Error("CreditRating not found")
   }
   const language = SKILLS.get("Language")
   if (language == undefined) {

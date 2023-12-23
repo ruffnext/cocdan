@@ -9,7 +9,7 @@ const dict : ICardI18NRaw = {
     "Law" : {
       "name" : "法律"
     },
-    "Library Use" : {
+    "LibraryUse" : {
       "name" : "图书馆使用"
     },
     "Listen" : {
@@ -18,16 +18,16 @@ const dict : ICardI18NRaw = {
     "Persuade" : {
       "name" : "说服"
     },
-    "Spot Hidden" : {
+    "SpotHidden" : {
       "name" : "侦察"
     },
-    "Credit Rating" : {
+    "CreditRating" : {
       "name" : "信用评级"
     },
     "Charm" : {
       "name" : "魅惑"
     },
-    "Fast Talk" : {
+    "FastTalk" : {
       "name" : "话术"
     },
     "Intimidate" : {
@@ -39,13 +39,13 @@ const dict : ICardI18NRaw = {
     "Psychoanalysis" : {
       "name" : "精神分析"
     },
-    "Computer Use" : {
+    "ComputerUse" : {
       "name" : "计算机使用"
     },
     "Typing" : {
       "name" : "打字"
     },
-    "Short Hand" : {
+    "ShortHand" : {
       "name" : "速记"
     },
     "Dodge" : {

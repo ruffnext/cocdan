@@ -8,7 +8,7 @@ use super::skills::{Occupation, OCCUPATIONS, SkillAssigned};
 
 use super::weapon::Weapon;
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IGender", export_to = "bindings/avatar/IGender.ts")]
 pub enum Gender {
     Other,
@@ -22,7 +22,7 @@ impl Default for Gender {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default)]
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default, Debug, Clone)]
 #[ts(export, rename = "IDescriptor", export_to = "bindings/avatar/IDescriptor.ts")]
 pub struct Descriptor {
     age : u32,
@@ -30,7 +30,7 @@ pub struct Descriptor {
     homeland : String,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IMentalStatus", export_to = "bindings/avatar/IMentalStatus.ts")]
 pub enum MentalStatus {
     Lucid,
@@ -40,7 +40,7 @@ pub enum MentalStatus {
     PermanentInsanity
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IHealthStatus", export_to = "bindings/avatar/IHealthStatus.ts")]
 pub enum HealthStatus {
     Healthy,
@@ -50,7 +50,7 @@ pub enum HealthStatus {
     Dead
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IStatus", export_to = "bindings/avatar/IStatus.ts")]
 pub struct Status {
     pub hp  : u32,
@@ -78,7 +78,7 @@ impl Default for Status {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default)]
+#[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Default, Debug, Clone)]
 #[ts(export, rename = "ICharacteristics", export_to = "bindings/avatar/ICharacteristics.ts")]
 pub struct Characteristics {
     pub str : u32,
@@ -94,7 +94,7 @@ pub struct Characteristics {
     pub mov_adj : Option<f32>
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
+#[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "ICharacteristicEnum", export_to = "bindings/avatar/ICharacteristicEnum.ts")]
 #[serde(rename_all = "lowercase")]
 pub enum Characteristic {
@@ -110,27 +110,27 @@ pub enum Characteristic {
     Luk
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "ICustomEquipment", export_to = "bindings/ICustomEquipment.ts")]
 pub struct CustomEquipment {
     pub description : String
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IEquipmentItem", export_to = "bindings/IEquipmentItem.ts")]
 pub enum EquipmentItem {
     Weapon(Weapon),
     Custom(CustomEquipment)
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IEquipment", export_to = "bindings/IEquipment.ts")]
 pub struct Equipment {
     pub name : String,
     pub item : EquipmentItem
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IDetail", export_to = "bindings/avatar/IDetail.ts")]
 pub struct Detail {
     pub status : Status,
@@ -158,7 +158,7 @@ impl Default for Detail {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, TS, PartialEq)]
+#[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IAvatar", export_to = "bindings/IAvatar.ts")]
 pub struct IAvatar {
     pub id: i32,
