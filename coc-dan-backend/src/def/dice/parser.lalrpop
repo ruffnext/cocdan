@@ -6,7 +6,8 @@ grammar;
 Term: f64 = {
     <n:Num> => n.into(),                // u32 into f64
     "(" <t:Term> ")" => t,
-    <d:SimpleDice> => d.dice().into()   // u32 into f64
+    <d:SimpleDice> => d.dice().into(),  // u32 into f64
+    <d:DB> => d.into()
 };
 
 pub Expr:f64 = {
@@ -26,3 +27,7 @@ Factor:f64 = {
 
 Num: u32 = <s:r"[0-9]+"> => u32::from_str(s).unwrap();
 SimpleDice: SimpleDice = <s:r"[0-9]+[dD]{1}[0-9]+"> => SimpleDice::try_from(s).unwrap();
+DB : u32 = {
+    "db" => 0,
+    "DB" => 0
+};

@@ -10,5 +10,6 @@ mod tests {
     fn test_dice_parser() {
         let parser = ExprParser::new();
         assert_eq!(parser.parse("-3D1 * 5").unwrap(), -15.0);
+        assert_eq!(parser.parse("3D1 + DB").unwrap(), 3.0);
     }
 }
