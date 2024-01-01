@@ -2,14 +2,14 @@ use std::collections::HashMap;
 
 use ts_rs::TS;
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Clone, Debug)]
 #[ts(export, rename = "IArea")]
 pub struct Area {
     pub id : String,
     pub name : String
 }
 
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
+#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Clone, Debug)]
 #[ts(export, rename = "IGameMap")]
 pub struct GameMap{
     uuid_to_area : HashMap<String, Area>
@@ -21,5 +21,11 @@ impl GameMap {
     }
     pub fn get_area(&self, uuid : &String) -> Option<&Area> {
         self.uuid_to_area.get(uuid)
+    }
+}
+
+impl Default for GameMap {
+    fn default() -> Self {
+        Self { uuid_to_area: HashMap::new() }
     }
 }

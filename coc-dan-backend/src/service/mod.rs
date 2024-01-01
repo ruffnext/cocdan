@@ -5,6 +5,7 @@ use crate::AppState;
 pub mod user;
 pub mod stage;
 pub mod avatar;
+pub mod transaction;
 
 pub fn app() -> Router<AppState> {
     Router::new()

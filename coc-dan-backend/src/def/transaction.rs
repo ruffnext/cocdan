@@ -6,9 +6,10 @@ use super::avatar::IAvatar;
 #[ts(export, rename = "ITransaction", export_to = "bindings/tx/ITransaction.ts")]
 pub struct ITransaction {
     pub id : i32,
-    pub tx_id : i32,
+    pub tx_id : usize,
     pub stage_uuid : String,
     pub user_id : i32,
+    pub avatar_id : i32,
     pub time : String,
     pub tx : Tx
 }
@@ -16,18 +17,12 @@ pub struct ITransaction {
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq, TS)]
 #[ts(export, rename = "ITx", export_to = "bindings/tx/ITx.ts")]
 pub enum Tx {
-    Speak (Speak),
+    Statement (String),
     Dice (Dice),
     UpdateAvatar {
         before : IAvatar,
         after : IAvatar
     }
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq, TS)]
-#[ts(export, rename = "ISpeak", export_to = "bindings/tx/ISpeak.ts")]
-pub struct Speak {
-    pub message : String
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq, TS)]
@@ -41,6 +36,7 @@ pub struct Dice {
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq, TS)]
 #[ts(export, rename = "IDiceResult", export_to = "bindings/dice/IDiceResult.ts")]
 pub enum DiceResult {
+    DicePending,
     DiceNaive (DiceNaive),
     DiceCheck (DiceCheck),
     DiceSanCheck (DiceSanCheck)

@@ -1,5 +1,5 @@
 // auto-generated: "lalrpop 0.20.0"
-// sha3: efe5ad4caf017c7d1eec6c8f6163784a1b903b9928890c96f36f8d1433891a2c
+// sha3: eb43806a98d51b451a232bf0354a37957e5fa63d75b499d563399c5e949a3ed7
 use std::str::FromStr;
 use crate::def::dice::def::SimpleDice;
 #[allow(unused_extern_crates)]

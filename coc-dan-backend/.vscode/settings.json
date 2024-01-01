@@ -4,5 +4,7 @@
         "dotenv",
         "Iden",
         "lalrpop"
-    ]
+    ],
+    "vim.smartRelativeLine": true,
+    "editor.lineNumbers": "relative"
 }
