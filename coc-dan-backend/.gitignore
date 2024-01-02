@@ -3,4 +3,4 @@
 *.lock
 *.db
 .env
-#./src/def/dice/parser.rs
+./src/def/dice/parser.rs
