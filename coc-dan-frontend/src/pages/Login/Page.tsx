@@ -1,6 +1,5 @@
 import { createSignal } from "solid-js"
 import "./style.css"
-import { User } from "../../core/user";
 import { post } from "../../core";
 import toast from "solid-toast";
 import { IUser } from "../../bindings/IUser";
@@ -23,7 +22,7 @@ export default () => {
       const user : IUser = await post("/api/user/login", params)
       setLoginButtonState("is-ok")
       toast.success("login success")
-      afterLogin(new User(user))
+      afterLogin(user)
     } catch (error : any) {
       setLoginButtonState("is-danger")
       return
@@ -36,7 +35,7 @@ export default () => {
     navigate("/home")
   }
 
-  function afterLogin(u : User) {
+  function afterLogin(u : IUser) {
     console.log("login success ", u)
     setUser(u)
     navigate("/home")

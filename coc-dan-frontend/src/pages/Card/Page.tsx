@@ -12,24 +12,27 @@ import InterestSkillEditor from "./components/Skills/InterestSkillEditor";
 import Weapons from "./components/Weapons";
 import FightingSkillEditor from "./components/Skills/FightingSkillEditor";
 import LoadingPage from "./LoadingPage";
-import { sleep } from "../../core/utils";
 import { useUser } from "../Login/context";
+import { queryAvatarById } from "../../core/card/api";
 
 export default () => {
   const params = useParams()
   const { user } = useUser()
 
-  async function load_avatar(avatarId: string): Promise<IAvatar> {
-    await sleep(300)
-    return newEmpty()
+  async function loadAvatar(avatarId: string): Promise<IAvatar> {
+    if (user() == undefined) {
+      return newEmpty()
+    }
+    const res = await queryAvatarById(parseInt(avatarId))
+    return res || newEmpty()
   }
 
   const [initialAvatar, setInitialAvatar] = createSignal<IAvatar | undefined>()
   const [editable, setEditable] = createSignal<boolean>(false)
-  load_avatar(params.id).then((e) => {
+  loadAvatar(params.id).then((e) => {
     setInitialAvatar(e)
     const userVal = user()
-    if (userVal == undefined || (e.owner != userVal.raw.id && e.id != 0)) {
+    if (userVal == undefined || (e.owner != userVal.id && e.id != 0)) {
       setEditable(false)
     } else {
       setEditable(true)

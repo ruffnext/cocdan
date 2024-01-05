@@ -12,7 +12,7 @@ export default () => {
       <div class="column is-one-third">
         <div id="user-info-card" class="main-card-container radius">
           <figure id="user-header" class="image is-128x128">
-            <img class="is-rounded" src={user()?.raw.header}></img>
+            <img class="is-rounded" src={user()?.header}></img>
           </figure>
           <div id="user-name" class="title">username</div>
         </div>

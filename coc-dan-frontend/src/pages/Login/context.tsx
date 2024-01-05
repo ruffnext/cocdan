@@ -1,22 +1,21 @@
 import { createContext, createSignal, useContext } from "solid-js";
-import { User } from "../../core/user";
-import { IUser } from "../../bindings/IUser";
 import { get } from "../../core";
 import Cookies from "js-cookie";
+import { IUser } from "../../bindings/IUser";
 
-export async function tryLogin() : Promise<User | undefined> {
+export async function tryLogin() : Promise<IUser | undefined> {
   try {
     const res : IUser = await get("/api/user/me", null, false)
-    return new User(res)
+    return res
   } catch (error) {
     return undefined
   }
 }
 
 function newContext() {
-  const [user, setUser] = createSignal<User | undefined>()
+  const [user, setUser] = createSignal<IUser | undefined>()
   if (document.cookie.includes("SESSION")) {
-    tryLogin().then((e : User | undefined) => {
+    tryLogin().then((e : IUser | undefined) => {
       if (e == undefined) {
         Cookies.remove("SESSION")
       } else {
