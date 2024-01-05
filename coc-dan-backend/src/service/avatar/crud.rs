@@ -1,6 +1,7 @@
 use axum::extract::{Path, State};
 use axum::response::{Response, IntoResponse};
 use axum::{Json, extract};
+use coc_dan_common::def::avatar::service::ICreateAvatar;
 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveValue, ActiveModelTrait, IntoActiveModel, DbErr, ConnectionTrait, TransactionTrait};
 use uuid::Uuid;
 use crate::AppState;
@@ -52,45 +53,42 @@ pub async fn get_by_id_req (
     Ok((http::StatusCode::OK, Json(get_by_id(u, Path(id), State(state)).await?)).into_response())
 }
 
-
-#[derive(serde::Deserialize, serde::Serialize)]
-pub struct CreateAvatar {
-    pub name : String,
-    pub detail : Option<coc_dan_common::def::avatar::Detail>,
-    pub stage_id : Uuid,
-}
-
 pub async fn create (
     u : crate::entities::user::Model, 
     State(state) : State<AppState>,
-    extract::Json(params) : extract::Json<CreateAvatar>
+    extract::Json(params) : extract::Json<ICreateAvatar>
 ) -> Result<Json<IAvatar>, Left> {
     let db = &state.db;
-    let a = match LinkStageUser::find()
-        .filter(link_stage_user::Column::StageId.eq(params.stage_id.to_string()))
-        .filter(link_stage_user::Column::UserId.eq(u.id))
-        .one(db).await? 
-        {
-            Some(v) => {
-                let i = avatar::ActiveModel {
-                    stage_uuid : ActiveValue::Set(v.stage_id.clone()),
-                    owner : ActiveValue::Set(u.id),
-                    name : ActiveValue::Set(params.name),
-                    detail : ActiveValue::Set(serde_json::to_string(&params.detail.unwrap_or_default()).unwrap()),
-                    header : ActiveValue::Set(None),
-                    ..Default::default()
-                };
-                i.insert(db).await?
-            },
-            None => {
-                return Err(Left { 
-                    status: http::StatusCode::UNAUTHORIZED, 
-                    message: format!("You are not a member of stage {}", params.stage_id), 
-                    uuid: "4e1da279" 
-                })
-            }
-        };
-    Ok(Json(a.into()))
+    match &params.stage_id {
+        Some(stage_uuid) => {
+            match LinkStageUser::find()
+                .filter(link_stage_user::Column::StageId.eq(stage_uuid.to_string()))
+                .filter(link_stage_user::Column::UserId.eq(u.id))
+                .one(db).await?
+                {
+                    None => {
+                        return Err(Left { 
+                            status: http::StatusCode::UNAUTHORIZED, 
+                            message: format!("You are not a member of stage {}", stage_uuid), 
+                            uuid: "4e1da279" 
+                        })
+                    }
+                    _ => {}
+                }
+        },
+        None => {}
+    };
+
+    let res = avatar::ActiveModel {
+        stage_uuid : ActiveValue::Set(params.stage_id.map(|x| x.to_string())),
+        owner : ActiveValue::Set(u.id),
+        name : ActiveValue::Set(params.name),
+        detail : ActiveValue::Set(serde_json::to_string(&params.detail.unwrap_or_default()).unwrap()),
+        header : ActiveValue::Set(None),
+        ..Default::default()
+    }.insert(db).await?;
+
+    Ok(Json(res.into()))
 }
 
 pub async fn destroy (

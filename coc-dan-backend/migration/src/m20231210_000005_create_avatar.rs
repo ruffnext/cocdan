@@ -18,7 +18,6 @@ impl MigrationTrait for Migration {
             .col(
                 ColumnDef::new(Avatar::StageUuid)
                     .uuid()
-                    .not_null()
             )
             .col(
                 ColumnDef::new(Avatar::Owner)

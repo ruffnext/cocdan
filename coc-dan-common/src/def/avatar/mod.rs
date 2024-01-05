@@ -1,3 +1,4 @@
+pub mod service;
 use std::collections::HashMap;
 
 use ts_rs::TS;
@@ -160,7 +161,7 @@ impl Default for Detail {
 #[ts(export, rename = "IAvatar", export_to = "bindings/IAvatar.ts")]
 pub struct IAvatar {
     pub id: i32,
-    pub stage_uuid: String,
+    pub stage_uuid: Option<String>,
     pub owner: i32,
     pub name: String,
     pub detail: Detail

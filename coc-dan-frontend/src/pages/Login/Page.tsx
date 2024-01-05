@@ -1,13 +1,15 @@
 import { createSignal } from "solid-js"
 import "./style.css"
-import { User, setGlobalUser } from "../../core/user";
+import { User } from "../../core/user";
 import { post } from "../../core";
 import toast from "solid-toast";
-import { try_login } from "../../core/user/login";
 import { IUser } from "../../bindings/IUser";
 import { useNavigate } from "@solidjs/router";
+import { IUserLogin } from "../../bindings/user/service/IUserLogin";
+import { useUser } from "./context";
 
 export default () => {
+  const { user, setUser } = useUser()
   const [username, setUsername] = createSignal<string>("");
   const handleInputChange = (e : any) => {
     setUsername(e.currentTarget.value)
@@ -16,8 +18,9 @@ export default () => {
   const [loginButtonState, setLoginButtonState] = createSignal<string>("")
   async function toggleLogin() {
     setLoginButtonState("is-loading")
+    const params : IUserLogin = {name : username()}
     try {
-      const user : IUser = await post("/api/user/login", { name : username()})
+      const user : IUser = await post("/api/user/login", params)
       setLoginButtonState("is-ok")
       toast.success("login success")
       afterLogin(new User(user))
@@ -29,15 +32,13 @@ export default () => {
 
   const navigate = useNavigate()
 
-  try_login().then((u : User | null) => {
-    if (u != null) {
-      afterLogin(u)
-    }
-  })
+  if (user() != undefined) {
+    navigate("/home")
+  }
 
   function afterLogin(u : User) {
     console.log("login success ", u)
-    setGlobalUser(u)
+    setUser(u)
     navigate("/home")
   }
 

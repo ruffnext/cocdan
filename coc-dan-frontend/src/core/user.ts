@@ -22,13 +22,3 @@ export class User {
     return []
   }
 }
-function newEmpty() {
-  return new User({
-    id : 1, // for development
-    name : "developer",
-    nick_name : "developer",
-    header : "/img/default_header.png"
-  })
-}
-
-export const [globalUser, setGlobalUser] = createSignal<User>(newEmpty());

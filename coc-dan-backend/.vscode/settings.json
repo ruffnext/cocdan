@@ -7,5 +7,6 @@
         "lalrpop"
     ],
     "vim.smartRelativeLine": true,
-    "editor.lineNumbers": "relative"
+    "editor.lineNumbers": "relative",
+    "vim.useSystemClipboard": true
 }
