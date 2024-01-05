@@ -13,6 +13,7 @@ pub struct Model {
     pub user_id: i32,
     pub time: String,
     pub tx: String,
+    pub avatar_id: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

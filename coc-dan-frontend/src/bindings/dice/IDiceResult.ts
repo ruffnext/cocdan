@@ -3,4 +3,4 @@ import type { IDiceCheck } from "./IDiceCheck";
 import type { IDiceNaive } from "./IDiceNaive";
 import type { IDiceSanCheck } from "./IDiceSanCheck";
 
-export type IDiceResult = { "DiceNaive": IDiceNaive } | { "DiceCheck": IDiceCheck } | { "DiceSanCheck": IDiceSanCheck };
+export type IDiceResult = "DicePending" | { "DiceNaive": IDiceNaive } | { "DiceCheck": IDiceCheck } | { "DiceSanCheck": IDiceSanCheck };

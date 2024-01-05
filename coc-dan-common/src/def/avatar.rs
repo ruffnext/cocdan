@@ -2,8 +2,6 @@ use std::collections::HashMap;
 
 use ts_rs::TS;
 
-use crate::entities::avatar;
-
 use super::skills::{Occupation, OCCUPATIONS, SkillAssigned};
 
 use super::weapon::Weapon;
@@ -166,16 +164,4 @@ pub struct IAvatar {
     pub owner: i32,
     pub name: String,
     pub detail: Detail
-}
-
-impl From<avatar::Model> for IAvatar {
-    fn from(value: avatar::Model) -> Self {
-        Self { 
-            id: value.id, 
-            stage_uuid: value.stage_uuid, 
-            owner: value.owner, 
-            name: value.name, 
-            detail: serde_json::from_str(value.detail.as_str()).unwrap_or_default()
-        }
-    }
 }

@@ -1,17 +1,23 @@
-use axum::{Router, routing::{get, post}, response::IntoResponse, Json};
+use axum::{Router, routing::{get, post}};
 
 mod crud;
 
+use coc_dan_common::def::avatar::IAvatar;
 pub use crud::clear_user_stage_avatars;
 
-use crate::{AppState, def::avatar::IAvatar};
+use crate::{AppState, entities::avatar};
 
-impl IntoResponse for IAvatar {
-    fn into_response(self) -> axum::response::Response {
-        (http::StatusCode::OK, Json(self)).into_response()
+impl From<avatar::Model> for IAvatar {
+    fn from(value: avatar::Model) -> Self {
+        Self { 
+            id: value.id, 
+            stage_uuid: value.stage_uuid, 
+            owner: value.owner, 
+            name: value.name, 
+            detail: serde_json::from_str(value.detail.as_str()).unwrap_or_default()
+        }
     }
 }
-
 
 pub fn route() -> Router<AppState> {
     Router::new()
@@ -25,11 +31,12 @@ pub fn route() -> Router<AppState> {
 pub (crate) mod tests {
     use std::str::FromStr;
 
+    use coc_dan_common::def::{stage::IStage, avatar::IAvatar};
     use serde_json::json;
     use uuid::Uuid;
     use http::StatusCode;
 
-    use crate::service::{tests::new_test_server, user::tests::test_create_user_and_login, stage::IStage, avatar::IAvatar};
+    use crate::service::{tests::new_test_server, user::tests::test_create_user_and_login};
 
     use super::crud::CreateAvatar;
 

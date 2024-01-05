@@ -2,7 +2,6 @@ pub mod entities;
 mod service;
 pub mod state;
 pub mod err;
-pub mod def;
 
 use sea_orm::DatabaseConnection;
 use tracing::debug;

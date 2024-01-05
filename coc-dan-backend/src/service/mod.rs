@@ -1,11 +1,22 @@
-use axum::Router;
+use axum::{Router, response::IntoResponse, Json};
 
-use crate::AppState;
+use crate::{AppState, err::Left};
 
 pub mod user;
 pub mod stage;
 pub mod avatar;
 pub mod transaction;
+mod db_relation;
+
+impl IntoResponse for Left {
+    fn into_response(self) -> axum::response::Response {
+        if self.status == http::StatusCode::NO_CONTENT {
+            self.status.into_response()
+        } else {
+            (self.status, Json(self)).into_response()
+        }
+    }
+}
 
 pub fn app() -> Router<AppState> {
     Router::new()

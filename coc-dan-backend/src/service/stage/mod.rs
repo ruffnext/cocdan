@@ -1,29 +1,12 @@
 use axum::{
     routing::{get, post},
-    Router, response::IntoResponse, Json,
+    Router
 };
-use ts_rs::TS;
+use coc_dan_common::def::stage::IStage;
 
-use crate::{AppState, entities::stage, def::GameMap};
+use crate::{AppState, entities::stage};
 
 mod crud;
-
-
-#[derive(serde::Serialize, serde::Deserialize, TS, PartialEq)]
-#[ts(export)]
-pub struct IStage {
-    pub uuid : String,
-    pub owner : i32,
-    pub title : String,
-    pub description : String,
-    pub area : GameMap 
-}
-
-impl IntoResponse for IStage {
-    fn into_response(self) -> axum::response::Response {
-        (http::StatusCode::OK, Json(self)).into_response()
-    }
-}
 
 impl From<stage::Model> for IStage {
     fn from(value: stage::Model) -> Self {
@@ -50,10 +33,10 @@ pub fn route() -> Router<AppState> {
 #[cfg(test)]
 pub mod tests {
 
-    use crate::service::{user::{tests::test_create_user_and_login, IUser}, tests::{new_test_server, test_extract_left_uuid}, stage::IStage};
+    use crate::service::{user::tests::test_create_user_and_login, tests::{new_test_server, test_extract_left_uuid}, stage::IStage};
+    use coc_dan_common::def::{user::IUser, stage::service::ICreateStage};
     use http::StatusCode;
     use serde_json::json;
-    use super::crud::ICreateStage;
 
     #[tokio::test]
     async fn test_stage_basic() {

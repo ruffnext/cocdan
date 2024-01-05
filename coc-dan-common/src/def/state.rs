@@ -1,21 +1,26 @@
 use std::collections::HashMap;
+use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
-use crate::{def::{transaction::{Tx, ITransaction}, avatar::IAvatar, GameMap}, err::Left};
+use crate::err::Left;
+
+use super::{GameMap, transaction::{ITransaction, Tx}, avatar::IAvatar};
 
 
 #[derive(serde::Serialize, serde::Deserialize, PartialEq, Default, Debug, Clone)]
+#[wasm_bindgen]
 pub struct StateMachine {
-    pub idx : usize,        // current maximum transaction id, and also total size of txs
-    pub idx_base : usize,   // idx_base is included, minimum is 1
-    pub txs : Vec<ITransaction>,
-    pub state : State
+    #[wasm_bindgen(skip)] pub idx : usize,        // current maximum transaction id, and also total size of txs
+    #[wasm_bindgen(skip)] pub idx_base : usize,   // idx_base is included, minimum is 1
+    #[wasm_bindgen(skip)] pub txs : Vec<ITransaction>,
+    #[wasm_bindgen(skip)] pub state : State
 }
 
 #[derive(serde::Serialize, serde::Deserialize, PartialEq, Default, Debug, Clone)]
+#[wasm_bindgen]
 pub struct State {
-    pub idx : usize,
-    pub avatars : HashMap<i32, IAvatar>,
-    pub game_map : GameMap
+    #[wasm_bindgen(skip)] pub idx : usize,
+    #[wasm_bindgen(skip)] pub avatars : HashMap<i32, IAvatar>,
+    #[wasm_bindgen(skip)] pub game_map : GameMap
 }
 
 
@@ -82,7 +87,9 @@ impl State {
     }
 }
 
+#[wasm_bindgen]
 impl StateMachine {
+
     pub fn query_state(&self, idx : usize) -> Result<State, Left> {
         if idx > self.idx || idx < self.idx_base {
             return Err(Left {
@@ -99,8 +106,17 @@ impl StateMachine {
         }
         Ok(current_state)
     }
+    
 
-    pub fn build_states<'a>(&'a self, idx_begin : Option<usize>, idx_end : Option<usize>) -> Result<Vec<(State, ITransaction)>, Left> {
+}
+
+impl StateMachine {
+    pub fn observe<T>(
+        &self, 
+        idx_begin : Option<usize>, 
+        idx_end : Option<usize>,
+        observer : impl Fn(&State, &ITransaction) -> T
+    ) -> Result<Vec<T>, Left> {
         let idx_end = match idx_end {
             Some(v) if v <= self.idx => { v },
             _ => self.idx
@@ -109,14 +125,53 @@ impl StateMachine {
             Some(v) if v >= self.idx_base => { v }, 
             _ => self.idx_base
         };
-        let mut res : Vec<(State, ITransaction)> = Vec::with_capacity(idx_end - idx_begin + 1);
+        let mut res : Vec<T> = Vec::with_capacity(idx_end - idx_begin + 1);
         let mut state = self.query_state(idx_end)?;
-        res.push((state.clone(), (&self.txs[idx_end - self.idx_base]).clone()));
+        res.push(observer(&state, &self.txs[idx_end - self.idx_base]));
         for i in (idx_begin..idx_end).rev() {
             let tx = &self.txs[i - self.idx_base];
             state.apply_tx_rev(tx);
-            res.push((state.clone(), tx.clone()));
+            res.push(observer(&state, tx))
         }
         Ok(res)
+    }
+
+}
+
+#[wasm_bindgen]
+impl StateMachine {
+    #[wasm_bindgen(constructor)]
+    pub fn new_js(val : JsValue) -> Self {
+        serde_wasm_bindgen::from_value(val).unwrap()
+    }
+
+    pub fn to_js(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(self).unwrap()
+    }
+    
+    #[wasm_bindgen(js_name = "observe")]
+    pub fn observe_js(
+        &self,
+        idx_begin : Option<usize>,
+        idx_end : Option<usize>,
+        f : &js_sys::Function
+    ) -> Result<Vec<JsValue>, Left> {
+        let this = JsValue::null();
+        let rust_f = move |state : &State, tx : &ITransaction| -> JsValue {
+            f.call2(&this, &serde_wasm_bindgen::to_value(state).unwrap(), &serde_wasm_bindgen::to_value(tx).unwrap()).unwrap()
+        };
+        self.observe(idx_begin, idx_end, rust_f)
+    }
+}
+
+#[wasm_bindgen]
+impl State {
+    #[wasm_bindgen(constructor)]
+    pub fn new_js(val : JsValue) -> Self {
+        serde_wasm_bindgen::from_value(val).unwrap()
+    }
+
+    pub fn to_js(&self) -> JsValue {
+        serde_wasm_bindgen::to_value(self).unwrap()
     }
 }

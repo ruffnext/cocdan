@@ -1,27 +1,20 @@
 use axum::extract::{Path, State};
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use axum::{Json, extract};
+use coc_dan_common::def::GameMap;
 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveModelTrait, DbErr, ActiveValue, DatabaseConnection, IntoActiveModel };
 use tracing::debug;
-use ts_rs::TS;
 use uuid::Uuid;
 use sea_orm::TransactionTrait;
+use coc_dan_common::def::user::IUser;
+use coc_dan_common::def::stage::service::ICreateStage;
 
 use crate::AppState;
-use crate::def::GameMap;
 use crate::service::avatar::clear_user_stage_avatars;
 use crate::err::Left;
 use crate::entities::{prelude::*, *};
-use crate::service::user::IUser;
 
 use super::IStage;
-
-#[derive(serde::Deserialize, serde::Serialize, TS)]
-#[ts(export)]
-pub struct ICreateStage {
-    pub title : String,
-    pub description : String
-}
 
 pub async fn create (
     u : crate::entities::user::Model, 
@@ -55,9 +48,9 @@ pub async fn get_by_uuid (
     _u : user::Model, 
     Path(uuid) : Path<Uuid>,
     State(state) : State<AppState>
-) -> Result<IStage, Left> {
+) -> Result<Response, Left> {
     match Stage::find_by_id(uuid.to_string()).one(&state.db).await? {
-        Some(v) => Ok(v.into()),
+        Some(v) => Ok((http::StatusCode::OK, Json(IStage::from(v))).into_response()),
         None => Err(Left {
             status : http::StatusCode::NO_CONTENT,
             message : String::new(),

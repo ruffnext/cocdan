@@ -4,9 +4,9 @@ mod logout;
 
 use axum::{Router, routing::{post, get}, extract::{FromRequestParts, State, FromRef}, async_trait, response::{IntoResponse, Response}, Json};
 use axum_extra::extract::CookieJar;
+use coc_dan_common::def::user::IUser;
 use http::request::Parts;
 use sea_orm::{EntityTrait, DatabaseConnection};
-use ts_rs::TS;
 use crate::{entities::{prelude::*, user}, err::Left, AppState};
 
 #[async_trait]
@@ -23,15 +23,6 @@ where S: Send + Sync,
     }
 }
 
-
-#[derive(serde::Deserialize, serde::Serialize, TS, PartialEq)]
-#[ts(export)]
-pub struct IUser {
-    pub id : i32,
-    pub name : String,
-    pub nick_name : String,
-    pub header : String
-}
 
 impl From<user::Model> for IUser {
     fn from(value: user::Model) -> Self {

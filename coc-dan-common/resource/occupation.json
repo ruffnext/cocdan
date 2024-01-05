@@ -1,0 +1,52 @@
+[
+    {
+        "name" : "Accountant",
+        "era" : "None",
+        "credit_rating" : [30, 70],
+        "characteristics" : ["edu"],
+        "occupational_skills" : [
+            "Accounting", 
+            "Law", 
+            "LibraryUse",
+            "Listen",
+            "Persuade",
+            "SpotHidden",
+            {
+                "category" : "Any",
+                "candidates" : [],
+                "limit" : 2
+            }
+        ]
+    },
+    {
+        "name" : "Secretary",
+        "era" : "Modern",
+        "credit_rating" : [9, 30],
+        "characteristics" : ["dex", "app"],
+        "occupational_skills" : [
+            "Accounting",
+            {
+                "category" : "ArtAndCraft",
+                "candidates" : ["Typing", "ShortHand"],
+                "limit" : 1
+            },
+            {
+                "category" : "Social",
+                "candidates" : [],
+                "limit" : 2
+            },
+            "Language",
+            {
+                "category" : "Custom",
+                "candidates" : ["LibraryUse", "ComputerUse"],
+                "limit" : 1
+            },
+            "Psychoanalysis",
+            {
+                "category" : "Any",
+                "candidates" : [],
+                "limit" : 1
+            }
+        ]
+    }
+]

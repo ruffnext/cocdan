@@ -1,17 +1,11 @@
 use axum::{extract::{self, State}, Json, response::IntoResponse};
 use axum_extra::extract::{CookieJar, cookie::Cookie};
+use coc_dan_common::def::user::service::IUserLogin;
 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveValue, ActiveModelTrait};
-use ts_rs::TS;
 
 use crate::{err::Left, entities::{prelude::*, *}, AppState};
 
 use super::{is_login, IUser};
-
-#[derive(serde::Deserialize, Debug, TS)]
-#[ts(export)]
-pub struct IUserLogin {
-    name : String
-}
 
 pub async fn login (
     cookies : CookieJar, 

@@ -1,12 +1,13 @@
-use axum::{response::IntoResponse, Json};
 use sea_orm::{DbErr, TransactionError};
+use wasm_bindgen::prelude::wasm_bindgen;
 
 #[derive(Debug, serde::Serialize)]
+#[wasm_bindgen]
 pub struct Left {
     #[serde(with = "http_status")]
-    pub status : http::StatusCode,
-    pub message : String,
-    pub uuid : &'static str
+    #[wasm_bindgen(skip)] pub status : http::StatusCode,
+    #[wasm_bindgen(skip)] pub message : String,
+    #[wasm_bindgen(skip)] pub uuid : &'static str
 }
 
 impl From<DbErr> for Left {
@@ -29,15 +30,6 @@ impl From<TransactionError<DbErr>> for Left {
     }
 }
 
-impl IntoResponse for Left {
-    fn into_response(self) -> axum::response::Response {
-        if self.status == http::StatusCode::NO_CONTENT {
-            self.status.into_response()
-        } else {
-            (self.status, Json(self)).into_response()
-        }
-    }
-}
 
 mod http_status {
     use serde::Serializer;

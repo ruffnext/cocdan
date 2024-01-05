@@ -32,6 +32,7 @@ impl MigrationTrait for Migration {
             )
             .col(ColumnDef::new(Transaction::Time).date_time().not_null())
             .col(ColumnDef::new(Transaction::Tx).json().not_null())
+            .col(ColumnDef::new(Transaction::AvatarId).integer().not_null())
             .foreign_key(
                 ForeignKey::create()
                     .name("fk-tx-user_id")
@@ -62,6 +63,7 @@ pub enum Transaction {
     TxId,
     StageUuid,
     UserId,
+    AvatarId,
     Time,
     Tx
 }

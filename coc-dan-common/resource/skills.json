@@ -1,0 +1,284 @@
+[
+    {
+        "name" : "Accounting",
+        "initial" : 5,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Anthropology",
+        "initial" : 1,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Appraise",
+        "initial" : 1,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Charm",
+        "initial" : 15,
+        "era" : "None",
+        "category" : "Social"
+    },
+    {
+        "name" : "Climb",
+        "initial" : 20,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "ComputerUse",
+        "initial" : 5,
+        "era" : "Contemporary",
+        "category" : "None"
+    },
+    {
+        "name" : "CreditRating",
+        "initial" : 0,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "CthulhuMythos",
+        "initial" : 0,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Disguise",
+        "initial" : 5,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Dodge",
+        "initial" : 0,
+        "era" : "None",
+        "category" : "Fighting"
+    },
+    {
+        "name" : "Drive Auto",
+        "initial" : 20,
+        "era" : "Modern",
+        "category" : "None"
+    },
+    {
+        "name" : "ElectricalRepair",
+        "initial" : 10,
+        "era" : "Modern",
+        "category" : "None"
+    },
+    {
+        "name" : "Electronics",
+        "initial" : 1,
+        "era" : "Contemporary",
+        "category" : "None"
+    },
+    {
+        "name" : "FastTalk",
+        "initial" : 5,
+        "era" : "None",
+        "category" : "Social"
+    },
+    {
+        "name" : "Fighting",
+        "initial" : 25,
+        "era" : "None",
+        "category" : "Fighting"
+    },
+    {
+        "name" : "Sword",
+        "initial" : 20,
+        "era" : "None",
+        "category" : "Fighting"
+    },
+    {
+        "name" : "Firearms",
+        "initial" : 20,
+        "era" : "Modern",
+        "category" : "None"
+    },
+    {
+        "name" : "FirstAid",
+        "initial" : 30,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "History",
+        "initial" : 5,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Intimidate",
+        "initial" : 15,
+        "era" : "None",
+        "category" : "Social"
+    },
+    {
+        "name" : "Jump",
+        "initial" : 20,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Language",
+        "initial" : 0,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Language(Other)",
+        "initial" : 1,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Law",
+        "initial" : 5,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "LibraryUse",
+        "initial" : 20,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Listen",
+        "initial" : 20,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Locksmith",
+        "initial" : 1,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "MechanicalRepair",
+        "initial" : 10,
+        "era" : "Modern",
+        "category" : "None"
+    },
+    {
+        "name" : "Medicine",
+        "initial" : 1,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "NaturalWorld",
+        "initial" : 10,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Navigate",
+        "initial" : 10,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Occult",
+        "initial" : 5,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "OperateHeavyMachinery",
+        "initial" : 1,
+        "era" : "Modern",
+        "category" : "None"
+    },
+    {
+        "name" : "Persuade",
+        "initial" : 10,
+        "era" : "None",
+        "category" : "Social"
+    },
+    {
+        "name" : "Pilot",
+        "initial" : 1,
+        "era" : "Modern",
+        "category" : "None"
+    },
+    {
+        "name" : "Psychoanalysis",
+        "initial" : 1,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Psychology",
+        "initial" : 10,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Ride",
+        "initial" : 5,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Science",
+        "initial" : 1,
+        "era" : "Modern",
+        "category" : "None"
+    },
+    {
+        "name" : "SleightOfHand",
+        "initial" : 10,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "SpotHidden",
+        "initial" : 25,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Stealth",
+        "initial" : 20,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Swim",
+        "initial" : 20,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Throw",
+        "initial" : 20,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Track",
+        "initial" : 10,
+        "era" : "None",
+        "category" : "None"
+    },
+    {
+        "name" : "Typing",
+        "initial" : 9,
+        "era" : "Modern",
+        "category" : "ArtAndCraft"
+    },
+    {
+        "name" : "ShortHand",
+        "initial" : 9,
+        "era" : "None",
+        "category" : "ArtAndCraft"
+    }
+]

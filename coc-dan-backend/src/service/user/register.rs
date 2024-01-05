@@ -1,11 +1,12 @@
 
 use axum::{extract::{self, State}, Json};
 use axum_extra::extract::CookieJar;
+use coc_dan_common::def::user::IUser;
 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveValue, ActiveModelTrait};
 
 use crate::{err::Left, entities::{prelude::*, *}, AppState};
 
-use super::{is_login, IUser};
+use super::is_login;
 
 #[derive(serde::Deserialize, Debug)]
 pub struct UserRegister {

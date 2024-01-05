@@ -1,12 +1,12 @@
 use axum::extract::{Path, State};
+use axum::response::{Response, IntoResponse};
 use axum::{Json, extract};
 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveValue, ActiveModelTrait, IntoActiveModel, DbErr, ConnectionTrait, TransactionTrait};
 use uuid::Uuid;
 use crate::AppState;
 use crate::entities::{prelude::*, *};
 use crate::err::Left;
-
-use super::IAvatar;
+use coc_dan_common::def::avatar::IAvatar;
 
 pub async fn list_by_user(
     u : user::Model,
@@ -48,14 +48,15 @@ pub async fn get_by_id_req (
     u : user::Model, 
     Path(id) : Path<i32>,
     State(state) : State<AppState>
-) -> Result<IAvatar, Left> {
-    Ok(get_by_id(u, Path(id), State(state)).await?.into())
+) -> Result<Response, Left> {
+    Ok((http::StatusCode::OK, Json(get_by_id(u, Path(id), State(state)).await?)).into_response())
 }
+
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct CreateAvatar {
     pub name : String,
-    pub detail : Option<crate::def::avatar::Detail>,
+    pub detail : Option<coc_dan_common::def::avatar::Detail>,
     pub stage_id : Uuid,
 }
 
