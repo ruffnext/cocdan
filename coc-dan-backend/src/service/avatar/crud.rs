@@ -2,11 +2,13 @@ use axum::extract::{Path, State};
 use axum::response::{Response, IntoResponse};
 use axum::{Json, extract};
 use coc_dan_common::def::avatar::service::ICreateAvatar;
+use coc_dan_common::def::transaction::Tx;
 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveValue, ActiveModelTrait, IntoActiveModel, DbErr, ConnectionTrait, TransactionTrait};
 use uuid::Uuid;
 use crate::AppState;
 use crate::entities::{prelude::*, *};
 use crate::err::Left;
+use crate::service::transaction::crud::add_tx;
 use coc_dan_common::def::avatar::IAvatar;
 
 pub async fn list_by_user(
@@ -26,7 +28,7 @@ pub async fn list_by_user(
     }
 }
 
-pub async fn get_by_id (
+pub async fn get_avatar_by_id (
     u : user::Model, 
     Path(id) : Path<i32>,
     State(state) : State<AppState>
@@ -50,7 +52,7 @@ pub async fn get_by_id_req (
     Path(id) : Path<i32>,
     State(state) : State<AppState>
 ) -> Result<Response, Left> {
-    Ok((http::StatusCode::OK, Json(get_by_id(u, Path(id), State(state)).await?)).into_response())
+    Ok((http::StatusCode::OK, Json(get_avatar_by_id(u, Path(id), State(state)).await?)).into_response())
 }
 
 pub async fn create (
@@ -79,14 +81,28 @@ pub async fn create (
         None => {}
     };
 
-    let res = avatar::ActiveModel {
-        stage_uuid : ActiveValue::Set(params.stage_id.map(|x| x.to_string())),
-        owner : ActiveValue::Set(u.id),
-        name : ActiveValue::Set(params.name),
-        detail : ActiveValue::Set(serde_json::to_string(&params.detail.unwrap_or_default()).unwrap()),
-        header : ActiveValue::Set(None),
-        ..Default::default()
-    }.insert(db).await?;
+
+    let res = db.transaction::<_, IAvatar, DbErr>(|ctx| {
+        Box::pin(async move {
+            let res : IAvatar = avatar::ActiveModel {
+                stage_uuid : ActiveValue::Set(params.stage_id.clone()),
+                owner : ActiveValue::Set(u.id),
+                name : ActiveValue::Set(params.name),
+                detail : ActiveValue::Set(serde_json::to_string(&params.detail.unwrap_or_default()).unwrap()),
+                header : ActiveValue::Set(None),
+                ..Default::default()
+            }.insert(ctx).await?.into();
+            match params.stage_id {
+                Some(v) => {
+                    let tx : Tx = Tx::UpdateAvatar { before: None, after: Some(res.clone()) };
+                    add_tx(&v, u.id, res.id , &tx, ctx).await?;
+                },
+                _ => {}
+            };
+            Ok(res)
+        })
+    }).await?;
+
 
     Ok(Json(res.into()))
 }
@@ -97,7 +113,7 @@ pub async fn destroy (
     State(state) : State<AppState>
 ) -> Result<http::StatusCode, Left> {
     let db = state.db.clone();
-    let a = get_by_id(u.clone(), Path(id), State(state)).await?;
+    let a = get_avatar_by_id(u.clone(), Path(id), State(state)).await?;
     if a.owner != u.id.clone() {
         return Err(Left { 
             status: http::StatusCode::BAD_REQUEST, 
@@ -120,3 +136,12 @@ pub async fn clear_user_stage_avatars<T: TransactionTrait + ConnectionTrait> (
         .exec(db).await?;
     Ok(())
 }
+
+// pub async fn action (
+//     u : user::Model,
+//     Path(id) : Path<i32>,
+//     State(state) : State<AppState>
+// ) {
+//     let a = get_avatar_by_id(u, Path(id), State(state)).await?;
+//     todo!()
+// }

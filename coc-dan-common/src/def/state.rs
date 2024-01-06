@@ -47,8 +47,12 @@ impl State {
                     _ => { false }
                 }
             },
-            Tx::UpdateAvatar { before, .. } => {
-                self.avatars.insert(before.id, before.clone());
+            Tx::UpdateAvatar { before, after } => {
+                match (before, after) {
+                    (Some(v), ..) => self.avatars.insert(v.id, v.clone()),
+                    (None, Some(v)) => self.avatars.remove(&v.id),
+                    _ => panic!("Bad Transaction! code = 3c10a28e")
+                };
                 true
             },
         }
@@ -79,8 +83,12 @@ impl State {
                     _ => { false }
                 }
             },
-            Tx::UpdateAvatar { after , .. } => {
-                self.avatars.insert(after.id, after.clone());
+            Tx::UpdateAvatar { before , after } => {
+                match (before, after) {
+                    (Some(v), ..) => self.avatars.remove(&v.id),
+                    (None, Some(v)) => self.avatars.insert(v.id, v.clone()),
+                    _ => panic!("Bad Transaction! code = d2df489d")
+                };
                 true
             },
         }
@@ -93,7 +101,7 @@ impl StateMachine {
     pub fn query_state(&self, idx : usize) -> Result<State, Left> {
         if idx > self.idx || idx < self.idx_base {
             return Err(Left {
-                status : http::StatusCode::BAD_REQUEST,
+                status : http::StatusCode::BAD_REQUEST.as_u16(),
                 message : format!("query state out of range, idx range in ({}, {}), but query is {}", self.idx_base, self.idx, idx),
                 uuid : "c4a28ada"
             });

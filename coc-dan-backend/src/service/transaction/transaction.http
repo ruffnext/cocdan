@@ -1,0 +1,44 @@
+@hostname = localhost
+@port = 3000
+@host = {{hostname}}:{{port}}
+
+### create stage
+# @name new_stage
+POST http://{{host}}/api/stage/new HTTP/1.1
+Content-Type: application/json
+
+{
+    "title" : "stage title",
+    "description" : "example stage"
+}
+
+@stage_uuid = {{new_stage.response.body.uuid}}
+
+@stage_api = {{host}}/api/stage/{{stage_uuid}}
+
+
+### create an avatar on stage
+# @name new_avatar
+POST http://{{host}}/api/avatar/new HTTP/1.1
+Content-Type: application/json
+
+{
+    "name" : "new avatar",
+    "description" : "new avatar",
+    "stage_id" : "{{stage_uuid}}"
+}
+
+@avatar_id = {{new_avatar.response.body.id}}
+
+
+### Query all transactions
+GET http://{{stage_api}}/txs HTTP/1.1
+Content-Type: application/json
+
+### Manipulate avatar
+POST http://{{host}}/api/avatar/{{avatar_id}}/transaction HTTP/1.1
+Content-Type: application/json
+
+{
+    "Statement" : "Hello"
+}

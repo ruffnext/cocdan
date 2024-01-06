@@ -25,6 +25,7 @@ wasm-bindgen = { version = "0.2.84" }
 serde-wasm-bindgen = { version = "0.6.0" }
 js-sys = { version = "0.3.64" }
 coc-dan-common = { path = "../coc-dan-common" }
+chrono = { version = "0.4.31", features = ["std"] }
 
 [dev-dependencies]
 migration = { path = "./migration" }

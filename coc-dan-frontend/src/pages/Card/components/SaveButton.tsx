@@ -1,33 +1,57 @@
 import { listMyStages } from "../../../core/user"
 import { useUser } from "../../Login/context"
 import Dropdown, { IDropdownItem } from "../../../components/Dropdown/Component"
-import { createSignal } from "solid-js"
+import { createEffect, createSignal } from "solid-js"
+import { IStage } from "../../../bindings/IStage"
+import { IUser } from "../../../bindings/IUser"
+import { useAvatar } from "../context"
 
-interface Props {
-  editable : boolean
-}
-
-export default (props : Props) => {
+export default () => {
   const { user } = useUser()
-  const [dropdownItems, setDropdownItems] = createSignal<Array<IDropdownItem>>([])
-  async function queryStages() {
-    if (user() != undefined) {
+  const { avatar } = useAvatar()
+  const [stages, setStages] = createSignal<Record<string, IStage>>({})
+  const [stagesDropdown, setStagesDropdown] = createSignal<Array<IDropdownItem>>([])
+  async function queryStages(user : IUser | undefined) {
+    if (user != undefined) {
       const stages = await listMyStages()
-      const res : Array<IDropdownItem> = []
-      for (const item of stages) {
-        res.push({
-          label : item.title,
-          value : item.uuid
+      const newStages : Record<string, IStage> = {}
+      const newDropdowns : Array<IDropdownItem> = [{
+        label : "None",
+        value : "None"
+      }]
+      for (const key in stages) {
+        newStages[key] = stages[key]
+        newDropdowns.push({
+          value : key,
+          label : stages[key].title
         })
-        setDropdownItems(res)
       }
+      setStages(newStages)
+      setStagesDropdown(newDropdowns)
     }
   }
-  queryStages()
+  createEffect(() => {
+    queryStages(user())
+  })
+
+  function isEditable() {
+    const u = user()
+    if (u == undefined) return false
+    if (avatar.id == 0 || avatar.id == u.id) return true
+    return false
+  }
+
   return (
     <div>
-      <button disabled={user() == undefined || props.editable === false} class="button">Save</button>
-      <Dropdown items={dropdownItems()} initialLabel="默认" setValue={(e) => {return ""}}/>
+      <button disabled={!isEditable()} class="button">Save</button>
+      <Dropdown items={stagesDropdown()} initialLabel="None" setValue={(e) => {
+        const s = stages()
+        if (e in s) {
+          return s[e].title
+        } else {
+          return "None"
+        }
+      }}/>
     </div>
   )
 }

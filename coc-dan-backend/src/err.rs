@@ -30,7 +30,6 @@ impl From<TransactionError<DbErr>> for Left {
     }
 }
 
-
 mod http_status {
     use serde::Serializer;
 

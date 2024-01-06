@@ -1,2 +1,2 @@
-pub mod err;
+mod err;
 pub mod def;

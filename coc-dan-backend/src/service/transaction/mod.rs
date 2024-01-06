@@ -1,3 +1,6 @@
+// Transaction CRUDs are under service/stage
+
+pub mod crud;
 use coc_dan_common::def::transaction::ITransaction;
 
 use crate::entities::transaction::Model;
@@ -5,7 +8,6 @@ use crate::entities::transaction::Model;
 impl From<Model> for ITransaction {
     fn from(value: Model) -> Self {
         Self {
-            id : value.id,
             tx_id : value.tx_id as usize,
             stage_uuid : value.stage_uuid,
             user_id : value.user_id,

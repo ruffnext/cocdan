@@ -29,15 +29,8 @@ export default () => {
   }
 
   const [initialAvatar, setInitialAvatar] = createSignal<IAvatar | undefined>()
-  const [editable, setEditable] = createSignal<boolean>(false)
   loadAvatar(params.id).then((e) => {
     setInitialAvatar(e)
-    const userVal = user()
-    if (userVal == undefined || (e.owner != userVal.id && e.id != 0)) {
-      setEditable(false)
-    } else {
-      setEditable(true)
-    }
   })
 
   return (
@@ -69,8 +62,9 @@ export default () => {
               <Weapons />
             </div>
           </div>
-          <SaveButton editable={editable()} />
+          <SaveButton />
         </AvatarProvider>
+        <div style="padding-bottom : 3em"></div>
       </Show>
     </div>
   )

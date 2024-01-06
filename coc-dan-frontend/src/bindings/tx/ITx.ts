@@ -2,4 +2,4 @@
 import type { IAvatar } from "../IAvatar";
 import type { IDice } from "../dice/IDice";
 
-export type ITx = { "Statement": string } | { "Dice": IDice } | { "UpdateAvatar": { before: IAvatar, after: IAvatar, } };
+export type ITx = { "Statement": string } | { "Dice": IDice } | { "UpdateAvatar": { before: IAvatar | null, after: IAvatar | null, } };
