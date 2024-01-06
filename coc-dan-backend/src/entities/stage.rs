@@ -11,7 +11,7 @@ pub struct Model {
     pub owner: i32,
     pub title: String,
     pub description: String,
-    pub areas: String,
+    pub game_map: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

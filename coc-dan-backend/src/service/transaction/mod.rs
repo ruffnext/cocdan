@@ -1,6 +1,7 @@
 // Transaction CRUDs are under service/stage
 
 pub mod crud;
+pub mod realtime_tx;
 use coc_dan_common::def::transaction::ITransaction;
 
 use crate::entities::transaction::Model;

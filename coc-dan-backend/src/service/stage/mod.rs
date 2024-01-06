@@ -8,7 +8,7 @@ use http::request::Parts;
 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
 use uuid::Uuid;
 
-use crate::{AppState, entities::{stage, user, link_stage_user}, service::stage::crud::query_stage_by_id, err::Left};
+use crate::{AppState, entities::{stage, user, link_stage_user}, err::Left};
 
 use super::user::get_session_user;
 
@@ -21,14 +21,14 @@ impl From<stage::Model> for IStage {
             owner: value.owner, 
             title: value.title, 
             description: value.description, 
-            area: serde_json::from_str(&value.areas).unwrap() 
+            area: serde_json::from_str(&value.game_map).unwrap() 
         }
     }
 }
 
 pub struct StageUser {
     pub user : user::Model,
-    pub stage : IStage
+    pub stage : stage::Model
 }
 
 #[async_trait]
@@ -47,6 +47,7 @@ where S: Send + Sync,
             .filter(link_stage_user::Column::StageId.eq(stage_uuid.0.to_string()))
             .filter(link_stage_user::Column::UserId.eq(u.id))
             .one(&state.db).await.map_err(|x| Left::from(x).into_response())?;
+
         if link.is_none() {
             Err(Left {
                 status : http::StatusCode::UNAUTHORIZED,
@@ -54,7 +55,9 @@ where S: Send + Sync,
                 uuid : "2b46d6bb"
             }.into_response())?
         }
-        let s = query_stage_by_id(&u, stage_uuid.0, &state.db).await.map_err(|x| x.into_response())?;
+
+        let s = stage::Entity::find_by_id(stage_uuid.0).one(&state.db).await.map_err(|x| Left::from(x).into_response())?.unwrap();
+
         Ok(StageUser {
             user : u,
             stage : s
@@ -68,7 +71,8 @@ pub fn route() -> Router<AppState> {
         .route("/:uuid/users",  get (crud::list_users_by_stage))
         .route("/:uuid/join",   post(crud::join_stage))
         .route("/:uuid/leave",  post(crud::leave_stage))
-        .route("/:uuid/txs",    get(super::transaction::crud::query_stage_txs))
+        .route("/:uuid/txs",    get (super::transaction::crud::query_stage_txs))
+        .route("/:uuid/state",  get (super::transaction::crud::query_stage_realtime_state))
         .route("/new",          post(crud::create))
         .route("/my_stages",    get (crud::list_stages_by_user))
 }

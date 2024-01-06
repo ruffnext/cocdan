@@ -30,7 +30,7 @@ pub async fn create (
                 owner : ActiveValue::Set(u.id),
                 title : ActiveValue::Set(params.title.clone()),
                 description : ActiveValue::Set(params.description.clone()),
-                areas : ActiveValue::Set(serde_json::to_string(&game_map).unwrap())
+                game_map : ActiveValue::Set(serde_json::to_string(&game_map).unwrap())
             }.insert(ctx).await?;
             
             link_stage_user::ActiveModel {

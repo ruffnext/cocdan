@@ -1,7 +1,12 @@
+use std::str::FromStr;
+
 use coc_dan_common::def::transaction::{Tx, service::IQueryStageTxs, ITransaction};
 use sea_orm::{FromQueryResult, EntityTrait, QuerySelect, ColumnTrait, DbErr, ActiveValue, ActiveModelTrait, QueryFilter, ConnectionTrait};
+use uuid::Uuid;
 use crate::{entities::*, AppState, service::{stage::StageUser, avatar::UserAvatar}, err::Left};
 use axum::{extract::{State, Query}, response::{IntoResponse, Response}, Json};
+
+use super::realtime_tx::query_realtime_state;
 
 #[derive(FromQueryResult, Debug)]
 struct MaxTxId {
@@ -86,5 +91,13 @@ pub async fn action (
         }
     };
     let res = add_tx(&stage_uuid, user_avatar.user.id, user_avatar.avatar.id, &tx, &state.db).await?;
+    Ok((http::StatusCode::OK, Json(res)).into_response())
+}
+
+pub async fn query_stage_realtime_state (
+    stage_user : StageUser,
+    State(state) : State<AppState>,
+) -> Result<Response, Left> {
+    let res = query_realtime_state(Uuid::from_str(&stage_user.stage.uuid).unwrap(), &state.db).await?;
     Ok((http::StatusCode::OK, Json(res)).into_response())
 }

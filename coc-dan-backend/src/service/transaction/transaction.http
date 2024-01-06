@@ -42,3 +42,7 @@ Content-Type: application/json
 {
     "Statement" : "Hello"
 }
+
+### Query stage realtime state
+GET http://{{stage_api}}/state HTTP/1.1
+Content-Type: application/json
