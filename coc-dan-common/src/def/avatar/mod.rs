@@ -1,5 +1,5 @@
-pub mod service;
 use std::collections::HashMap;
+pub mod service;
 
 use ts_rs::TS;
 

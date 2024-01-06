@@ -14,13 +14,14 @@ import FightingSkillEditor from "./components/Skills/FightingSkillEditor";
 import LoadingPage from "./LoadingPage";
 import { useUser } from "../Login/context";
 import { queryAvatarById } from "../../core/card/api";
+import SaveButton from "./components/SaveButton";
 
 export default () => {
   const params = useParams()
   const { user } = useUser()
 
   async function loadAvatar(avatarId: string): Promise<IAvatar> {
-    if (user() == undefined) {
+    if (user() == undefined || avatarId.toLocaleLowerCase() === "new") {
       return newEmpty()
     }
     const res = await queryAvatarById(parseInt(avatarId))
@@ -68,9 +69,7 @@ export default () => {
               <Weapons />
             </div>
           </div>
-          <div>
-            <button disabled={user() == undefined || editable() == false} class="button">Save</button>
-          </div>
+          <SaveButton editable={editable()} />
         </AvatarProvider>
       </Show>
     </div>

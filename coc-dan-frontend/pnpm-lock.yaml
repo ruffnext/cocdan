@@ -14,9 +14,6 @@ dependencies:
   '@solidjs/router':
     specifier: ^0.10.6
     version: 0.10.6(solid-js@1.8.8)
-  '@types/js-cookie':
-    specifier: ^3.0.6
-    version: 3.0.6
   bulma:
     specifier: ^0.9.4
     version: 0.9.4
@@ -34,6 +31,9 @@ dependencies:
     version: 0.5.0(solid-js@1.8.8)
 
 devDependencies:
+  '@types/js-cookie':
+    specifier: ^3.0.6
+    version: 3.0.6
   typescript:
     specifier: ^5.3.3
     version: 5.3.3
@@ -880,7 +880,7 @@ packages:
 
   /@types/js-cookie@3.0.6:
     resolution: {integrity: sha512-wkw9yd1kEXOPnvEeEV1Go1MmxtBJL0RR79aOTAApecWFVu7w0NNXNqhcWgvw2YgZDYadliXkl14pa3WXw5jlCQ==}
-    dev: false
+    dev: true
 
   /@zag-js/accordion@0.31.1:
     resolution: {integrity: sha512-OcI/FutvnsNMMGkbkYnDukt0VbM6QT1ey7U3LJbalMJ1+3SFBr3ZdE75gn3k1lC33z3Yj5FnpBqdkLFfgj4/vg==}
