@@ -38,16 +38,15 @@ POST http://{{host}}/api/user/logout
 POST http://localhost:3000/api/user/logout HTTP/1.1
 
 ### register user A
-
 POST http://localhost:3000/api/user/register HTTP/1.1
 Content-Type: application/json
+
 {
     "name" : "userA"
 }
 
 
 ### register user B
-
 POST http://localhost:3000/api/user/register HTTP/1.1
 Content-Type: application/json
 
@@ -120,7 +119,6 @@ Cookie: {{user-B-cookies}}
 }
 
 ### get all transactions
-
 GET http://{{stage_api}}/txs HTTP/1.1
 Content-Type: application/json
 Cookie: {{user-B-cookies}}
@@ -138,6 +136,13 @@ Cookie: {{user-B-cookies}}
 GET http://{{stage_api}}/txs HTTP/1.1
 Content-Type: application/json
 Cookie: {{user-A-cookies}}
+
+
+### Query stage realtime state
+GET http://{{stage_api}}/state HTTP/1.1
+Content-Type: application/json
+Cookie: {{user-A-cookies}}
+
 
 ### user a leaves stage resulting destroy of stage
 POST http://{{stage_api}}/leave HTTP/1.1
