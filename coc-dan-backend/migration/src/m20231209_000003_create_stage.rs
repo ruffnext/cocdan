@@ -9,11 +9,12 @@ impl MigrationTrait for Migration {
         manager.create_table(Table::create()
             .table(Stage::Table)
             .col(
-                ColumnDef::new(Stage::Uuid)
-                    .uuid()
+                ColumnDef::new(Stage::Id)
+                    .integer()
                     .unique_key()
                     .not_null()
                     .primary_key()
+                    .auto_increment()
             )
             .col(
                 ColumnDef::new(Stage::Owner)
@@ -47,7 +48,7 @@ impl MigrationTrait for Migration {
 #[derive(Iden)]
 pub enum Stage {
     Table,
-    Uuid,
+    Id,
     Owner,
     Title,
     Description,

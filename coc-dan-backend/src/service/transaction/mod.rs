@@ -10,7 +10,7 @@ impl From<Model> for ITransaction {
     fn from(value: Model) -> Self {
         Self {
             tx_id : value.tx_id as usize,
-            stage_uuid : value.stage_uuid,
+            stage_id : value.stage_id,
             user_id : value.user_id,
             avatar_id : value.avatar_id,
             time : value.time,

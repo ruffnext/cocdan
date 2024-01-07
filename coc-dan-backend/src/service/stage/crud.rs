@@ -1,18 +1,21 @@
+use std::collections::HashMap;
+
 use axum::extract::{Path, State};
 use axum::response::{IntoResponse, Response};
 use axum::{Json, extract};
 use coc_dan_common::def::GameMap;
-use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveModelTrait, DbErr, ActiveValue, DatabaseConnection, IntoActiveModel };
+use coc_dan_common::def::transaction::Tx;
+use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveModelTrait, DbErr, ActiveValue, DatabaseConnection};
 use tracing::debug;
-use uuid::Uuid;
 use sea_orm::TransactionTrait;
 use coc_dan_common::def::user::IUser;
 use coc_dan_common::def::stage::service::ICreateStage;
 
 use crate::AppState;
-use crate::service::avatar::clear_user_stage_avatars;
 use crate::err::Left;
 use crate::entities::{prelude::*, *};
+use crate::service::avatar::crud::destroy_avatar_inner;
+use crate::service::transaction::realtime_tx::{RealtimeState, get_realtime_state};
 
 use super::IStage;
 
@@ -23,33 +26,55 @@ pub async fn create (
 ) -> Result<Json<IStage>, Left> {
     let game_map = GameMap::new_empty();
     let db = &state.db;
-    let res = db.transaction::<_, stage::Model, DbErr>(|ctx| {
+    let (res_stage, res_tx) = db.transaction::<_, (stage::Model, transaction::Model), DbErr>(|ctx| {
+        let game_map = game_map.clone();
         Box::pin(async move {
             let res = crate::entities::stage::ActiveModel {
-                uuid : ActiveValue::Set(Uuid::new_v4().to_string()),
                 owner : ActiveValue::Set(u.id),
                 title : ActiveValue::Set(params.title.clone()),
                 description : ActiveValue::Set(params.description.clone()),
-                game_map : ActiveValue::Set(serde_json::to_string(&game_map).unwrap())
+                game_map : ActiveValue::Set(serde_json::to_string(&game_map).unwrap()),
+                ..Default::default()
             }.insert(ctx).await?;
+
+            let stage_id = res.id;
             
             link_stage_user::ActiveModel {
-                stage_id : ActiveValue::Set(res.uuid.clone()),
+                stage_id : ActiveValue::Set(stage_id),
                 user_id : ActiveValue::Set(u.id),
                 ..Default::default()
             }.insert(ctx).await?;
-            Ok(res)
+
+            let tx = transaction::ActiveModel {
+                tx_id : ActiveValue::Set(1),
+                stage_id : ActiveValue::Set(stage_id),
+                user_id : ActiveValue::Set(u.id),
+                time : ActiveValue::Set(chrono::Local::now().to_rfc3339()),
+                tx : ActiveValue::Set(serde_json::to_string(&Tx::Statement("Stage Created".to_string())).unwrap()),
+                avatar_id : ActiveValue::Set(0),
+                ..Default::default()
+            }.insert(ctx).await?;
+            Ok((res, tx))
         })
     }).await?;
-    Ok(Json(res.into()))
+
+    let mut write_lock = get_realtime_state().await.write().await;
+    write_lock.insert(res_stage.id, RealtimeState {
+        last_tx : res_tx.into(),
+        avatars : HashMap::new(),
+        game_map
+    });
+    drop(write_lock);
+
+    Ok(Json(res_stage.into()))
 }
 
 pub async fn get_by_uuid (
     _u : user::Model, 
-    Path(uuid) : Path<Uuid>,
+    Path(id) : Path<i32>,
     State(state) : State<AppState>
 ) -> Result<Response, Left> {
-    match Stage::find_by_id(uuid.to_string()).one(&state.db).await? {
+    match Stage::find_by_id(id).one(&state.db).await? {
         Some(v) => Ok((http::StatusCode::OK, Json(IStage::from(v))).into_response()),
         None => Err(Left {
             status : http::StatusCode::NO_CONTENT,
@@ -91,13 +116,13 @@ pub async fn list_stages_by_user (
 
 pub async fn list_users_by_stage (
     _u : user::Model, 
-    Path(uuid) : Path<Uuid>,
+    Path(id) : Path<i32>,
     State(state) : State<AppState>
 ) -> Result<Json<Vec<IUser>>, Left> {
     let db = &state.db;
     
     let raw = LinkStageUser::find()
-        .filter(link_stage_user::Column::StageId.eq(uuid.to_string()))
+        .filter(link_stage_user::Column::StageId.eq(id))
         .find_also_related(user::Entity)
         .all(db).await?;
     
@@ -123,13 +148,13 @@ pub async fn list_users_by_stage (
 
 pub async fn query_stage_by_id (
     u : &user::Model,
-    uuid : Uuid, 
+    id : i32, 
     db : &DatabaseConnection
 ) -> Result<IStage, Left> {
-    match Stage::find_by_id(uuid.to_string()).one(db).await? {
+    match Stage::find_by_id(id).one(db).await? {
         Some(v) => Ok(v.into()),
         None => {
-            debug!("User {} try to get stage {uuid}, but it does not exist", u.id);
+            debug!("User {} try to get stage {id}, but it does not exist", u.id);
             Err(Left { 
                 status: http::StatusCode::NO_CONTENT, 
                 message: "This stage does not exist".to_string(), 
@@ -141,14 +166,14 @@ pub async fn query_stage_by_id (
 
 pub async fn join_stage (
     u : user::Model,
-    Path(uuid) : Path<Uuid>,
+    Path(id) : Path<i32>,
     State(state) : State<AppState>
 ) -> Result<impl IntoResponse, Left> {
     let db = &state.db;
-    let s = query_stage_by_id(&u, uuid, db).await?;
+    let s = query_stage_by_id(&u, id, db).await?;
 
     match LinkStageUser::find()
-        .filter(link_stage_user::Column::StageId.eq(uuid.to_string()))
+        .filter(link_stage_user::Column::StageId.eq(id))
         .filter(link_stage_user::Column::UserId.eq(u.id))
         .one(db).await? {
         Some(_v) => {
@@ -160,7 +185,7 @@ pub async fn join_stage (
         },
         None => {
             link_stage_user::ActiveModel {
-                stage_id : ActiveValue::Set(s.uuid),
+                stage_id : ActiveValue::Set(s.id),
                 user_id : ActiveValue::Set(u.id),
                 ..Default::default()
             }.insert(db).await?;
@@ -171,33 +196,51 @@ pub async fn join_stage (
 
 pub async fn leave_stage (
     u : user::Model,
-    Path(uuid) : Path<Uuid>,
+    Path(id) : Path<i32>,
     State(state) : State<AppState>
 ) -> Result<http::StatusCode, Left> {
     let db = &state.db;
     match LinkStageUser::find()
-        .filter(link_stage_user::Column::StageId.eq(uuid.to_string()))
+        .filter(link_stage_user::Column::StageId.eq(id))
         .filter(link_stage_user::Column::UserId.eq(u.id))
         .one(db).await? {
         Some(v) => {
             db.transaction::<_, (), DbErr>(|ctx| {
                 Box::pin(async move {
-                    LinkStageUser::delete_many()
-                        .filter(link_stage_user::Column::StageId.eq(v.stage_id.clone()))
-                        .filter(link_stage_user::Column::UserId.eq(u.id))
-                        .exec(ctx).await?;
+                    let s = Stage::find_by_id(id).one(ctx).await?.unwrap();
 
-                    match Stage::find_by_id(v.stage_id.clone()).one(ctx).await? {
-                        Some(s) => {
-                            if s.owner == u.id {
-                                Stage::delete(s.into_active_model()).exec(ctx).await?;
-                                Avatar::delete_many().filter(avatar::Column::StageUuid.eq(uuid.to_string())).exec(ctx).await?;
-                            }
-                        },
-                        None => {}
-                    };
+                    if s.owner == u.id {
+                        LinkStageUser::delete_many()
+                            .filter(link_stage_user::Column::StageId.eq(v.stage_id.clone()))
+                            .exec(ctx).await?;
 
-                    clear_user_stage_avatars(&u, &uuid, ctx).await?;
+                        Avatar::delete_many()
+                            .filter(avatar::Column::StageId.eq(v.stage_id))
+                            .exec(ctx).await?;
+
+                        Transaction::delete_many()
+                            .filter(transaction::Column::StageId.eq(v.stage_id))
+                            .exec(ctx).await?;
+
+                        Stage::delete_by_id(s.id).exec(ctx).await?;
+
+                        get_realtime_state().await.write().await.remove(&id);
+                    } else {
+                        LinkStageUser::delete_many()
+                            .filter(link_stage_user::Column::StageId.eq(v.stage_id.clone()))
+                            .filter(link_stage_user::Column::UserId.eq(u.id))
+                            .exec(ctx).await?;
+
+                        let avatars = Avatar::find()
+                            .filter(avatar::Column::StageId.eq(v.stage_id))
+                            .filter(avatar::Column::Owner.eq(v.user_id))
+                            .all(ctx).await?;
+                        
+                        for a in avatars {
+                            destroy_avatar_inner(&a.into(), ctx).await?;
+                        }
+
+                    }
 
                     Ok(())
                 })

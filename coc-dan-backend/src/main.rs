@@ -19,7 +19,6 @@ async fn main() {
     tracing_subscriber::fmt::init();
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
     let db = get_db().await;
-    service::transaction::realtime_tx::initialize();
     debug!("listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, service::app().with_state(AppState{ db })).await.unwrap()
 }

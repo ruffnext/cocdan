@@ -41,7 +41,8 @@ export default () : IAvatar => {
   
   return {
     id : 0,
-    stage_uuid : "",
+    stage_id : null,
+    header : null,
     owner : 0,
     name : "Chris Redfield",
     detail : {

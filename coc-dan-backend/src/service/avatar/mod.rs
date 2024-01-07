@@ -3,7 +3,6 @@ use axum::{Router, routing::{get, post}, async_trait, extract::{FromRequestParts
 pub mod crud;
 
 use coc_dan_common::def::avatar::IAvatar;
-pub use crud::clear_user_stage_avatars;
 use http::request::Parts;
 use sea_orm::EntityTrait;
 
@@ -13,21 +12,35 @@ impl From<avatar::Model> for IAvatar {
     fn from(value: avatar::Model) -> Self {
         Self { 
             id: value.id, 
-            stage_uuid: value.stage_uuid, 
+            stage_id: value.stage_id, 
             owner: value.owner, 
             name: value.name, 
-            detail: serde_json::from_str(value.detail.as_str()).unwrap_or_default()
+            detail: serde_json::from_str(value.detail.as_str()).unwrap_or_default(),
+            header : value.header
         }
     }
 }
 
-pub struct UserAvatar {
+impl From<IAvatar> for avatar::Model {
+    fn from(value: IAvatar) -> Self {
+        Self {
+            id : value.id,
+            stage_id : value.stage_id, 
+            owner : value.owner, 
+            name : value.name, 
+            detail : serde_json::to_string(&value.detail).unwrap(),
+            header : value.header
+        }
+    }
+}
+
+pub struct UserControlledAvatar {
     pub user : user::Model,
     pub avatar : avatar::Model
 }
 
 #[async_trait]
-impl<S> FromRequestParts<S> for UserAvatar
+impl<S> FromRequestParts<S> for UserControlledAvatar
 where S: Send + Sync,
     AppState: FromRef<S>
 {
@@ -40,7 +53,7 @@ where S: Send + Sync,
         let a = avatar::Entity::find_by_id(avatar_id.0).one(&state.db).await.map_err(|x| Left::from(x).into_response())?;
         match a {
             Some(v) if v.owner == u.id => {
-                Ok(UserAvatar {
+                Ok(UserControlledAvatar {
                     user : u,
                     avatar : v
                 })
@@ -49,7 +62,7 @@ where S: Send + Sync,
                 Err(Left {
                     status : http::StatusCode::BAD_REQUEST,
                     message : format!("Avatar {} not found", avatar_id.0),
-                    uuid : ""
+                    uuid : "f33956a4"
                 }.into_response())
             }
         }
@@ -60,7 +73,8 @@ pub fn route() -> Router<AppState> {
     Router::new()
         .route("/:id",              get     (crud::get_by_id_req).
                                                         delete  (crud::destroy))
-        .route("/:id/transaction",  post(super::transaction::crud::action))
+        .route("/:id/transaction",  post    (super::transaction::crud::action_service))
+        .route("/:id/update",       post    (crud::update_avatar))
         .route("/list_owned",       get     (crud::list_by_user))
         .route("/new",              post    (crud::create))
 }

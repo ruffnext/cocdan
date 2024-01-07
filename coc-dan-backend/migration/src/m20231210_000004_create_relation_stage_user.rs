@@ -16,7 +16,7 @@ impl MigrationTrait for Migration {
             )
             .col(
                 ColumnDef::new(LinkStageUser::StageId)
-                    .uuid()
+                    .integer()
                     .not_null()
             )
             .col(

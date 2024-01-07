@@ -1,13 +1,11 @@
 use sea_orm::{DbErr, TransactionError};
-use wasm_bindgen::prelude::wasm_bindgen;
 
 #[derive(Debug, serde::Serialize)]
-#[wasm_bindgen]
 pub struct Left {
     #[serde(with = "http_status")]
-    #[wasm_bindgen(skip)] pub status : http::StatusCode,
-    #[wasm_bindgen(skip)] pub message : String,
-    #[wasm_bindgen(skip)] pub uuid : &'static str
+    pub status : http::StatusCode,
+    pub message : String,
+    pub uuid : &'static str
 }
 
 impl From<DbErr> for Left {

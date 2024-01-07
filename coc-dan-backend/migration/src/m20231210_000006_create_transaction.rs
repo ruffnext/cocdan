@@ -20,16 +20,8 @@ impl MigrationTrait for Migration {
                     .auto_increment()
             )
             .col(ColumnDef::new(Transaction::TxId).integer().not_null())
-            .col(
-                ColumnDef::new(Transaction::StageUuid)
-                    .uuid()
-                    .not_null()
-            )
-            .col(
-                ColumnDef::new(Transaction::UserId)
-                    .integer()
-                    .not_null()
-            )
+            .col(ColumnDef::new(Transaction::StageId).integer().not_null())
+            .col(ColumnDef::new(Transaction::UserId).integer().not_null())
             .col(ColumnDef::new(Transaction::Time).date_time().not_null())
             .col(ColumnDef::new(Transaction::Tx).json().not_null())
             .col(ColumnDef::new(Transaction::AvatarId).integer().not_null())
@@ -42,8 +34,8 @@ impl MigrationTrait for Migration {
             .foreign_key(
                 ForeignKey::create()
                     .name("fk-tx-stage_uuid")
-                    .from(Transaction::Table, Transaction::StageUuid)
-                    .to(Stage::Table, Stage::Uuid)
+                    .from(Transaction::Table, Transaction::StageId)
+                    .to(Stage::Table, Stage::Id)
             )
             .to_owned()
         ).await?;
@@ -61,7 +53,7 @@ pub enum Transaction {
     Table,
     Id,
     TxId,
-    StageUuid,
+    StageId,
     UserId,
     AvatarId,
     Time,

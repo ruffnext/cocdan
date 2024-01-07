@@ -7,5 +7,5 @@ use super::Detail;
 pub struct ICreateAvatar {
     pub name : String,
     pub detail : Option<Detail>,
-    pub stage_id : Option<String>,
+    pub stage_id : Option<i32>,
 }

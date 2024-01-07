@@ -161,8 +161,9 @@ impl Default for Detail {
 #[ts(export, rename = "IAvatar", export_to = "bindings/IAvatar.ts")]
 pub struct IAvatar {
     pub id: i32,
-    pub stage_uuid: Option<String>,
+    pub stage_id: Option<i32>,
     pub owner: i32,
     pub name: String,
-    pub detail: Detail
+    pub detail: Detail,
+    pub header: Option<String>
 }

@@ -36,12 +36,12 @@ async fn test_stage_basic() {
     assert!(first_stage.owner == u.id);
     
     // get stage by id
-    let response = server.get(format!("/api/stage/{}", new_stage.uuid).as_str()).add_cookie(session.clone()).await;
+    let response = server.get(format!("/api/stage/{}", new_stage.id).as_str()).add_cookie(session.clone()).await;
     let get_by_id_stage : IStage = response.json();
     assert!(get_by_id_stage == *first_stage);
 
     // get stage users
-    let res = server.get(format!("/api/stage/{}/users", new_stage.uuid).as_str()).add_cookie(session.clone()).await;
+    let res = server.get(format!("/api/stage/{}/users", new_stage.id).as_str()).add_cookie(session.clone()).await;
     let stage_users : Vec<IUser> = res.json();
     assert!(stage_users.len() == 1);
     assert!(stage_users[0] == u);
@@ -49,13 +49,13 @@ async fn test_stage_basic() {
     // user 2 join
     let (u2, cookie2) = test_create_user_and_login("user name 2", &server).await;
     let session2 = cookie2.get("SESSION").unwrap();
-    let res = server.post(format!("/api/stage/{}/join", first_stage.uuid).as_str()).add_cookie(session2.clone()).await;
+    let res = server.post(format!("/api/stage/{}/join", first_stage.id).as_str()).add_cookie(session2.clone()).await;
     assert!(res.status_code() == StatusCode::OK);
     
     // user 3 join
     let (u3, cookie3) = test_create_user_and_login("user name 3", &server).await;
     let session3 = cookie3.get("SESSION").unwrap();
-    let res = server.post(format!("/api/stage/{}/join", first_stage.uuid).as_str()).add_cookie(session3.clone()).await;
+    let res = server.post(format!("/api/stage/{}/join", first_stage.id).as_str()).add_cookie(session3.clone()).await;
     assert!(res.status_code() == StatusCode::OK);
     
     // user 3 create a new stage, and deleting it using user 1, resulting bad request
@@ -71,11 +71,11 @@ async fn test_stage_basic() {
         assert!(user_3_stages[0] == new_stage);
         assert!(user_3_stages[1] == user_3_stage);
         
-        let res = server.post(format!("/api/stage/{}/leave", user_3_stage.uuid).as_str()).add_cookie(session.clone()).await;
+        let res = server.post(format!("/api/stage/{}/leave", user_3_stage.id).as_str()).add_cookie(session.clone()).await;
         assert_eq!(res.status_code(), StatusCode::BAD_REQUEST);
         assert_eq!(test_extract_left_uuid(&res), "21fa1f82");
 
-        let res = server.post(format!("/api/stage/{}/leave", user_3_stage.uuid).as_str()).add_cookie(session3.clone()).await;
+        let res = server.post(format!("/api/stage/{}/leave", user_3_stage.id).as_str()).add_cookie(session3.clone()).await;
         assert_eq!(res.status_code(), StatusCode::OK);
         
         let res = server.get("/api/stage/my_stages").add_cookie(session3.clone()).await;
@@ -86,7 +86,7 @@ async fn test_stage_basic() {
     
 
     // get stage users
-    let res = server.get(format!("/api/stage/{}/users", new_stage.uuid).as_str()).add_cookie(session.clone()).await;
+    let res = server.get(format!("/api/stage/{}/users", new_stage.id).as_str()).add_cookie(session.clone()).await;
     let stage_users : Vec<IUser> = res.json();
     assert!(stage_users.len() == 3);
     assert!(stage_users[0] == u);
@@ -100,7 +100,7 @@ async fn test_stage_basic() {
     assert!(stages[0] == new_stage);
     
     // user 3 leaves
-    let res = server.post(format!("/api/stage/{}/leave", new_stage.uuid).as_str()).add_cookie(session3.clone()).await;
+    let res = server.post(format!("/api/stage/{}/leave", new_stage.id).as_str()).add_cookie(session3.clone()).await;
     assert!(res.status_code() == StatusCode::OK);
     assert!(server.get("/api/stage/my_stages").add_cookie(session3.clone()).await.status_code() == StatusCode::NO_CONTENT);
 
@@ -108,7 +108,7 @@ async fn test_stage_basic() {
     let res = server.get("/api/stage/my_stages").add_cookie(session3.clone()).await;
     assert!(res.status_code() == StatusCode::NO_CONTENT);
 
-    let res = server.get(format!("/api/stage/{}/users", new_stage.uuid).as_str()).add_cookie(session.clone()).await;
+    let res = server.get(format!("/api/stage/{}/users", new_stage.id).as_str()).add_cookie(session.clone()).await;
     let users : Vec<IUser> = res.json();
     assert!(users.len() == 2);
     assert!(users[0] == u);
@@ -121,10 +121,10 @@ async fn test_stage_basic() {
     assert!(stages[0] == new_stage);
 
     // When the owner leaves stage, the stage will be destroyed
-    let res = server.post(format!("/api/stage/{}/leave", new_stage.uuid).as_str()).add_cookie(session.clone()).await;
+    let res = server.post(format!("/api/stage/{}/leave", new_stage.id).as_str()).add_cookie(session.clone()).await;
     assert!(res.status_code() == StatusCode::OK);
 
-    let res = server.get(format!("/api/stage/{}", new_stage.uuid).as_str()).add_cookie(session.clone()).await;
+    let res = server.get(format!("/api/stage/{}", new_stage.id).as_str()).add_cookie(session.clone()).await;
     assert!(res.status_code() == StatusCode::NO_CONTENT);
 
     let res = server.get("/api/stage/my_stages").add_cookie(session2.clone()).await;

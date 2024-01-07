@@ -2,43 +2,143 @@
 @port = 3000
 @host = {{hostname}}:{{port}}
 
-### login 
-# @name login
-POST http://{{host}}/api/user/login HTTP/1.1
-Content-Type : application/json
-
-{
-    "name" : "ruffnex"
-}
-
-@cookies = {{login.response.headers.set-cookie}}
-
 ### create stage
 # @name new_stage
 POST http://{{host}}/api/stage/new HTTP/1.1
 Content-Type: application/json
-Cookie: {{cookies}}
 
 {
     "title" : "stage title",
     "description" : "example stage"
 }
 
-@stage_uuid = {{new_stage.response.body.uuid}}
+@stage_uuid = {{new_stage.response.body.id}}
 
 @stage_api = {{host}}/api/stage/{{stage_uuid}}
 
 ### get stage by id
 GET http://{{stage_api}} HTTP/1.1
-Cookie: {{cookies}}
 
 ### list stages by user
 GET http://{{host}}/api/stage/my_stages HTTP/1.1
-Cookie: {{cookies}}
+
+### list users by stage
+GET http://{{stage_api}}/users HTTP/1.1
 
 ### destroy a stage 
 POST http://{{stage_api}}/leave HTTP/1.1
-Cookie: {{cookies}}
 
 ### logout
 POST http://{{host}}/api/user/logout
+
+
+########## test leave stage ##############
+
+### logout 
+POST http://localhost:3000/api/user/logout HTTP/1.1
+
+### register user A
+
+POST http://localhost:3000/api/user/register HTTP/1.1
+Content-Type: application/json
+{
+    "name" : "userA"
+}
+
+
+### register user B
+
+POST http://localhost:3000/api/user/register HTTP/1.1
+Content-Type: application/json
+
+{
+    "name" : "userB"
+}
+
+### Login user A
+# @name loginA
+# @no-cookie-jar	
+POST http://{{host}}/api/user/login HTTP/1.1
+Content-Type : application/json
+
+{
+    "name" : "userA"
+}
+
+@user-A-cookies = {{loginA.response.headers.set-cookie}}
+
+
+### Login user B
+# @name loginB
+# @no-cookie-jar	
+POST http://{{host}}/api/user/login HTTP/1.1
+Content-Type : application/json
+
+{
+    "name" : "userB"
+}
+
+@user-B-cookies = {{loginB.response.headers.set-cookie}}
+
+### create stage by user a
+# @name new_stage_a
+POST http://{{host}}/api/stage/new HTTP/1.1
+Content-Type: application/json
+Cookie: {{user-A-cookies}}
+
+{
+    "title" : "stage title",
+    "description" : "example stage"
+}
+
+@stage_a_id = {{new_stage_a.response.body.id}}
+@stage_api = {{host}}/api/stage/{{new_stage_a.response.body.id}}
+
+### user b join this stage
+POST http://{{stage_api}}/join HTTP/1.1
+Content-Type: application/json
+Cookie: {{user-B-cookies}}
+
+### list user by stage
+GET http://{{stage_api}}/users HTTP/1.1
+Content-Type: application/json
+Cookie: {{user-B-cookies}}
+
+### user b add avatar
+
+
+### create an avatar
+# @name new_avatar
+POST http://{{host}}/api/avatar/new HTTP/1.1
+Content-Type: application/json
+Cookie: {{user-B-cookies}}
+
+{
+    "name" : "new avatar",
+    "description" : "new avatar",
+    "stage_id" : {{stage_a_id}}
+}
+
+### get all transactions
+
+GET http://{{stage_api}}/txs HTTP/1.1
+Content-Type: application/json
+Cookie: {{user-B-cookies}}
+
+### user b leave stage
+POST http://{{stage_api}}/leave HTTP/1.1
+Cookie: {{user-B-cookies}}
+
+### get all transactions by user b (not allowed)
+GET http://{{stage_api}}/txs HTTP/1.1
+Content-Type: application/json
+Cookie: {{user-B-cookies}}
+
+### get all transactions by user A
+GET http://{{stage_api}}/txs HTTP/1.1
+Content-Type: application/json
+Cookie: {{user-A-cookies}}
+
+### user a leaves stage resulting destroy of stage
+POST http://{{stage_api}}/leave HTTP/1.1
+Cookie: {{user-A-cookies}}

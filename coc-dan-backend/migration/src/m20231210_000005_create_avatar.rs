@@ -16,8 +16,8 @@ impl MigrationTrait for Migration {
                     .auto_increment()
             )
             .col(
-                ColumnDef::new(Avatar::StageUuid)
-                    .uuid()
+                ColumnDef::new(Avatar::StageId)
+                    .integer()
             )
             .col(
                 ColumnDef::new(Avatar::Owner)
@@ -46,7 +46,7 @@ impl MigrationTrait for Migration {
 pub enum Avatar {
     Table,
     Id,
-    StageUuid,
+    StageId,
     Owner,
     Name,
     Header,    // binary image

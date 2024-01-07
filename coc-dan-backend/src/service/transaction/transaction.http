@@ -12,7 +12,7 @@ Content-Type: application/json
     "description" : "example stage"
 }
 
-@stage_uuid = {{new_stage.response.body.uuid}}
+@stage_uuid = {{new_stage.response.body.id}}
 
 @stage_api = {{host}}/api/stage/{{stage_uuid}}
 

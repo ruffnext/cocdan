@@ -8,7 +8,7 @@ use serde::Serialize;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: i32,
-    pub stage_id: String,
+    pub stage_id: i32,
     pub user_id: i32,
 }
 

@@ -6,7 +6,7 @@ use crate::err::Left;
 use super::{GameMap, transaction::{ITransaction, Tx}, avatar::IAvatar};
 
 
-#[derive(serde::Serialize, serde::Deserialize, PartialEq, Default, Debug, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, PartialEq, Debug, Clone)]
 #[wasm_bindgen]
 pub struct StateMachine {
     #[wasm_bindgen(skip)] pub idx : usize,        // current maximum transaction id, and also total size of txs
@@ -15,10 +15,10 @@ pub struct StateMachine {
     #[wasm_bindgen(skip)] pub state : State
 }
 
-#[derive(serde::Serialize, serde::Deserialize, PartialEq, Default, Debug, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, PartialEq, Debug, Clone)]
 #[wasm_bindgen]
 pub struct State {
-    #[wasm_bindgen(skip)] pub idx : usize,
+    #[wasm_bindgen(skip)] pub last_tx : ITransaction,
     #[wasm_bindgen(skip)] pub avatars : HashMap<i32, IAvatar>,
     #[wasm_bindgen(skip)] pub game_map : GameMap
 }
@@ -26,10 +26,10 @@ pub struct State {
 
 impl State {
     pub fn apply_tx_rev(&mut self, tx : &ITransaction) -> bool {
-        if self.idx - 1 != tx.tx_id {
+        if self.last_tx.tx_id - 1 != tx.tx_id {
             panic!("Reversely apply: Transaction Idx must be state's idx - 1")
         }
-        self.idx = tx.tx_id;
+        self.last_tx = tx.clone();
         match &tx.tx {
             Tx::Statement(_) => { false },
             Tx::Dice(dice) => {
@@ -55,14 +55,18 @@ impl State {
                 };
                 true
             },
+            Tx::UpdateStage { before , .. } => {
+                self.game_map = before.game_map.clone();
+                true
+            }
         }
     }
 
     pub fn apply_tx(&mut self, tx : &ITransaction) -> bool {
-        if self.idx + 1 != tx.tx_id {
+        if self.last_tx.tx_id + 1 != tx.tx_id {
             panic!("Apply: Transaction Idx mut be state's idx + 1")
         }
-        self.idx = tx.tx_id;
+        self.last_tx = tx.clone();
         match &tx.tx {
             Tx::Statement(_) => { false },
             Tx::Dice(dice) => {
@@ -91,6 +95,10 @@ impl State {
                 };
                 true
             },
+            Tx::UpdateStage { after , .. } => {
+                self.game_map = after.game_map.clone();
+                true
+            }
         }
     }
 }

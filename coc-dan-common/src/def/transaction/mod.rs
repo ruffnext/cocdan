@@ -1,13 +1,13 @@
 pub mod service;
 use ts_rs::TS;
 
-use super::avatar::IAvatar;
+use super::{avatar::IAvatar, stage::IStage};
 
 #[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq, TS)]
 #[ts(export, rename = "ITransaction", export_to = "bindings/tx/ITransaction.ts")]
 pub struct ITransaction {
     pub tx_id : usize,
-    pub stage_uuid : String,
+    pub stage_id : i32,
     pub user_id : i32,
     pub avatar_id : i32,
     pub time : String,
@@ -22,6 +22,10 @@ pub enum Tx {
     UpdateAvatar {
         before : Option<IAvatar>,
         after : Option<IAvatar>
+    },
+    UpdateStage {
+        before : IStage,
+        after : IStage
     }
 }
 

@@ -1,8 +1,5 @@
-use std::str::FromStr;
-
 use coc_dan_common::def::{stage::IStage, avatar::{IAvatar, service::ICreateAvatar}};
 use serde_json::json;
-use uuid::Uuid;
 use http::StatusCode;
 
 use crate::service::{tests::new_test_server, user::tests::test_create_user_and_login};
@@ -26,7 +23,7 @@ async fn test_avatar_basic() {
     let res = server.post("/api/avatar/new").json(&ICreateAvatar {
         name : "avatar 0".to_string(),
         detail : None,
-        stage_id : Some(Uuid::from_str(&stage_0.uuid).unwrap().to_string())
+        stage_id : Some(stage_0.id)
     }).add_cookie(session.clone()).await;
     assert_eq!(res.status_code(), StatusCode::OK);
     let avatar_0 : IAvatar = res.json();
@@ -35,7 +32,7 @@ async fn test_avatar_basic() {
     let res = server.post("/api/avatar/new").json(&ICreateAvatar {
         name : "avatar 1".to_string(),
         detail : None,
-        stage_id : Some(Uuid::from_str(&stage_0.uuid).unwrap().to_string())
+        stage_id : Some(stage_0.id)
     }).add_cookie(session.clone()).await;
     let avatar_1 : IAvatar = res.json();
     
@@ -59,7 +56,7 @@ async fn test_avatar_basic() {
     assert!(avatars_1[0] == avatar_1);
 
     // leave stage then all avatar will be removed
-    let res = server.post(format!("/api/stage/{}/leave", stage_0.uuid).as_str()).add_cookie(session.clone()).await;
+    let res = server.post(format!("/api/stage/{}/leave", stage_0.id).as_str()).add_cookie(session.clone()).await;
     assert_eq!(res.status_code(), StatusCode::OK);
 
     let res = server.get("/api/avatar/list_owned").add_cookie(session.clone()).await;

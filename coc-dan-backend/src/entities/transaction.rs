@@ -9,7 +9,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub tx_id: i32,
-    pub stage_uuid: String,
+    pub stage_id: i32,
     pub user_id: i32,
     pub time: String,
     pub tx: String,
@@ -20,8 +20,8 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(
         belongs_to = "super::stage::Entity",
-        from = "Column::StageUuid",
-        to = "super::stage::Column::Uuid",
+        from = "Column::StageId",
+        to = "super::stage::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
