@@ -1,10 +1,12 @@
 use coc_dan_common::def::{stage::IStage, avatar::{IAvatar, service::ICreateAvatar}};
 use serde_json::json;
 use http::StatusCode;
+use tracing_test::traced_test;
 
 use crate::service::{tests::new_test_server, user::tests::test_create_user_and_login};
 
 #[tokio::test]
+#[traced_test]
 async fn test_avatar_basic() {
     let (server, _db) = new_test_server().await;
     let (u, cookie) = test_create_user_and_login("user_name", &server).await;

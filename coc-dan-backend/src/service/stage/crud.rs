@@ -6,6 +6,7 @@ use axum::{Json, extract};
 use coc_dan_common::def::GameMap;
 use coc_dan_common::def::transaction::Tx;
 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveModelTrait, DbErr, ActiveValue, DatabaseConnection};
+use tokio::sync::RwLock;
 use tracing::debug;
 use sea_orm::TransactionTrait;
 use coc_dan_common::def::user::IUser;
@@ -14,8 +15,7 @@ use coc_dan_common::def::stage::service::ICreateStage;
 use crate::AppState;
 use crate::err::Left;
 use crate::entities::{prelude::*, *};
-use crate::service::avatar::crud::destroy_avatar_inner;
-use crate::service::transaction::realtime_tx::{RealtimeState, get_realtime_state};
+use crate::service::transaction::realtime_tx::{RealtimeState, lock_stage_state, perform_tx, get_realtime_state_write_lock};
 
 use super::IStage;
 
@@ -58,12 +58,13 @@ pub async fn create (
         })
     }).await?;
 
-    let mut write_lock = get_realtime_state().await.write().await;
-    write_lock.insert(res_stage.id, RealtimeState {
+    let mut write_lock = get_realtime_state_write_lock().await;
+    write_lock.insert(res_stage.id, RwLock::new(RealtimeState {
         last_tx : res_tx.into(),
         avatars : HashMap::new(),
         game_map
-    });
+    }));
+
     drop(write_lock);
 
     Ok(Json(res_stage.into()))
@@ -207,6 +208,9 @@ pub async fn leave_stage (
         Some(v) => {
             db.transaction::<_, (), DbErr>(|ctx| {
                 Box::pin(async move {
+                    let lock = lock_stage_state(id, ctx).await?;
+                    let mut state = lock.get(&id).unwrap().write().await;
+
                     let s = Stage::find_by_id(id).one(ctx).await?.unwrap();
 
                     if s.owner == u.id {
@@ -224,7 +228,6 @@ pub async fn leave_stage (
 
                         Stage::delete_by_id(s.id).exec(ctx).await?;
 
-                        get_realtime_state().await.write().await.remove(&id);
                     } else {
                         LinkStageUser::delete_many()
                             .filter(link_stage_user::Column::StageId.eq(v.stage_id.clone()))
@@ -236,10 +239,17 @@ pub async fn leave_stage (
                             .filter(avatar::Column::Owner.eq(v.user_id))
                             .all(ctx).await?;
                         
+                        let mut delete_db = Avatar::delete_many();
                         for a in avatars {
-                            destroy_avatar_inner(&a.into(), ctx).await?;
+                            delete_db = delete_db.filter(avatar::Column::Id.eq(a.id));
+                            perform_tx (
+                                (&mut state, v.stage_id), 
+                                ctx, 
+                                u.id, 
+                                a.id, 
+                                &Tx::UpdateAvatar { before: Some(a.into()), after: None }
+                            ).await?;
                         }
-
                     }
 
                     Ok(())

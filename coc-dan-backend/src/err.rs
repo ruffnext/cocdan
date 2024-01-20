@@ -18,6 +18,12 @@ impl From<DbErr> for Left {
     }
 }
 
+impl From<Left> for DbErr {
+    fn from(value: Left) -> Self {
+        Self::Custom(value.message)
+    }
+}
+
 impl From<TransactionError<DbErr>> for Left {
     fn from(value: TransactionError<DbErr>) -> Self {
         Self { 

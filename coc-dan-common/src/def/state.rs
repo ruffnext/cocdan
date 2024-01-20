@@ -62,6 +62,7 @@ impl State {
         }
     }
 
+    /// retrun bool indicates whether state changes
     pub fn apply_tx(&mut self, tx : &ITransaction) -> bool {
         if self.last_tx.tx_id + 1 != tx.tx_id {
             panic!("Apply: Transaction Idx mut be state's idx + 1")

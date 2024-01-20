@@ -8,7 +8,7 @@ use sea_orm::{EntityTrait, QueryFilter, ColumnTrait, ActiveValue, ActiveModelTra
 use crate::AppState;
 use crate::entities::{prelude::*, *};
 use crate::err::Left;
-use crate::service::transaction::crud::add_tx;
+use crate::service::transaction::realtime_tx::{lock_stage_state, perform_tx};
 use coc_dan_common::def::avatar::IAvatar;
 
 use super::UserControlledAvatar;
@@ -97,8 +97,10 @@ pub async fn create (
             }.insert(ctx).await?.into();
             match params.stage_id {
                 Some(v) => {
+                    let lock = lock_stage_state(v, ctx).await?;
+                    let mut state = lock.get(&v).unwrap().write().await;
                     let tx : Tx = Tx::UpdateAvatar { before: None, after: Some(res.clone()) };
-                    add_tx(v, u.id, res.id , &tx, ctx).await?;
+                    perform_tx((&mut state, v), ctx, u.id, res.id, &tx).await?;
                 },
                 _ => {}
             };
@@ -116,26 +118,23 @@ pub async fn destroy (
 ) -> Result<http::StatusCode, Left> {
     state.db.transaction::<_, (), DbErr>(|ctx| {
         Box::pin(async move {
-            destroy_avatar_inner(&user_avatar.avatar.into(), ctx).await?;
+            match user_avatar.avatar.stage_id {
+                Some(v) => {
+                    let lock = lock_stage_state(v, ctx).await?;
+                    let mut state = lock.get(&v).unwrap().write().await;
+                    let avatar_id = user_avatar.avatar.id;
+                    Avatar::delete_by_id(avatar_id).exec(ctx).await?;
+                    let tx = Tx::UpdateAvatar { before: Some(user_avatar.avatar.into()), after: None };
+                    perform_tx((&mut state, v), ctx, user_avatar.user.id, avatar_id, &tx).await?;
+                },
+                None => {
+                    Avatar::delete_by_id(user_avatar.avatar.id).exec(ctx).await?;
+                }
+            };
             Ok(())
         })
     }).await?;
     Ok(http::StatusCode::OK)
-}
-
-pub async fn destroy_avatar_inner <T : ConnectionTrait> (
-    a : &IAvatar,
-    ctx : &T
-) -> Result<Option<Tx>, DbErr> {
-    Avatar::delete_by_id(a.id).exec(ctx).await?;
-    Ok(match a.stage_id {
-        Some(v) => {
-            let tx = Tx::UpdateAvatar { before: Some(a.clone()), after: None };
-            add_tx(v, a.owner, a.id, &tx, ctx).await?;
-            Some(tx)
-        },
-        None => None
-    })
 }
 
 pub async fn update_avatar (
@@ -191,40 +190,47 @@ pub async fn update_avatar_inner<T : ConnectionTrait> (
 
     let model : avatar::Model = avatar_after.clone().into();
     let active_model : avatar::ActiveModel = model.into_active_model();
-
-    Avatar::update(active_model).exec(ctx).await?;
-
+    let avatar_id = avatar_after.id;
     let res_tx = match (avatar_before.stage_id, avatar_after.stage_id) {
         (None, None) => {
+            Avatar::update(active_model).exec(ctx).await?;
             ITransaction {
                 tx_id : 0,
                 stage_id : 0,
                 user_id : user.id,
-                avatar_id : avatar_after.id,
+                avatar_id ,
                 time : chrono::Local::now().to_rfc3339(),
                 tx : Tx::UpdateAvatar { before: Some(avatar_before), after: Some(avatar_after) }
             }
         },
-        (None, Some(v)) => {
-            let tx = Tx::UpdateAvatar { before: None, after: Some(avatar_after) };
-            add_tx(v, user.id, avatar_before.id, &tx, ctx).await?
-        },
-        (Some(v), None) => {
-            let tx = Tx::UpdateAvatar { before: Some(avatar_after), after: None };
-            add_tx(v, user.id, avatar_before.id, &tx, ctx).await?
-        },
-        (Some(before), Some(after)) => {
-            let avatar_id = avatar_after.id;
-            if before == after {
-                let tx = Tx::UpdateAvatar { before: Some(avatar_before.into()), after: Some(avatar_after) };
-                add_tx(after, user.id, avatar_id, &tx, ctx).await?
+        (Some(a), Some(b)) => {
+            if a != b {
+                return Err(DbErr::Custom("Not supported yet.".to_string()))
             } else {
-                let tx_before = Tx::UpdateAvatar { before: Some(avatar_before.into()), after: None };
-                let tx_after  = Tx::UpdateAvatar { before: None, after: Some(avatar_after) };
-                add_tx(before, user.id, avatar_id, &tx_before, ctx).await?;
-                add_tx(after, user.id, avatar_id, &tx_after, ctx).await?
+                let lock = lock_stage_state(a, ctx).await?;
+                let mut state = lock.get(&a).unwrap().write().await;
+                Avatar::update(active_model).exec(ctx).await?;
+                let tx = Tx::UpdateAvatar { before: Some(avatar_before), after: Some(avatar_after) };
+                perform_tx((&mut state, a), ctx, user.id, avatar_id, &tx).await?;
+                state.last_tx.clone()
             }
         },
+        (Some(before), None) => {
+            let lock = lock_stage_state(before, ctx).await?;
+            Avatar::update(active_model).exec(ctx).await?;
+            let mut state = lock.get(&before).unwrap().write().await;
+            let tx = Tx::UpdateAvatar { before: Some(avatar_before), after: None };
+            perform_tx((&mut state, before), ctx, user.id, avatar_id, &tx).await?;
+            state.last_tx.to_owned()
+        },
+        (None, Some(after)) => {
+            let lock = lock_stage_state(after, ctx).await?;
+            Avatar::update(active_model).exec(ctx).await?;
+            let mut state = lock.get(&after).unwrap().write().await;
+            let tx = Tx::UpdateAvatar { before: None, after: Some(avatar_after) };
+            perform_tx((&mut state, after), ctx, user.id, avatar_id, &tx).await?;
+            state.last_tx.to_owned()
+        }
     };
 
     Ok(res_tx)
