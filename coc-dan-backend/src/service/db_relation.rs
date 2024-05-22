@@ -1,5 +1,5 @@
 use crate::entities::*;
-use sea_orm::{Related, RelationDef, EntityTrait};
+use sea_orm::{EntityTrait, Related, RelationDef};
 
 impl Related<stage::Entity> for link_stage_user::Entity {
     fn to() -> RelationDef {

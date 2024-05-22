@@ -3,7 +3,7 @@ pub mod service;
 
 use ts_rs::TS;
 
-use super::skills::{Occupation, OCCUPATIONS, SkillAssigned};
+use super::skills::{Occupation, SkillAssigned, OCCUPATIONS};
 
 use super::weapon::Weapon;
 
@@ -12,7 +12,7 @@ use super::weapon::Weapon;
 pub enum Gender {
     Other,
     Male,
-    Female
+    Female,
 }
 
 impl Default for Gender {
@@ -22,79 +22,99 @@ impl Default for Gender {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Default, Debug, Clone)]
-#[ts(export, rename = "IDescriptor", export_to = "bindings/avatar/IDescriptor.ts")]
+#[ts(
+    export,
+    rename = "IDescriptor",
+    export_to = "bindings/avatar/IDescriptor.ts"
+)]
 pub struct Descriptor {
-    age : u32,
-    gender : Gender,
-    homeland : String,
+    age: u32,
+    gender: Gender,
+    homeland: String,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
-#[ts(export, rename = "IMentalStatus", export_to = "bindings/avatar/IMentalStatus.ts")]
+#[ts(
+    export,
+    rename = "IMentalStatus",
+    export_to = "bindings/avatar/IMentalStatus.ts"
+)]
 pub enum MentalStatus {
     Lucid,
     Fainting,
     TemporaryInsanity,
     IndefiniteInsanity,
-    PermanentInsanity
+    PermanentInsanity,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
-#[ts(export, rename = "IHealthStatus", export_to = "bindings/avatar/IHealthStatus.ts")]
+#[ts(
+    export,
+    rename = "IHealthStatus",
+    export_to = "bindings/avatar/IHealthStatus.ts"
+)]
 pub enum HealthStatus {
     Healthy,
     Ill,
     Injured,
     Critical,
-    Dead
+    Dead,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IStatus", export_to = "bindings/avatar/IStatus.ts")]
 pub struct Status {
-    pub hp  : u32,
-    pub mp  : u32,
-    pub san : u32,
-    pub hp_loss : u32,
-    pub mp_loss : u32,
-    pub san_loss : u32,
-    pub mental_status : MentalStatus,
-    pub health_status : HealthStatus,
+    pub hp: u32,
+    pub mp: u32,
+    pub san: u32,
+    pub hp_loss: u32,
+    pub mp_loss: u32,
+    pub san_loss: u32,
+    pub mental_status: MentalStatus,
+    pub health_status: HealthStatus,
 }
 
 impl Default for Status {
     fn default() -> Self {
-        Self { 
-            hp: 0, 
-            mp: 0, 
-            san: 0, 
-            hp_loss : 0,
-            mp_loss : 0,
-            san_loss : 0,
-            mental_status: MentalStatus::Lucid, 
-            health_status: HealthStatus::Healthy
+        Self {
+            hp: 0,
+            mp: 0,
+            san: 0,
+            hp_loss: 0,
+            mp_loss: 0,
+            san_loss: 0,
+            mental_status: MentalStatus::Lucid,
+            health_status: HealthStatus::Healthy,
         }
     }
 }
 
 #[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Default, Debug, Clone)]
-#[ts(export, rename = "ICharacteristics", export_to = "bindings/avatar/ICharacteristics.ts")]
+#[ts(
+    export,
+    rename = "ICharacteristics",
+    export_to = "bindings/avatar/ICharacteristics.ts"
+)]
 pub struct Characteristics {
-    pub str : u32,
-    pub dex : u32,
-    pub pow : u32,
-    pub con : u32,
-    pub app : u32,
-    pub edu : u32,
-    pub siz : u32,
-    pub int : u32,
-    pub mov : u32,
-    pub luk : u32,
-    pub mov_adj : Option<f32>
+    pub str: u32,
+    pub dex: u32,
+    pub pow: u32,
+    pub con: u32,
+    pub app: u32,
+    pub edu: u32,
+    pub siz: u32,
+    pub int: u32,
+    pub mov: u32,
+    pub luk: u32,
+    pub mov_adj: Option<f32>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
-#[ts(export, rename = "ICharacteristicEnum", export_to = "bindings/avatar/ICharacteristicEnum.ts")]
+#[ts(
+    export,
+    rename = "ICharacteristicEnum",
+    export_to = "bindings/avatar/ICharacteristicEnum.ts"
+)]
 #[serde(rename_all = "lowercase")]
 pub enum Characteristic {
     Str,
@@ -106,53 +126,61 @@ pub enum Characteristic {
     Siz,
     Int,
     Mov,
-    Luk
+    Luk,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
-#[ts(export, rename = "ICustomEquipment", export_to = "bindings/ICustomEquipment.ts")]
+#[ts(
+    export,
+    rename = "ICustomEquipment",
+    export_to = "bindings/ICustomEquipment.ts"
+)]
 pub struct CustomEquipment {
-    pub description : String
+    pub description: String,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
-#[ts(export, rename = "IEquipmentItem", export_to = "bindings/IEquipmentItem.ts")]
+#[ts(
+    export,
+    rename = "IEquipmentItem",
+    export_to = "bindings/IEquipmentItem.ts"
+)]
 pub enum EquipmentItem {
     Weapon(Weapon),
-    Custom(CustomEquipment)
+    Custom(CustomEquipment),
 }
 
 #[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IEquipment", export_to = "bindings/IEquipment.ts")]
 pub struct Equipment {
-    pub name : String,
-    pub item : EquipmentItem
+    pub name: String,
+    pub item: EquipmentItem,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IDetail", export_to = "bindings/avatar/IDetail.ts")]
 pub struct Detail {
-    pub status : Status,
-    pub characteristics : Characteristics,
-    pub descriptor : Descriptor,
-    pub skills : HashMap<String, SkillAssigned>,
-    pub occupation : Occupation,
-    pub equipments : Vec<Equipment>
+    pub status: Status,
+    pub characteristics: Characteristics,
+    pub descriptor: Descriptor,
+    pub skills: HashMap<String, SkillAssigned>,
+    pub occupation: Occupation,
+    pub equipments: Vec<Equipment>,
 }
 
 impl Default for Detail {
     fn default() -> Self {
         let occupation: Occupation = match OCCUPATIONS.get("Accountant") {
             Some(v) => v.clone(),
-            None => Occupation::default()
+            None => Occupation::default(),
         };
-        Self { 
-            status: Default::default(), 
-            characteristics: Default::default(), 
-            descriptor: Default::default(), 
-            skills: Default::default(), 
+        Self {
+            status: Default::default(),
+            characteristics: Default::default(),
+            descriptor: Default::default(),
+            skills: Default::default(),
             occupation,
-            equipments: Default::default()
+            equipments: Default::default(),
         }
     }
 }
@@ -165,5 +193,5 @@ pub struct IAvatar {
     pub owner: i32,
     pub name: String,
     pub detail: Detail,
-    pub header: Option<String>
+    pub header: Option<String>,
 }

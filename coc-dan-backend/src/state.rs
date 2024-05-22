@@ -1,14 +1,16 @@
-use sea_orm::{DatabaseConnection, Database};
+use sea_orm::{Database, DatabaseConnection};
 
 pub async fn get_db() -> DatabaseConnection {
-    Database::connect(std::env::var("DATABASE_URL").unwrap()).await.unwrap()
+    Database::connect(std::env::var("DATABASE_URL").unwrap())
+        .await
+        .unwrap()
 }
 
-#[cfg(test)] 
+#[cfg(test)]
 pub mod tests {
 
-    use sea_orm::{Database, DatabaseConnection};
     use migration::*;
+    use sea_orm::{Database, DatabaseConnection};
     use sea_orm_migration::prelude::*;
 
     pub async fn new_mock_db() -> DatabaseConnection {

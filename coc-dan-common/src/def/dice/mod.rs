@@ -1,6 +1,6 @@
+pub mod def;
 #[allow(unused)]
 mod parser;
-pub mod def;
 
 #[cfg(test)]
 mod tests {

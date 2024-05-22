@@ -4,8 +4,10 @@
         "chrono",
         "codegen",
         "dotenv",
+        "getrandom",
         "Iden",
-        "lalrpop"
+        "lalrpop",
+        "serde"
     ],
     "vim.smartRelativeLine": true,
     "editor.lineNumbers": "relative",

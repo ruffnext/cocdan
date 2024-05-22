@@ -1,8 +1,12 @@
 use ts_rs::TS;
 
 #[derive(serde::Deserialize, serde::Serialize, TS)]
-#[ts(export, rename = "ICreateStage", export_to = "bindings/stage/service/ICreateStage.ts")]
+#[ts(
+    export,
+    rename = "ICreateStage",
+    export_to = "bindings/stage/service/ICreateStage.ts"
+)]
 pub struct ICreateStage {
-    pub title : String,
-    pub description : String
+    pub title: String,
+    pub description: String,
 }
