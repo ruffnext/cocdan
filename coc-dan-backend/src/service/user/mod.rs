@@ -3,7 +3,7 @@ mod logout;
 mod register;
 
 use crate::{
-    entities::{prelude::*, user},
+    database::entities::{prelude::*, user},
     err::Left,
     AppState,
 };
@@ -20,7 +20,7 @@ use http::request::Parts;
 use sea_orm::{DatabaseConnection, EntityTrait};
 
 #[async_trait]
-impl<S> FromRequestParts<S> for crate::entities::user::Model
+impl<S> FromRequestParts<S> for crate::database::entities::user::Model
 where
     S: Send + Sync,
     AppState: FromRef<S>,

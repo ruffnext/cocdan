@@ -13,7 +13,7 @@ use http::request::Parts;
 use sea_orm::EntityTrait;
 
 use crate::{
-    entities::{avatar, user},
+    database::entities::{avatar, user},
     err::Left,
     AppState,
 };

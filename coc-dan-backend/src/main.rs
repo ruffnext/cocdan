@@ -1,5 +1,5 @@
-pub mod entities;
 pub mod err;
+pub mod database;
 mod service;
 pub mod state;
 

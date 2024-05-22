@@ -8,7 +8,7 @@ use sea_orm::{
 use tokio::sync::{OnceCell, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use crate::{
-    entities::{avatar, stage, transaction},
+    database::entities::{avatar, stage, transaction},
     err::Left,
 };
 

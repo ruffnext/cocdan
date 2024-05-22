@@ -1,5 +1,5 @@
 use crate::{
-    entities::*,
+    database::entities::*,
     err::Left,
     service::{avatar::UserControlledAvatar, stage::StageUser},
     AppState,

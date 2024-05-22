@@ -4,7 +4,7 @@ pub mod crud;
 pub mod realtime_tx;
 use coc_dan_common::def::transaction::ITransaction;
 
-use crate::entities::transaction::Model;
+use crate::database::entities::transaction::Model;
 
 impl From<Model> for ITransaction {
     fn from(value: Model) -> Self {

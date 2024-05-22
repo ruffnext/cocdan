@@ -11,7 +11,7 @@ use http::request::Parts;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 
 use crate::{
-    entities::{link_stage_user, stage, user},
+    database::entities::{link_stage_user, stage, user},
     err::Left,
     AppState,
 };

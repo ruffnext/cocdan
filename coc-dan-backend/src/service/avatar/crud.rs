@@ -1,4 +1,4 @@
-use crate::entities::{prelude::*, *};
+use crate::database::entities::{prelude::*, *};
 use crate::err::Left;
 use crate::service::transaction::realtime_tx::{lock_stage_state, perform_tx};
 use crate::AppState;
@@ -22,7 +22,7 @@ pub async fn list_by_user(
 ) -> Result<Json<Vec<IAvatar>>, Left> {
     let db = state.db;
     let raw = Avatar::find()
-        .filter(crate::entities::avatar::Column::Owner.eq(u.id))
+        .filter(crate::database::entities::avatar::Column::Owner.eq(u.id))
         .all(&db)
         .await?;
     if raw.len() > 0 {
@@ -64,7 +64,7 @@ pub async fn get_by_id_req(
 }
 
 pub async fn create(
-    u: crate::entities::user::Model,
+    u: crate::database::entities::user::Model,
     State(state): State<AppState>,
     extract::Json(params): extract::Json<ICreateAvatar>,
 ) -> Result<Json<IAvatar>, Left> {

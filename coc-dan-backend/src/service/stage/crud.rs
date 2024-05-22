@@ -14,7 +14,7 @@ use sea_orm::{
 use tokio::sync::RwLock;
 use tracing::debug;
 
-use crate::entities::{prelude::*, *};
+use crate::database::entities::{prelude::*, *};
 use crate::err::Left;
 use crate::service::transaction::realtime_tx::{
     get_realtime_state_write_lock, lock_stage_state, perform_tx, RealtimeState,
@@ -24,7 +24,7 @@ use crate::AppState;
 use super::IStage;
 
 pub async fn create(
-    u: crate::entities::user::Model,
+    u: crate::database::entities::user::Model,
     State(state): State<AppState>,
     extract::Json(params): extract::Json<ICreateStage>,
 ) -> Result<Json<IStage>, Left> {
@@ -34,7 +34,7 @@ pub async fn create(
         .transaction::<_, (stage::Model, transaction::Model), DbErr>(|ctx| {
             let game_map = game_map.clone();
             Box::pin(async move {
-                let res = crate::entities::stage::ActiveModel {
+                let res = crate::database::entities::stage::ActiveModel {
                     owner: ActiveValue::Set(u.id),
                     title: ActiveValue::Set(params.title.clone()),
                     description: ActiveValue::Set(params.description.clone()),

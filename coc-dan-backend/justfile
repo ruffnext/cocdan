@@ -8,4 +8,4 @@ ts:
     
 migrate:
     sea-orm-cli migrate
-    sea-orm-cli generate entity --with-serde serialize -o ./src/entities
+    sea-orm-cli generate entity --with-serde serialize -o ./src/database/entities

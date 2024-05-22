@@ -7,7 +7,7 @@ use coc_dan_common::def::user::IUser;
 use sea_orm::{ActiveModelTrait, ActiveValue, ColumnTrait, EntityTrait, QueryFilter};
 
 use crate::{
-    entities::{prelude::*, *},
+    database::entities::{prelude::*, *},
     err::Left,
     AppState,
 };

@@ -4,3 +4,4 @@
 *.db
 .env
 /src/def/dice/parser.rs
+/src/database/entities

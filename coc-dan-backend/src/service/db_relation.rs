@@ -1,4 +1,4 @@
-use crate::entities::*;
+use crate::database::entities::*;
 use sea_orm::{EntityTrait, Related, RelationDef};
 
 impl Related<stage::Entity> for link_stage_user::Entity {

@@ -3,7 +3,7 @@ use axum_extra::extract::{cookie::Cookie, CookieJar};
 use sea_orm::EntityTrait;
 
 use crate::{
-    entities::{prelude::*, *},
+    database::entities::{prelude::*, *},
     AppState,
 };
 
