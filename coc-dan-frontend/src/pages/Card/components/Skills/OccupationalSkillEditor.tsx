@@ -77,6 +77,9 @@ export default () => {
     const res: Array<ISkillAssigned> = []
     for (const key in avatar.detail.skills) {
       const item = avatar.detail.skills[key]
+      if (item == undefined) {
+        continue
+      }
       if (item.assign_type & ISkillAssignType.Occupational) {
         res.push(item)
       }

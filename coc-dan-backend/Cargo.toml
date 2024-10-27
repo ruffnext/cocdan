@@ -9,30 +9,30 @@ edition = "2021"
 sea-orm = { version = "*", features = ["sqlx-sqlite", "runtime-tokio-native-tls", "macros" ]}
 tokio = { version = "*", features = ["full"] }
 futures = "*"
-tracing = "0.1.40"
-tracing-subscriber = "0.3.18"
-serde = "1.0.193"
+tracing = "0.1"
+tracing-subscriber = "*"
+serde = "1"
 serde_json = "*"
-axum = { version = "0.7.2", features = ["json"] }
-axum-extra = { version = "0.9.0", features = ["cookie"] }
+axum = { version = "*", features = ["json"] }
+axum-extra = { version = "*", features = ["cookie"] }
 lazy_static = "1.4.0"
-http = "1.0.0"
-uuid = { version = "1.6.1", features = ["v4"] }
+http = "1.1.0"
+uuid = { version = "1.11.0", features = ["v4"] }
 dotenv = "0.15.0"
 getrandom = { version = "0.2", features = ["js"] }
-rand = "0.8.5"
-wasm-bindgen = { version = "0.2.84" }
-serde-wasm-bindgen = { version = "0.6.0" }
-js-sys = { version = "0.3.64" }
+rand = "0.8"
+wasm-bindgen = { version = "0.2" }
+serde-wasm-bindgen = { version = "0.6" }
+js-sys = { version = "0.3" }
 coc-dan-common = { path = "../coc-dan-common" }
-chrono = { version = "0.4.31", features = ["std"] }
+chrono = { version = "*", features = ["std"] }
 
 [dev-dependencies]
 migration = { path = "./migration" }
-axum-test = "14.0.0"
+axum-test = "*"
 tracing-test = "*"
 [dev-dependencies.sea-orm-migration]
-version = "0.12.0"
+version = "*"
 features = [
   # Enable at least one `ASYNC_RUNTIME` and `DATABASE_DRIVER` feature if you want to run migration via CLI.
   # View the list of supported features at https://www.sea-ql.org/SeaORM/docs/install-and-config/database-and-async-runtime.

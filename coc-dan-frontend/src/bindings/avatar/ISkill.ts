@@ -2,4 +2,4 @@
 import type { IEraEnum } from "../IEraEnum";
 import type { ISkillCategory } from "./ISkillCategory";
 
-export interface ISkill { name: string, initial: number, era: IEraEnum, category: ISkillCategory, }
+export type ISkill = { name: string, initial: number, era: IEraEnum, category: ISkillCategory, };

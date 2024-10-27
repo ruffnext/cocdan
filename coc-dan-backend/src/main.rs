@@ -1,5 +1,5 @@
-pub mod err;
 pub mod database;
+pub mod err;
 mod service;
 pub mod state;
 

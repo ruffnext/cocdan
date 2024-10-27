@@ -45,6 +45,7 @@ pub enum MentalStatus {
     TemporaryInsanity,
     IndefiniteInsanity,
     PermanentInsanity,
+    IntermittentInsanity,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]

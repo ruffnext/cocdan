@@ -10,7 +10,7 @@ pub struct Area {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Clone, Debug)]
-#[ts(export, rename = "IGameMap")]
+#[ts(export, rename = "IGameMap", export_to = "bindings/IGameMap.ts")]
 pub struct GameMap {
     uuid_to_area: HashMap<String, Area>,
 }

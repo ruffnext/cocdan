@@ -3,7 +3,7 @@ pub mod service;
 use ts_rs::TS;
 
 #[derive(serde::Deserialize, serde::Serialize, TS, PartialEq)]
-#[ts(export)]
+#[ts(export, export_to = "bindings/IUser.ts")]
 pub struct IUser {
     pub id: i32,
     pub name: String,

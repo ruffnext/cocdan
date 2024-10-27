@@ -17,6 +17,9 @@ export function resetSkill(raw: IAvatar, setAvatar: SetStoreFunction<IAvatar>) {
 
   for (const key in original) {
     const item = original[key]
+    if (item == undefined) {
+      continue
+    }
     item.occupation_skill_point = 0
     setSkill(item)
     if (item.assign_type == (ISkillAssignType.Occupational | ISkillAssignType.Optional)) {

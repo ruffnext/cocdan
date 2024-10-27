@@ -2,4 +2,4 @@
 import type { IEraEnum } from "../IEraEnum";
 import type { ISkillCategory } from "./ISkillCategory";
 
-export interface ISkillAssigned { name: string, initial: number, era: IEraEnum, occupation_skill_point: number, interest_skill_point: number, category: ISkillCategory, assign_type: number, }
+export type ISkillAssigned = { name: string, initial: number, era: IEraEnum, occupation_skill_point: number, interest_skill_point: number, category: ISkillCategory, assign_type: number, };

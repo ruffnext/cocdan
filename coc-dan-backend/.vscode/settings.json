@@ -7,7 +7,9 @@
         "getrandom",
         "Iden",
         "lalrpop",
-        "serde"
+        "rustls",
+        "serde",
+        "sqlx"
     ],
     "vim.smartRelativeLine": true,
     "editor.lineNumbers": "relative",

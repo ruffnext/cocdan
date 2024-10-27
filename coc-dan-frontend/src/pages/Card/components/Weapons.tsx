@@ -40,6 +40,7 @@ export default () => {
   //   return val;
   // }
 
+  // @ts-ignore
   const insertWeapon = () => {
     const weapon : IWeapon = {
       name : "",

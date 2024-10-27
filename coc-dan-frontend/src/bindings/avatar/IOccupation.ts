@@ -3,4 +3,4 @@ import type { ICharacteristicEnum } from "./ICharacteristicEnum";
 import type { IEraEnum } from "../IEraEnum";
 import type { IOccupationalSkill } from "./IOccupationalSkill";
 
-export interface IOccupation { name: string, credit_rating: [number, number], era: IEraEnum, characteristics: Array<ICharacteristicEnum>, occupational_skills: Array<IOccupationalSkill>, }
+export type IOccupation = { name: string, credit_rating: [number, number], era: IEraEnum, characteristics: Array<ICharacteristicEnum>, occupational_skills: Array<IOccupationalSkill>, };
