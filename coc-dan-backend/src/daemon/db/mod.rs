@@ -101,6 +101,7 @@ where
         Ok(())
     }
 
+    #[tracing::instrument(skip(db))]
     async fn db_del(id: Id, db: &DbConn) -> Result<(), Left> {
         let _: Option<SurrealRecord> = db
             .delete((Self::db_tab_name(), RecordIdKey::from_inner(id)))

@@ -8,8 +8,11 @@ use http::{request::Parts, StatusCode};
 use serde_json::json;
 
 use crate::{
-    daemon::entities::Session,
-    mls,
+    daemon::{
+        entities::{Session, SessionType, UserActiveStatus},
+        DbEntity,
+    },
+    left_span, mls,
     typedef::err::{ErrCode, Left},
     AppState,
 };
@@ -56,6 +59,26 @@ pub async fn query_session_by_raw_id(
         .map_err(mls!(ErrCode::DbError))?;
 
     if let Some(v) = session.into_iter().next() {
+        match &v.session_type {
+            SessionType::User(u) => match u.active_status {
+                UserActiveStatus::Active => {
+                    if v.is_expired() {
+                        Session::db_del(v.db_id(), &state.db.manager).await?;
+                        return Err(left_span!(
+                            ErrCode::PermissionDenied("Session is expired".into()),
+                            "224c7d40"
+                        ));
+                    }
+                }
+                UserActiveStatus::Banned => {
+                    Session::db_del(v.db_id(), &state.db.manager).await?;
+                    return Err(left_span!(
+                        ErrCode::PermissionDenied("User is banned".into()),
+                        "6d0ce117"
+                    ));
+                }
+            },
+        }
         Ok(Some(v))
     } else {
         Ok(None)

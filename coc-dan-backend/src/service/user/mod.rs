@@ -1,90 +1,19 @@
 mod login;
 mod logout;
+mod me;
 mod register;
 mod session;
 
-use axum::{routing::post, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 
 use crate::AppState;
 
-// #[async_trait]
-// impl<S> FromRequestParts<S> for crate::database::entities::user::Model
-// where
-//     S: Send + Sync,
-//     AppState: FromRef<S>,
-// {
-//     type Rejection = Response;
-
-//     async fn from_request_parts(req: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-//         let cookies = CookieJar::from_request_parts(req, state).await.unwrap();
-//         let state = AppState::from_ref(state);
-//         get_session_user(&cookies, State(state))
-//             .await
-//             .map_err(|x| x.into_response())
-//     }
-// }
-
-// impl From<user::Model> for IUser {
-//     fn from(value: user::Model) -> Self {
-//         Self {
-//             id: value.id,
-//             name: value.name.clone(),
-//             nick_name: value.nick_name.clone(),
-//             header: value
-//                 .header
-//                 .unwrap_or("/img/default_header.png".to_string()),
-//         }
-//     }
-// }
-
-// pub async fn get_session_user(
-//     cookies: &CookieJar,
-//     State(state): State<AppState>,
-// ) -> Result<user::Model, Left> {
-//     let session_str: Option<String> = cookies
-//         .get("SESSION")
-//         .and_then(|c| Some(c.value().to_string()));
-//     match session_str {
-//         Some(v) => {
-//             let db = &state.db;
-//             match Session::find_by_id(v).one(db).await? {
-//                 Some(v) => match User::find_by_id(v.user_id).one(db).await? {
-//                     Some(u) => return Ok(u),
-//                     None => {}
-//                 },
-//                 None => {}
-//             }
-//         }
-//         None => {}
-//     };
-//     Err(Left {
-//         status: http::StatusCode::UNAUTHORIZED,
-//         message: "Please login first".to_string(),
-//         uuid: "c6c3cb95",
-//     })
-// }
-
-// pub async fn is_login(cookies: &CookieJar, db: &DatabaseConnection) -> bool {
-//     let session_str = match cookies
-//         .get("SESSION")
-//         .and_then(|c| Some(c.value().to_string()))
-//     {
-//         Some(v) => v,
-//         None => return false,
-//     };
-//     match Session::find_by_id(session_str).one(db).await {
-//         Ok(res) => res.is_some(),
-//         Err(_e) => false,
-//     }
-// }
-
-// async fn get_me(u: user::Model) -> Json<IUser> {
-//     Json(u.into())
-// }
-
 pub fn route() -> Router<AppState> {
     Router::new()
-        // .route("/me", get(get_me))
+        .route("/me", get(me::get_me))
         .route("/register", post(register::register))
         .route("/login", post(login::login))
         .route("/logout", post(logout::logout))
@@ -103,20 +32,24 @@ pub(crate) mod tests {
     };
 
     pub async fn test_create_user_and_login(
-        user_name: &str,
+        username: &str,
         server: &TestServer,
     ) -> (User, CookieJar) {
+        let password = "password";
         let u: User = server
             .post("/api/user/register")
             .json(&json!({
-                "name" : user_name.to_string()
+                "username" : username.to_string(),
+                "password" : password.to_string(),
+                "nickname" : "nickname".to_string()
             }))
             .await
             .json();
         let response = server
             .post("/api/user/login")
             .json(&json!({
-                "name" : u.username
+                "username" : u.username,
+                "password" : password
             }))
             .await;
         let cookie = CookieJar::new().add(response.cookie("SESSION"));

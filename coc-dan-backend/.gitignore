@@ -6,3 +6,4 @@
 /src/def/dice/parser.rs
 /src/database/entities
 bindings
+docker/SurrealDB/data

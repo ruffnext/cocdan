@@ -28,16 +28,14 @@ pub async fn register(
     Json(params): Json<ReqUserRegister>,
 ) -> Result<Json<User>, Left> {
     if let Some(_session) = get_session_user(&cookies, &state).await? {
-        return Err(left_span!(
-            http::StatusCode::BAD_REQUEST,
-            "Please logout and try again"
-        ));
+        return Err(left_span!(ErrCode::InvalidParameter(
+            "Please logout and try again".into()
+        )));
     }
 
     if let Some(_user) = User::find_by_username(&state.db, params.username.clone()).await? {
         return Err(left_span!(
-            http::StatusCode::BAD_REQUEST,
-            "User has been registered",
+            ErrCode::InvalidParameter("User already exists".into()),
             "0ee1f597"
         ));
     }
@@ -81,9 +79,8 @@ pub async fn register(
     if let Some(user) = response.into_iter().next() {
         Ok(Json(user))
     } else {
-        Err(left_span!(
-            http::StatusCode::INTERNAL_SERVER_ERROR,
-            "Failed to create user"
-        ))
+        Err(left_span!(ErrCode::InternalServerError(
+            "Failed to create user".into()
+        )))
     }
 }

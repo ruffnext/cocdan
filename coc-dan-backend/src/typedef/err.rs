@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use axum::{response::IntoResponse, Json};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -9,16 +11,6 @@ pub struct Left {
     pub message: String,
     pub code: Option<String>,
 }
-
-// impl From<DbErr> for Left {
-//     fn from(value: DbErr) -> Self {
-//         Self {
-//             status: http::StatusCode::INTERNAL_SERVER_ERROR,
-//             message: format!("Database Error : ({value})"),
-//             uuid: "a0bcfe69",
-//         }
-//     }
-// }
 
 mod http_status {
     use serde::Serializer;
@@ -39,22 +31,30 @@ impl IntoResponse for Left {
 
 #[derive(Debug, Serialize, Deserialize, thiserror::Error)]
 pub enum ErrCode {
-    #[error("Invalid Parameter")]
-    InvalidParameter,
+    #[error("Invalid Parameter {0}")]
+    InvalidParameter(Cow<'static, str>),
 
     #[error("Database Error")]
     DbError,
 
     #[error("Internal Server Error")]
-    InternalServerError(String),
+    InternalServerError(Cow<'static, str>),
+
+    #[error("Permission Denied {0}")]
+    PermissionDenied(Cow<'static, str>),
+
+    #[error("Unsupported Operation {0}")]
+    UnsupportedOperation(Cow<'static, str>),
 }
 
 impl ErrCode {
     pub fn to_http_code(&self) -> http::StatusCode {
         match self {
-            ErrCode::InvalidParameter => http::StatusCode::BAD_REQUEST,
+            ErrCode::InvalidParameter(_) => http::StatusCode::BAD_REQUEST,
             ErrCode::DbError => http::StatusCode::INTERNAL_SERVER_ERROR,
             ErrCode::InternalServerError(_) => http::StatusCode::INTERNAL_SERVER_ERROR,
+            ErrCode::PermissionDenied(_) => http::StatusCode::FORBIDDEN,
+            ErrCode::UnsupportedOperation(_) => http::StatusCode::BAD_REQUEST,
         }
     }
 }
@@ -86,19 +86,19 @@ macro_rules! mls {
 
 #[macro_export]
 macro_rules! left_span {
-    ( $status:expr, $message:expr ) => {{
-        tracing::error!("{} {}:{} {}", $status, file!(), line!(), $message);
+    ( $status:expr ) => {{
+        tracing::error!("{} / {}:{} / {}", $status, file!(), line!(), $status);
         crate::typedef::err::Left {
-            status: $status,
-            message: $message.to_string(),
+            status: $status.to_http_code(),
+            message: $status.to_string(),
             code: None,
         }
     }};
-    ( $status:expr, $message:expr, $code:expr ) => {{
-        tracing::error!("{} {}:{} {}", $status, file!(), line!(), $message);
+    ( $status:expr, $code:expr ) => {{
+        tracing::error!("{} / {}:{} / {}", $status, file!(), line!(), $status);
         crate::typedef::err::Left {
-            status: $status,
-            message: $message.to_string(),
+            status: $status.to_http_code(),
+            message: $status.to_string(),
             code: Some($code.to_string()),
         }
     }};

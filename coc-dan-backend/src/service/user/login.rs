@@ -24,8 +24,7 @@ pub async fn login(
 ) -> Result<impl IntoResponse, Left> {
     if let Some(_user) = get_session_user(&cookies, &state).await? {
         return Err(left_span!(
-            http::StatusCode::BAD_REQUEST,
-            "Please logout and try again",
+            ErrCode::UnsupportedOperation("Already logged in".into()),
             "a2f80a2f"
         ));
     }
@@ -43,10 +42,9 @@ pub async fn login(
     let user = if let Some(x) = users.first() {
         x
     } else {
-        return Err(left_span!(
-            http::StatusCode::BAD_REQUEST,
-            "User does not exists or password is incorrect"
-        ));
+        return Err(left_span!(ErrCode::InvalidParameter(
+            "User does not exists or password is incorrect".into()
+        )));
     };
 
     let session_id: usize = random();
@@ -80,10 +78,9 @@ pub async fn login(
 
     if let Some(_) = sessions.first() {
     } else {
-        return Err(left_span!(
-            http::StatusCode::INTERNAL_SERVER_ERROR,
-            "Failed to create session"
-        ));
+        return Err(left_span!(ErrCode::InternalServerError(
+            "Failed to create session".into()
+        )));
     };
 
     let session = query_session_by_raw_id(session_raw_id, &state).await?;
@@ -95,9 +92,8 @@ pub async fn login(
         new_session.set_max_age(None);
         Ok((cookies.add(new_session), Json(v)))
     } else {
-        Err(left_span!(
-            http::StatusCode::INTERNAL_SERVER_ERROR,
-            "Failed to create session"
-        ))
+        Err(left_span!(ErrCode::InternalServerError(
+            "Failed to create session".into()
+        )))
     }
 }
