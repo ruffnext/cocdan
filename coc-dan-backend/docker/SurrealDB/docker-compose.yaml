@@ -1,0 +1,17 @@
+services:
+  surrealdb:
+    command:
+      - start
+      - --user
+      - root
+      - --pass
+      - root
+      - surrealkv://data
+    image: surrealdb/surrealdb:v2.0.4
+    environment:
+      - SURREAL_EXPERIMENTAL_GRAPHQL=true
+    user: "1000:1000"
+    volumes:
+      - ./data:/data
+    ports:
+      - 7000:8000

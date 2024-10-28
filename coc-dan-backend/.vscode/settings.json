@@ -3,15 +3,20 @@
         "bindgen",
         "chrono",
         "codegen",
+        "Datetime",
         "dotenv",
+        "dotenvy",
         "getrandom",
         "Iden",
         "lalrpop",
         "rustls",
         "serde",
-        "sqlx"
+        "signin",
+        "sqlx",
+        "surrealdb",
+        "thiserror"
     ],
     "vim.smartRelativeLine": true,
     "editor.lineNumbers": "relative",
-    "vim.useSystemClipboard": true
+    "vim.useSystemClipboard": false
 }

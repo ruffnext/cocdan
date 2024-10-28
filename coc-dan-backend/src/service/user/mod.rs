@@ -1,102 +1,90 @@
 mod login;
 mod logout;
 mod register;
+mod session;
 
-use crate::{
-    database::entities::{prelude::*, user},
-    err::Left,
-    AppState,
-};
-use axum::{
-    async_trait,
-    extract::{FromRef, FromRequestParts, State},
-    response::{IntoResponse, Response},
-    routing::{get, post},
-    Json, Router,
-};
-use axum_extra::extract::CookieJar;
-use coc_dan_common::def::user::IUser;
-use http::request::Parts;
-use sea_orm::{DatabaseConnection, EntityTrait};
+use axum::{routing::post, Router};
 
-#[async_trait]
-impl<S> FromRequestParts<S> for crate::database::entities::user::Model
-where
-    S: Send + Sync,
-    AppState: FromRef<S>,
-{
-    type Rejection = Response;
+use crate::AppState;
 
-    async fn from_request_parts(req: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let cookies = CookieJar::from_request_parts(req, state).await.unwrap();
-        let state = AppState::from_ref(state);
-        get_session_user(&cookies, State(state))
-            .await
-            .map_err(|x| x.into_response())
-    }
-}
+// #[async_trait]
+// impl<S> FromRequestParts<S> for crate::database::entities::user::Model
+// where
+//     S: Send + Sync,
+//     AppState: FromRef<S>,
+// {
+//     type Rejection = Response;
 
-impl From<user::Model> for IUser {
-    fn from(value: user::Model) -> Self {
-        Self {
-            id: value.id,
-            name: value.name.clone(),
-            nick_name: value.nick_name.clone(),
-            header: value
-                .header
-                .unwrap_or("/img/default_header.png".to_string()),
-        }
-    }
-}
+//     async fn from_request_parts(req: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+//         let cookies = CookieJar::from_request_parts(req, state).await.unwrap();
+//         let state = AppState::from_ref(state);
+//         get_session_user(&cookies, State(state))
+//             .await
+//             .map_err(|x| x.into_response())
+//     }
+// }
 
-pub async fn get_session_user(
-    cookies: &CookieJar,
-    State(state): State<AppState>,
-) -> Result<user::Model, Left> {
-    let session_str: Option<String> = cookies
-        .get("SESSION")
-        .and_then(|c| Some(c.value().to_string()));
-    match session_str {
-        Some(v) => {
-            let db = &state.db;
-            match Session::find_by_id(v).one(db).await? {
-                Some(v) => match User::find_by_id(v.user_id).one(db).await? {
-                    Some(u) => return Ok(u),
-                    None => {}
-                },
-                None => {}
-            }
-        }
-        None => {}
-    };
-    Err(Left {
-        status: http::StatusCode::UNAUTHORIZED,
-        message: "Please login first".to_string(),
-        uuid: "c6c3cb95",
-    })
-}
+// impl From<user::Model> for IUser {
+//     fn from(value: user::Model) -> Self {
+//         Self {
+//             id: value.id,
+//             name: value.name.clone(),
+//             nick_name: value.nick_name.clone(),
+//             header: value
+//                 .header
+//                 .unwrap_or("/img/default_header.png".to_string()),
+//         }
+//     }
+// }
 
-pub async fn is_login(cookies: &CookieJar, db: &DatabaseConnection) -> bool {
-    let session_str = match cookies
-        .get("SESSION")
-        .and_then(|c| Some(c.value().to_string()))
-    {
-        Some(v) => v,
-        None => return false,
-    };
-    match Session::find_by_id(session_str).one(db).await {
-        Ok(res) => res.is_some(),
-        Err(_e) => false,
-    }
-}
+// pub async fn get_session_user(
+//     cookies: &CookieJar,
+//     State(state): State<AppState>,
+// ) -> Result<user::Model, Left> {
+//     let session_str: Option<String> = cookies
+//         .get("SESSION")
+//         .and_then(|c| Some(c.value().to_string()));
+//     match session_str {
+//         Some(v) => {
+//             let db = &state.db;
+//             match Session::find_by_id(v).one(db).await? {
+//                 Some(v) => match User::find_by_id(v.user_id).one(db).await? {
+//                     Some(u) => return Ok(u),
+//                     None => {}
+//                 },
+//                 None => {}
+//             }
+//         }
+//         None => {}
+//     };
+//     Err(Left {
+//         status: http::StatusCode::UNAUTHORIZED,
+//         message: "Please login first".to_string(),
+//         uuid: "c6c3cb95",
+//     })
+// }
 
-async fn get_me(u: user::Model) -> Json<IUser> {
-    Json(u.into())
-}
+// pub async fn is_login(cookies: &CookieJar, db: &DatabaseConnection) -> bool {
+//     let session_str = match cookies
+//         .get("SESSION")
+//         .and_then(|c| Some(c.value().to_string()))
+//     {
+//         Some(v) => v,
+//         None => return false,
+//     };
+//     match Session::find_by_id(session_str).one(db).await {
+//         Ok(res) => res.is_some(),
+//         Err(_e) => false,
+//     }
+// }
+
+// async fn get_me(u: user::Model) -> Json<IUser> {
+//     Json(u.into())
+// }
 
 pub fn route() -> Router<AppState> {
     Router::new()
-        .route("/me", get(get_me))
+        // .route("/me", get(get_me))
         .route("/register", post(register::register))
         .route("/login", post(login::login))
         .route("/logout", post(logout::logout))
@@ -109,15 +97,16 @@ pub(crate) mod tests {
     use http::StatusCode;
     use serde_json::json;
 
-    use crate::service::tests::{new_test_server, test_extract_left_uuid};
-
-    use super::IUser;
+    use crate::{
+        daemon::entities::User,
+        service::tests::{new_test_server, test_extract_left_code},
+    };
 
     pub async fn test_create_user_and_login(
         user_name: &str,
         server: &TestServer,
-    ) -> (IUser, CookieJar) {
-        let u: IUser = server
+    ) -> (User, CookieJar) {
+        let u: User = server
             .post("/api/user/register")
             .json(&json!({
                 "name" : user_name.to_string()
@@ -127,7 +116,7 @@ pub(crate) mod tests {
         let response = server
             .post("/api/user/login")
             .json(&json!({
-                "name" : u.name
+                "name" : u.username
             }))
             .await;
         let cookie = CookieJar::new().add(response.cookie("SESSION"));
@@ -138,23 +127,28 @@ pub(crate) mod tests {
     async fn test_user_basic() {
         let (server, _db) = new_test_server().await;
         let new_user_name = "user name".to_string();
+        let new_user_pass = "user pass".to_string();
+        let new_user_nick = "user nick".to_string();
 
         // create user
         let response = server
             .post("/api/user/register")
             .json(&json!({
-                "name" : new_user_name
+                "username" : new_user_name,
+                "password" : new_user_pass,
+                "nickname" : new_user_nick
             }))
             .await;
         assert!(response.status_code() == StatusCode::OK);
-        let u: IUser = response.json();
-        assert!(u.name == new_user_name);
+        let u: User = response.json();
+        assert!(u.username == new_user_name);
 
         // login
         let response = server
             .post("/api/user/login")
             .json(&json!({
-                "name" : u.name
+                "username" : u.username,
+                "password" : new_user_pass
             }))
             .await;
         assert!(response.status_code() == StatusCode::OK);
@@ -164,11 +158,13 @@ pub(crate) mod tests {
         let response = server
             .post("/api/user/login")
             .json(&json!({
-                "name" : u.name
+                "username" : u.username,
+                "password" : new_user_pass,
+                "nickname" : new_user_nick
             }))
             .add_cookie(session.clone())
             .await;
-        assert_eq!(test_extract_left_uuid(&response), "a2f80a2f");
+        assert_eq!(test_extract_left_code(&response), "a2f80a2f");
 
         // logout
         let response = server
@@ -180,16 +176,18 @@ pub(crate) mod tests {
         // logout twice
         let response = server.post("/api/user/logout").add_cookie(session).await;
         assert!(response.status_code() == StatusCode::UNAUTHORIZED);
-        assert_eq!(test_extract_left_uuid(&response), "c6c3cb95");
+        assert_eq!(test_extract_left_code(&response), "c6c3cb95");
 
         // if the user name has been used, reply 400 BAD REQUEST
         let response = server
             .post("/api/user/register")
             .json(&json!({
-                "name" : new_user_name
+                "username" : new_user_name,
+                "password" : new_user_pass,
+                "nickname" : new_user_nick
             }))
             .await;
         assert!(response.status_code() == StatusCode::BAD_REQUEST);
-        assert_eq!(test_extract_left_uuid(&response), "0ee1f597");
+        assert_eq!(test_extract_left_code(&response), "0ee1f597");
     }
 }

@@ -1,50 +1,39 @@
-use axum::{response::IntoResponse, Json, Router};
+use axum::Router;
 
-use crate::{err::Left, AppState};
+use crate::AppState;
 
-pub mod avatar;
-mod db_relation;
-pub mod stage;
-pub mod transaction;
+// pub mod avatar;
+// mod db_relation;
+// pub mod stage;
+// pub mod transaction;
 pub mod user;
-
-impl IntoResponse for Left {
-    fn into_response(self) -> axum::response::Response {
-        if self.status == http::StatusCode::NO_CONTENT {
-            self.status.into_response()
-        } else {
-            (self.status, Json(self)).into_response()
-        }
-    }
-}
 
 pub fn app() -> Router<AppState> {
     Router::new().nest(
         "/api",
-        Router::new()
-            .nest("/user", user::route())
-            .nest("/stage", stage::route())
-            .nest("/avatar", avatar::route()),
+        Router::new().nest("/user", user::route()), // .nest("/stage", stage::route())
+                                                    // .nest("/avatar", avatar::route()),
     )
 }
 
 #[cfg(test)]
 pub(crate) mod tests {
-    use super::app;
-    use crate::state::tests::new_mock_db;
-    use axum_test::{TestResponse, TestServer};
-    use sea_orm::DatabaseConnection;
+    use crate::daemon::{new_mock_db, DbService};
 
-    pub async fn new_test_server() -> (TestServer, DatabaseConnection) {
+    use super::app;
+    use axum_test::{TestResponse, TestServer};
+
+    pub async fn new_test_server() -> (TestServer, DbService) {
+        dotenvy::dotenv().ok();
         let db = new_mock_db().await;
         let state = crate::AppState { db: db.clone() };
         (TestServer::new(app().with_state(state)).unwrap(), db)
     }
 
-    pub fn test_extract_left_uuid<'a>(val: &'a TestResponse) -> String {
-        val.json::<serde_json::Value>()["uuid"]
+    pub fn test_extract_left_code<'a>(val: &'a TestResponse) -> String {
+        val.json::<serde_json::Value>()["code"]
             .as_str()
-            .unwrap()
+            .unwrap_or_default()
             .to_string()
     }
 }

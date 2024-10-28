@@ -6,7 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sea-orm = { version = "*", features = ["sqlx-sqlite", "runtime-tokio-native-tls", "macros" ]}
 tokio = { version = "*", features = ["full"] }
 futures = "*"
 tracing = "0.1"
@@ -15,29 +14,14 @@ serde = "1"
 serde_json = "*"
 axum = { version = "*", features = ["json"] }
 axum-extra = { version = "*", features = ["cookie"] }
-lazy_static = "1.4.0"
 http = "1.1.0"
 uuid = { version = "1.11.0", features = ["v4"] }
-dotenv = "0.15.0"
-getrandom = { version = "0.2", features = ["js"] }
+dotenvy = "0.15.0"
 rand = "0.8"
-wasm-bindgen = { version = "0.2" }
-serde-wasm-bindgen = { version = "0.6" }
-js-sys = { version = "0.3" }
-coc-dan-common = { path = "../coc-dan-common" }
 chrono = { version = "*", features = ["std"] }
-
-[dev-dependencies]
-migration = { path = "./migration" }
-axum-test = "*"
-tracing-test = "*"
-[dev-dependencies.sea-orm-migration]
-version = "*"
-features = [
-  # Enable at least one `ASYNC_RUNTIME` and `DATABASE_DRIVER` feature if you want to run migration via CLI.
-  # View the list of supported features at https://www.sea-ql.org/SeaORM/docs/install-and-config/database-and-async-runtime.
-  # e.g.
-  "runtime-tokio-rustls",  # `ASYNC_RUNTIME` feature
-  # "sqlx-postgres",         # `DATABASE_DRIVER` feature
-  "sqlx-sqlite"
-]
+surrealdb = "2.0.4"
+surrealdb-core = "2.0.4"
+async-trait = "0.1"
+thiserror = "1.0.65"
+ts-rs = "10.0.0"
+axum-test = "16.3.0"

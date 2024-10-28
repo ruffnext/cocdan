@@ -1,27 +1,28 @@
-pub mod database;
-pub mod err;
+pub(self) mod daemon;
 mod service;
-pub mod state;
+mod state;
+mod typedef;
 
-use sea_orm::DatabaseConnection;
-use tracing::debug;
+use daemon::DbService;
+use tracing::info;
 
-use crate::state::get_db;
+// use crate::state::get_db;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db: DatabaseConnection,
+    pub db: DbService,
 }
 
 #[tokio::main]
 async fn main() {
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
     tracing_subscriber::fmt::init();
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
+    let db = DbService::new().await.expect("failed to connect to db");
+    let server_bind = std::env::var("SERVER_BIND").unwrap_or("127.0.0.1:3000".to_string());
+    let listener = tokio::net::TcpListener::bind(server_bind.clone())
         .await
         .unwrap();
-    let db = get_db().await;
-    debug!("listening on {}", listener.local_addr().unwrap());
+    info!("listening on {server_bind}");
     axum::serve(listener, service::app().with_state(AppState { db }))
         .await
         .unwrap()
