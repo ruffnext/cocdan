@@ -11,7 +11,12 @@ use crate::{
     AppState,
 };
 
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, ts_rs::TS)]
+#[ts(
+    export,
+    rename = "IReqUserLogin",
+    export_to = "api/user/login/IReqUserLogin.d.ts"
+)]
 pub struct ReqUserLogin {
     username: String,
     password: String,

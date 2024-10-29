@@ -45,6 +45,9 @@ pub enum ErrCode {
 
     #[error("Unsupported Operation {0}")]
     UnsupportedOperation(Cow<'static, str>),
+
+    #[error("Serialize Error")]
+    SerdeError,
 }
 
 impl ErrCode {
@@ -55,6 +58,7 @@ impl ErrCode {
             ErrCode::InternalServerError(_) => http::StatusCode::INTERNAL_SERVER_ERROR,
             ErrCode::PermissionDenied(_) => http::StatusCode::FORBIDDEN,
             ErrCode::UnsupportedOperation(_) => http::StatusCode::BAD_REQUEST,
+            ErrCode::SerdeError => http::StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }

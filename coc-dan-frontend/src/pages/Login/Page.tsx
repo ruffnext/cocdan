@@ -1,29 +1,27 @@
 import { createSignal } from "solid-js"
 import "./style.css"
-import { post } from "../../core";
 import toast from "solid-toast";
-import { IUser } from "../../bindings/IUser";
 import { useNavigate } from "@solidjs/router";
-import { IUserLogin } from "../../bindings/user/service/IUserLogin";
 import { useUser } from "./context";
+import { ISession } from "../../bindings/entity/basic/ISession";
+import { post } from "../../api/core";
 
 export default () => {
   const { user, setUser } = useUser()
   const [username, setUsername] = createSignal<string>("");
-  const handleInputChange = (e : any) => {
+  const handleInputChange = (e: any) => {
     setUsername(e.currentTarget.value)
   }
 
   const [loginButtonState, setLoginButtonState] = createSignal<string>("")
   async function toggleLogin() {
     setLoginButtonState("is-loading")
-    const params : IUserLogin = {name : username()}
-    try {
-      const user : IUser = await post("/api/user/login", params)
+    const ret = await post('/user/login', { username: username(), password: 'password' }, undefined)
+    if ("Ok" in ret) {
       setLoginButtonState("is-ok")
       toast.success("login success")
-      afterLogin(user)
-    } catch (error : any) {
+      // afterLogin(ret.Ok)
+    } else {
       setLoginButtonState("is-danger")
       return
     }
@@ -35,9 +33,9 @@ export default () => {
     navigate("/home")
   }
 
-  function afterLogin(u : IUser) {
+  function afterLogin(u: ISession) {
     console.log("login success ", u)
-    setUser(u)
+    // setUser(u)
     navigate("/home")
   }
 
@@ -47,13 +45,13 @@ export default () => {
       <div id="login-main">
         <div class="field">
           <p class="control has-icons-left">
-            <input 
-              class="input" 
-              type="text" 
-              placeholder="Username" 
+            <input
+              class="input"
+              type="text"
+              placeholder="Username"
               value={username()}
               onInput={handleInputChange}
-              />
+            />
             <span class="icon is-small is-left">
               <i class="fas fa-user"></i>
             </span>

@@ -4,15 +4,16 @@ use crate::AppState;
 
 // pub mod avatar;
 // mod db_relation;
-// pub mod stage;
+pub mod stage;
 // pub mod transaction;
 pub mod user;
 
 pub fn app() -> Router<AppState> {
     Router::new().nest(
         "/api",
-        Router::new().nest("/user", user::route()), // .nest("/stage", stage::route())
-                                                    // .nest("/avatar", avatar::route()),
+        Router::new()
+            .nest("/user", user::route())
+            .nest("/stage", stage::route()), // .nest("/avatar", avatar::route()),
     )
 }
 

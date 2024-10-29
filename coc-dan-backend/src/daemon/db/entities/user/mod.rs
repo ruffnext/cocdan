@@ -1,3 +1,5 @@
+use chrono::{DateTime, FixedOffset};
+use serde::{Deserialize, Serialize};
 use surrealdb::sql::Id;
 
 use crate::{
@@ -5,7 +7,23 @@ use crate::{
     typedef::err::Left,
 };
 
-use super::User;
+#[derive(Deserialize, Serialize, Debug, Clone, ts_rs::TS)]
+#[ts(export, rename = "IUser", export_to = "entity/basic/IUser.d.ts")]
+pub struct User {
+    pub raw_id: i64,
+    pub username: String,
+    pub nickname: String,
+    #[ts(inline)]
+    pub active_status: UserActiveStatus,
+    #[ts(type = "string")]
+    pub registration_time: DateTime<FixedOffset>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, ts_rs::TS)]
+pub enum UserActiveStatus {
+    Active,
+    Banned,
+}
 
 impl DbEntity for User {
     fn db_id(&self) -> Id {

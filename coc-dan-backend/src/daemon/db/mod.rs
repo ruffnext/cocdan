@@ -81,9 +81,9 @@ where
     }
     fn db_tab_name() -> &'static str;
 
-    async fn db_load_by_id(id: &str, db: &DbConn) -> Result<Option<Self>, Left> {
+    async fn db_load_by_id(id: Id, db: &DbConn) -> Result<Option<Self>, Left> {
         let r: Option<Self> = db
-            .select((Self::db_tab_name(), id))
+            .select((Self::db_tab_name(), RecordIdKey::from_inner(id)))
             .await
             .map_err(mls!(ErrCode::DbError))?;
         Ok(r)

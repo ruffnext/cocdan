@@ -14,7 +14,7 @@ use crate::{
 #[ts(
     export,
     rename = "IReqUserRegister",
-    export_to = "api/user/register/ReqUserRegister.d.ts"
+    export_to = "api/user/register/IReqUserRegister.d.ts"
 )]
 pub struct ReqUserRegister {
     username: String,
