@@ -12,21 +12,21 @@ Content-Type: application/json
     "description" : "example stage"
 }
 
-@stage_uuid = {{new_stage.response.body.id}}
+@stage_uuid = {{new_stage.response.body.raw_id}}
 
-@stage_api = {{host}}/api/stage/{{stage_uuid}}
+@stage_api_create = {{host}}/api/stage/{{stage_uuid}}
 
 ### get stage by id
-GET http://{{stage_api}} HTTP/1.1
+GET http://{{stage_api_create}} HTTP/1.1
 
 ### list stages by user
 GET http://{{host}}/api/stage/my_stages HTTP/1.1
 
 ### list users by stage
-GET http://{{stage_api}}/users HTTP/1.1
+GET http://{{stage_api_create}}/users HTTP/1.1
 
 ### destroy a stage 
-POST http://{{stage_api}}/leave HTTP/1.1
+POST http://{{stage_api_create}}/remove HTTP/1.1
 
 ### logout
 POST http://{{host}}/api/user/logout

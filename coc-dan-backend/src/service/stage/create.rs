@@ -60,7 +60,7 @@ pub async fn create_stage(
         .bind(json!({
             "title": req.title,
             "description": req.description,
-            "owner": user.db_thing(),
+            "owner": user.db_thing().to_string(),
         }))
         .await
         .map_err(mls!(ErrCode::DbError))?;

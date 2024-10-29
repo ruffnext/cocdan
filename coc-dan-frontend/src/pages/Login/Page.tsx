@@ -9,18 +9,22 @@ import { post } from "../../api/core";
 export default () => {
   const { user, setUser } = useUser()
   const [username, setUsername] = createSignal<string>("");
-  const handleInputChange = (e: any) => {
+  const [password, setPassword] = createSignal<string>("");
+  const handleUsernameChange = (e: any) => {
     setUsername(e.currentTarget.value)
+  }
+  const handlePasswordChange = (e: any) => {
+    setPassword(e.currentTarget.value)
   }
 
   const [loginButtonState, setLoginButtonState] = createSignal<string>("")
   async function toggleLogin() {
     setLoginButtonState("is-loading")
-    const ret = await post('/user/login', { username: username(), password: 'password' }, undefined)
+    const ret = await post('/user/login', { username: username(), password: password() }, undefined)
     if ("Ok" in ret) {
       setLoginButtonState("is-ok")
       toast.success("login success")
-      // afterLogin(ret.Ok)
+      afterLogin(ret.Ok)
     } else {
       setLoginButtonState("is-danger")
       return
@@ -34,8 +38,7 @@ export default () => {
   }
 
   function afterLogin(u: ISession) {
-    console.log("login success ", u)
-    // setUser(u)
+    setUser(u)
     navigate("/home")
   }
 
@@ -50,7 +53,21 @@ export default () => {
               type="text"
               placeholder="Username"
               value={username()}
-              onInput={handleInputChange}
+              onInput={handleUsernameChange}
+            />
+            <span class="icon is-small is-left">
+              <i class="fas fa-user"></i>
+            </span>
+          </p>
+        </div>
+        <div class="field">
+          <p class="control has-icons-left">
+            <input
+              class="input"
+              type="password"
+              placeholder="Password"
+              value={password()}
+              onInput={handlePasswordChange}
             />
             <span class="icon is-small is-left">
               <i class="fas fa-user"></i>

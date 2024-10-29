@@ -1,25 +1,13 @@
 import { createContext, createSignal, useContext } from "solid-js";
-import { get } from "../../core";
-import Cookies from "js-cookie";
-import { IUser } from "../../bindings/IUser";
-
-export async function tryLogin() : Promise<IUser | undefined> {
-  try {
-    const res : IUser = await get("/api/user/me", null, false)
-    return res
-  } catch (error) {
-    return undefined
-  }
-}
+import { ISession } from "../../bindings/entity/basic/ISession";
+import { get } from "../../api/core";
 
 function newContext() {
-  const [user, setUser] = createSignal<IUser | undefined>()
+  const [user, setUser] = createSignal<ISession | undefined>()
   if (document.cookie.includes("SESSION")) {
-    tryLogin().then((e : IUser | undefined) => {
-      if (e == undefined) {
-        Cookies.remove("SESSION")
-      } else {
-        setUser(e)
+    get('/user/me').then((ret) => {
+      if ("Ok" in ret) {
+        setUser(ret.Ok)
       }
     })
   }
@@ -28,14 +16,13 @@ function newContext() {
 
 export const UserContext = createContext<ReturnType<typeof newContext>>()
 
-export function UserProvider (props : any) {
+export function UserProvider(props: any) {
   const res = newContext()
   return (
     <UserContext.Provider value={res}>
-      { props.children }
+      {props.children}
     </UserContext.Provider>
   )
 }
 
-// @ts-ignore
-export function useUser() : ReturnType<typeof newContext> { return useContext(UserContext) }
+export function useUser(): ReturnType<typeof newContext> { return useContext(UserContext) as any }
