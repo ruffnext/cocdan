@@ -2,13 +2,13 @@ import toast from "solid-toast"
 import { post } from "../api/core"
 import "./Sidebar/style.css"
 import { useNavigate } from "@solidjs/router"
-import { useUser } from "../pages/Login/context"
+import { useSession } from "../pages/Login/context"
 
 const SIDE_BAR_WIDTH = "60px"
 
 function Sidebar() {
   const navigate = useNavigate()
-  const { setUser } = useUser()
+  const { setUser } = useSession()
   async function logout() {
     await post('/user/logout', undefined, undefined, false)
     toast.success("logout success")
@@ -66,7 +66,7 @@ export function SidebarWrapper(props: any) {
       <div style={{ "margin-left": SIDE_BAR_WIDTH }}>
         {props.children}
       </div>
-      <Sidebar />
+      {/* <Sidebar /> */}
     </div>
   );
 }

@@ -3,20 +3,22 @@ import { ISession } from "../../bindings/entity/basic/ISession";
 import { get } from "../../api/core";
 
 function newContext() {
-  const [user, setUser] = createSignal<ISession | undefined>()
+  const [session, setSession] = createSignal<ISession | "IsLoading" | "NotLoggedIn">("IsLoading")
   if (document.cookie.includes("SESSION")) {
-    get('/user/me').then((ret) => {
+    get('/user/me', false).then((ret) => {
       if ("Ok" in ret) {
-        setUser(ret.Ok)
+        setSession(ret.Ok)
+        return;
       }
+      setSession("NotLoggedIn")
     })
   }
-  return { user, setUser }
+  return { session, setSession }
 }
 
 export const UserContext = createContext<ReturnType<typeof newContext>>()
 
-export function UserProvider(props: any) {
+export function SessionProvider(props: any) {
   const res = newContext()
   return (
     <UserContext.Provider value={res}>
@@ -25,4 +27,4 @@ export function UserProvider(props: any) {
   )
 }
 
-export function useUser(): ReturnType<typeof newContext> { return useContext(UserContext) as any }
+export function useSession(): ReturnType<typeof newContext> { return useContext(UserContext) as any }

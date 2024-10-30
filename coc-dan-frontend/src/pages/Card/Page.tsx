@@ -12,13 +12,13 @@ import InterestSkillEditor from "./components/Skills/InterestSkillEditor";
 import Weapons from "./components/Weapons";
 import FightingSkillEditor from "./components/Skills/FightingSkillEditor";
 import LoadingPage from "./LoadingPage";
-import { useUser } from "../Login/context";
+import { useSession } from "../Login/context";
 import { queryAvatarById } from "../../core/card/api";
 import SaveButton from "./components/SaveButton";
 
 export default () => {
   const params = useParams()
-  const { user } = useUser()
+  const { user } = useSession()
 
   async function loadAvatar(avatarId: string): Promise<IAvatar> {
     if (user() == undefined || avatarId.toLocaleLowerCase() === "new") {

@@ -124,7 +124,7 @@ export async function get<Key extends GetApiKeys>(
   }
 
   try {
-    const res = await fetch(key, params)
+    const res = await fetch("/api" + key, params)
     if (res.status == 200) {
       return { "Ok": await res.json() }
     } else {

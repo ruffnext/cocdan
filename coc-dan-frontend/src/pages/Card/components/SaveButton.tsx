@@ -1,5 +1,5 @@
 import { listMyStages } from "../../../core/user"
-import { useUser } from "../../Login/context"
+import { useSession } from "../../Login/context"
 import Dropdown, { IDropdownItem } from "../../../components/Dropdown/Component"
 import { createEffect, createSignal } from "solid-js"
 import { IStage } from "../../../bindings/IStage"
@@ -7,7 +7,7 @@ import { IUser } from "../../../bindings/IUser"
 import { useAvatar } from "../context"
 
 export default () => {
-  const { user } = useUser()
+  const { user } = useSession()
   const { avatar } = useAvatar()
   const [stages, setStages] = createSignal<Record<string, IStage>>({})
   const [stagesDropdown, setStagesDropdown] = createSignal<Array<IDropdownItem>>([])

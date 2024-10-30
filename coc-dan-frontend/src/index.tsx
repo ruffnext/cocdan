@@ -4,11 +4,11 @@ import { Route, Router } from '@solidjs/router';
 import { lazy } from 'solid-js';
 import { render } from 'solid-js/web';
 import { Toaster } from "solid-toast";
-import { SidebarWrapper } from "./components/Sidebar";
 import Home from "./pages/Home/Page";
 import { SupportedI18N, I18nProvider } from "./core/i18n";
 import NewStage from "./pages/Stage/NewStage";
-import { UserProvider } from "./pages/Login/context";
+import { SessionProvider } from "./pages/Login/context";
+import { NavbarWrapper } from "./components/Navbar/core";
 
 const Login = lazy(() => import('./pages/Login/Page'))
 const Index = lazy(() => import('./pages/Index'))
@@ -17,10 +17,10 @@ const Card = lazy(() => import('./pages/Card/Page'))
 
 render(() =>
   <I18nProvider i18n={SupportedI18N.zh_CN} >
-    <UserProvider>
+    <SessionProvider>
       <Router>
         <Route path="/" component={Index}></Route>
-        <Route path="/" component={SidebarWrapper}>
+        <Route path="/" component={NavbarWrapper}>
           <Route path="/home" component={Home}></Route>
           <Route path="/card/:id" component={Card}></Route>
           <Route path="/stage/new" component={NewStage}></Route>
@@ -29,6 +29,6 @@ render(() =>
         <Route path="/avatar" component={Avatar} />
       </Router>
       <Toaster />
-    </UserProvider>
+    </SessionProvider>
   </I18nProvider>,
   document.getElementById('root')!)

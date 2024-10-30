@@ -5,7 +5,6 @@ use axum::{
 };
 use serde_json::json;
 use surrealdb::sql::Id;
-use tracing::info;
 
 use crate::{
     daemon::{

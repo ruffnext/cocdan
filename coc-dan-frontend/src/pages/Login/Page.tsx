@@ -2,12 +2,12 @@ import { createSignal } from "solid-js"
 import "./style.css"
 import toast from "solid-toast";
 import { useNavigate } from "@solidjs/router";
-import { useUser } from "./context";
+import { useSession } from "./context";
 import { ISession } from "../../bindings/entity/basic/ISession";
 import { post } from "../../api/core";
 
 export default () => {
-  const { user, setUser } = useUser()
+  const { session, setSession } = useSession()
   const [username, setUsername] = createSignal<string>("");
   const [password, setPassword] = createSignal<string>("");
   const handleUsernameChange = (e: any) => {
@@ -33,12 +33,12 @@ export default () => {
 
   const navigate = useNavigate()
 
-  if (user() != undefined) {
+  if (session() != "NotLoggedIn" && session() != "IsLoading") {
     navigate("/home")
   }
 
   function afterLogin(u: ISession) {
-    setUser(u)
+    setSession(u)
     navigate("/home")
   }
 

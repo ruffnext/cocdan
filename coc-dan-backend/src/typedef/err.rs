@@ -48,6 +48,9 @@ pub enum ErrCode {
 
     #[error("Serialize Error")]
     SerdeError,
+
+    #[error("No Content")]
+    NoContent,
 }
 
 impl ErrCode {
@@ -59,6 +62,7 @@ impl ErrCode {
             ErrCode::PermissionDenied(_) => http::StatusCode::FORBIDDEN,
             ErrCode::UnsupportedOperation(_) => http::StatusCode::BAD_REQUEST,
             ErrCode::SerdeError => http::StatusCode::INTERNAL_SERVER_ERROR,
+            ErrCode::NoContent => http::StatusCode::NO_CONTENT,
         }
     }
 }
