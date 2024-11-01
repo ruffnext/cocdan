@@ -6,7 +6,7 @@ import { render } from 'solid-js/web';
 import { Toaster } from "solid-toast";
 import Home from "./pages/Home/Page";
 import { SupportedI18N, I18nProvider } from "./core/i18n";
-import NewStage from "./pages/Stage/NewStage";
+import NewStage from "./pages/Stage/New/Component";
 import { SessionProvider } from "./pages/Login/context";
 import { NavbarWrapper } from "./components/Navbar/core";
 
@@ -14,6 +14,7 @@ const Login = lazy(() => import('./pages/Login/Page'))
 const Index = lazy(() => import('./pages/Index'))
 const Avatar = lazy(() => import('./pages/Avatar'))
 const Card = lazy(() => import('./pages/Card/Page'))
+const StageDetail = lazy(() => import('./pages/Stage/Detail/Component'))
 
 render(() =>
   <I18nProvider i18n={SupportedI18N.zh_CN} >
@@ -24,6 +25,7 @@ render(() =>
           <Route path="/home" component={Home}></Route>
           <Route path="/card/:id" component={Card}></Route>
           <Route path="/stage/new" component={NewStage}></Route>
+          <Route path="/stage/:id" component={StageDetail}></Route>
         </Route>
         <Route path="/login" component={Login}></Route>
         <Route path="/avatar" component={Avatar} />

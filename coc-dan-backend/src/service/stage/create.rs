@@ -4,7 +4,7 @@ use serde_json::json;
 
 use crate::{
     daemon::{
-        entities::{Stage, User},
+        entities::{Stage, StageRule, User},
         DbEntity, SurrealRecord,
     },
     left_span, mls,
@@ -21,6 +21,7 @@ use crate::{
 pub struct ReqCreateStage {
     pub title: String,
     pub description: String,
+    pub rule: StageRule,
 }
 
 pub async fn create_stage(
@@ -46,6 +47,7 @@ pub async fn create_stage(
             raw_id: $max_id,
             title: type::string($title),
             description: type::string($description),
+            rule: type::string($rule),
             owner: type::record($owner),
         }};
 
@@ -61,6 +63,7 @@ pub async fn create_stage(
             "title": req.title,
             "description": req.description,
             "owner": user.db_thing().to_string(),
+            "rule": req.rule,
         }))
         .await
         .map_err(mls!(ErrCode::DbError))?;

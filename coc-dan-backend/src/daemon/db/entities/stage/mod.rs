@@ -11,12 +11,25 @@ use crate::{
 
 use super::User;
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, ts_rs::TS)]
+#[ts(export, rename = "IStage", export_to = "entity/basic/IStage.d.ts")]
 pub struct Stage {
     pub raw_id: i64,
     pub title: String,
+    pub rule: StageRule,
     pub description: String,
     pub owner: User,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, ts_rs::TS)]
+#[ts(
+    export,
+    rename = "IStageRule",
+    export_to = "entity/basic/IStageRule.d.ts"
+)]
+pub enum StageRule {
+    CoC7th,
+    CoC6th,
 }
 
 #[derive(serde::Serialize)]

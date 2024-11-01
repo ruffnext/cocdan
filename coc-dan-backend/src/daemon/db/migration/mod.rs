@@ -92,3 +92,14 @@ pub async fn migrate() {
     let db = DbService::new().await.unwrap();
     init_surreal(&db.manager).await;
 }
+
+#[tokio::test]
+#[ignore]
+pub async fn reset_surreal() {
+    dotenvy::dotenv().ok();
+    let db = DbService::new().await.unwrap();
+    drop_surreal(&db.manager)
+        .await
+        .expect("failed to drop surreal");
+    init_surreal(&db.manager).await;
+}

@@ -5,7 +5,7 @@ import { get } from "../../api/core";
 function newContext() {
   const [session, setSession] = createSignal<ISession | "IsLoading" | "NotLoggedIn">("IsLoading")
   if (document.cookie.includes("SESSION")) {
-    get('/user/me', false).then((ret) => {
+    get('/user/me', undefined, false).then((ret) => {
       if ("Ok" in ret) {
         setSession(ret.Ok)
         return;

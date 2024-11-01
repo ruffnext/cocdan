@@ -23,5 +23,5 @@ pub fn route() -> Router<AppState> {
     // .route("/my_stages", get(crud::list_stages_by_user))
 }
 
-// #[cfg(test)]
-// mod test;
+#[cfg(test)]
+mod test;

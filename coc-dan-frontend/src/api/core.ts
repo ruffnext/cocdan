@@ -2,27 +2,41 @@ import toast from "solid-toast";
 import { IReqUserLogin } from "../bindings/api/user/login/IReqUserLogin"
 import { IReqUserRegister } from "../bindings/api/user/register/IReqUserRegister"
 import { ISession } from "../bindings/entity/basic/ISession"
+import { IReqCreateStage } from "../bindings/api/stage/create/IReqCreateStage";
+import { IStage } from "../bindings/entity/basic/IStage";
 
 type PostApiKeys =
   '/user/login' |
   '/user/register' |
-  '/user/logout';
+  '/user/logout' |
+  '/stage/new'
 
 type PostReqBodyType<Key extends PostApiKeys> =
   Key extends '/user/login' ? IReqUserLogin :
   Key extends '/user/register' ? IReqUserRegister :
-  Key extends '/user/logout' ? undefined :
-  never;
+  Key extends '/stage/new' ? IReqCreateStage :
+  undefined;
 
 type PostReqUrlType<Key extends PostApiKeys> =
   Key extends '' ? string :
   undefined
 
+type ISimpleResponse = {
+  message: string
+}
+
+type IApiResponse<T> = {
+  "Ok": T
+} | {
+  "Error": ApiError
+}
+
 type PostReqRespType<Key extends PostApiKeys> =
   Key extends '/user/login' ? ISession :
   Key extends '/user/register' ? ISession :
-  Key extends '/user/logout' ? string :
-  never;
+  Key extends '/user/logout' ? ISimpleResponse :
+  Key extends '/stage/new' ? IStage :
+  undefined;
 
 type ApiError = {
   status: 500,
@@ -36,7 +50,7 @@ function url_format_base(url: string, params: Record<string, any> | undefined): 
   }
   let new_url = url
   for (const key in params) {
-    new_url = new_url.replace(`_${key}`, params[key])
+    new_url = new_url.replace(`:${key}`, params[key])
   }
   return new_url
 }
@@ -55,11 +69,7 @@ export async function post<Key extends PostApiKeys>(
   body: PostReqBodyType<Key>,
   url: PostReqUrlType<Key>,
   autoToast: boolean = true
-): Promise<{
-  "Ok": PostReqRespType<Key>
-} | {
-  "Error": ApiError
-}> {
+): Promise<IApiResponse<PostReqRespType<Key>>> {
   const params = {
     method: "POST",
     headers: {
@@ -82,9 +92,12 @@ export async function post<Key extends PostApiKeys>(
       return { "Ok": await res.json() }
     } else {
       this_error.message = await res.text()
-      this_error = JSON.parse(this_error.message)
+      if (this_error.message.startsWith("{")) {
+        this_error = JSON.parse(this_error.message)
+      }
     }
   } catch (error) {
+    console.error(error)
   }
 
   if (autoToast) {
@@ -96,20 +109,23 @@ export async function post<Key extends PostApiKeys>(
 
 
 type GetApiKeys =
-  '/user/me'
+  '/user/me' |
+  '/stage/:id'
 
 type GetRespType<Key extends GetApiKeys> =
   Key extends '/user/me' ? ISession :
+  Key extends '/stage/:id' ? IStage :
   never;
+
+type GetReqUrlType<Key extends GetApiKeys> =
+  Key extends '/stage/:id' ? { id: string } :
+  undefined;
 
 export async function get<Key extends GetApiKeys>(
   key: Key,
+  url: GetReqUrlType<Key>,
   autoToast: boolean = true
-): Promise<{
-  "Ok": GetRespType<Key>
-} | {
-  "Error": ApiError
-}> {
+): Promise<IApiResponse<GetRespType<Key>>> {
   const params = {
     method: "GET",
     headers: {
@@ -123,15 +139,20 @@ export async function get<Key extends GetApiKeys>(
     code: null
   }
 
+  let req_url_base = "/api" + url_format_base(key, url)
+
   try {
-    const res = await fetch("/api" + key, params)
+    const res = await fetch(req_url_base, params)
     if (res.status == 200) {
       return { "Ok": await res.json() }
     } else {
       this_error.message = await res.text()
-      this_error = JSON.parse(this_error.message)
+      if (this_error.message.startsWith("{")) {
+        this_error = JSON.parse(this_error.message)
+      }
     }
   } catch (error) {
+    console.error(error)
   }
 
   if (autoToast) {

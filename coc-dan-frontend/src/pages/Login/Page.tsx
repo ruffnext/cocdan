@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js"
-import "./style.css"
+import "./style.scss"
 import toast from "solid-toast";
 import { useNavigate } from "@solidjs/router";
 import { useSession } from "./context";

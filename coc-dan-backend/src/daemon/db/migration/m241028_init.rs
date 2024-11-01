@@ -31,6 +31,15 @@ impl MigrationTrait for M241028Init {
         DEFINE FIELD expiration_time ON TABLE session TYPE datetime;
         DEFINE INDEX rawIdIdx ON session COLUMNS raw_id UNIQUE;
 
+
+        DEFINE TABLE stage SCHEMAFULL;
+        DEFINE FIELD raw_id ON TABLE stage TYPE int;
+        DEFINE FIELD title ON TABLE stage TYPE string;
+        DEFINE FIELD description ON TABLE stage TYPE string DEFAULT \"\";
+        DEFINE FIELD rule ON TABLE stage TYPE string;
+        DEFINE FIELD owner ON TABLE stage TYPE record<user>;
+        DEFINE INDEX rawIdIdx ON TABLE stage COLUMNS raw_id UNIQUE;
+
         COMMIT TRANSACTION;
         ";
 
@@ -43,6 +52,7 @@ impl MigrationTrait for M241028Init {
         let drop_db = "
             REMOVE TABLE session;
             REMOVE TABLE user;
+            REMOVE TABLE stage;
         ";
 
         db.query(drop_db).await?;
