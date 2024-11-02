@@ -9,7 +9,8 @@ Content-Type: application/json
 
 {
     "title" : "stage title",
-    "description" : "example stage"
+    "description" : "example stage",
+    "rule": "CoC7th"
 }
 
 @stage_uuid = {{new_stage.response.body.raw_id}}

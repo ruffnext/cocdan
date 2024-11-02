@@ -1,7 +1,11 @@
 import { useParams } from "@solidjs/router"
 import { get } from "../../../api/core"
-import { createResource, createSignal } from "solid-js"
+import { createResource, createSignal, For } from "solid-js"
 import { IStage } from "../../../bindings/entity/basic/IStage"
+import { IAvatar } from "../../../bindings/entity/avatar/IAvatar"
+import LogContainer from "./Component/LogContainer/Component"
+import { Suspense, Show } from "solid-js"
+import AvatarEditor from "./Component/AvatarEditor/Component"
 // const PlaceHolder = () => {
 //   return (
 //     <div>loading...</div>
@@ -19,8 +23,20 @@ export default () => {
       return undefined
     }
   })
-  return (
 
+  const [avatars] = createResource(async (): Promise<Array<IAvatar> | undefined> => {
+    const resp = await get('/stage/:id/my_avatars', { id: param['id'] }, true)
+    if ("Ok" in resp) {
+      console.log(resp.Ok)
+      return resp.Ok
+    } else {
+      return undefined
+    }
+  })
+
+  const [selectedAvatar, setSelectedAvatar] = createSignal<IAvatar | undefined>(undefined)
+
+  return (
     <main class={`bg-bg w-full h-full max-w-100vw text-textcolor flex`}>
       <button class={`absolute top-1 left-1 h-8 w-16 ${isExtend() ? "hidden" : ""} justify-center items-center flex bg-green-300 rounded-md`} on:click={() => setIsExtend(true)}>
         <svg class="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -39,11 +55,23 @@ export default () => {
         </button>
         <hr class="w-full" />
         <div class="flex items-center px-2 flex-col flex-1">
-          <button class="w-16 h-16 bg-red-500 mt-2 mb-2">
-          </button>
-          <button class="w-16 h-16 bg-red-500 mt-2 mb-2">
-          </button>
-          <button class="w-16 h-16 bg-red-500 mt-2 mb-2">
+          <For each={avatars()} fallback={<div>loading...</div>}>
+            {avatar => (
+              <button class={`w-16 h-16 mt-2 mb-2 rounded-md border-solid border-2 hover:bg-green-300 ${selectedAvatar() == avatar ? "border-green-300" : "border-black"}`} on:click={() => {
+                if (selectedAvatar() == avatar) {
+                  setSelectedAvatar(undefined)
+                } else {
+                  setSelectedAvatar(avatar)
+                }
+              }}>
+                {avatar.name}
+              </button>
+            )}
+          </For>
+          <button class="w-12 h-12 mt-2 mb-2 text-black hover:text-green-500">
+            <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
           </button>
           <div class="flex-1"></div>
           <button class="w-12 h-12 mt-2 mb-2 text-black hover:text-green-500">
@@ -64,8 +92,13 @@ export default () => {
           <div class="h-4 w-full"></div>
         </div>
       </div>
+      <Show when={selectedAvatar()}>
+        <AvatarEditor avatar={selectedAvatar() as any} />
+      </Show>
       <div>
-        ?????aaa
+        <Suspense fallback={<div>...</div>}>
+          <LogContainer stage={stage() as any} />
+        </Suspense>
       </div>
     </main>
   );

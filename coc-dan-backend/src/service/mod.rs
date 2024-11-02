@@ -13,11 +13,13 @@ pub fn app() -> Router<AppState> {
         "/api",
         Router::new()
             .nest("/user", user::route())
-            .nest("/stage", stage::route()), // .nest("/avatar", avatar::route()),
+            .nest("/stage", stage::route())
+            .nest("/avatar", avatar::route()),
     )
 }
 
 #[cfg(test)]
+#[cfg(feature = "mock")]
 pub(crate) mod tests {
     use crate::daemon::DbService;
 

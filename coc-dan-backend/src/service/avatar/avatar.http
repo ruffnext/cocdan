@@ -9,10 +9,9 @@ POST http://{{host}}/api/user/login HTTP/1.1
 Content-Type : application/json
 
 {
-    "name" : "ruffnex"
+    "username" : "ruffnex",
+    "password" : "ruffnex"
 }
-
-@cookies = {{login.response.headers.set-cookie}}
 
 
 
@@ -20,14 +19,14 @@ Content-Type : application/json
 # @name new_stage
 POST http://{{host}}/api/stage/new HTTP/1.1
 Content-Type: application/json
-Cookie: {{cookies}}
 
 {
     "title" : "stage title",
-    "description" : "example stage"
+    "description" : "example stage",
+    "rule": "CoC7th"
 }
 
-@stage_uuid = {{new_stage.response.body.uuid}}
+@stage_uuid = {{new_stage.response.body.raw_id}}
 
 
 
@@ -35,13 +34,15 @@ Cookie: {{cookies}}
 # @name new_avatar
 POST http://{{host}}/api/avatar/new HTTP/1.1
 Content-Type: application/json
-Cookie: {{cookies}}
 
 {
     "name" : "new avatar",
     "description" : "new avatar",
-    "stage_id" : "{{stage_uuid}}"
+    "stage_id" : {{stage_uuid}}
 }
+
+### list owned avatars by stage
+GET http://{{host}}/api/stage/{{stage_uuid}}/my_avatars HTTP/1.1
 
 @avatar_id = {{new_avatar.response.body.id}}
 

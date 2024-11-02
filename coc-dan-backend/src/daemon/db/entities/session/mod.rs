@@ -1,10 +1,18 @@
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use surrealdb::sql::Id;
 
-use crate::daemon::db::DbEntity;
+use crate::{
+    daemon::{
+        db::{DbConn, DbEntity},
+        SurrealRecord,
+    },
+    mls,
+    typedef::err::ErrCode,
+};
 
-use super::User;
+use super::{Stage, User};
 
 #[derive(Deserialize, Serialize, Debug, Clone, ts_rs::TS)]
 #[ts(export, rename = "ISession", export_to = "entity/basic/ISession.d.ts")]
@@ -37,5 +45,26 @@ impl DbEntity for Session {
 impl Session {
     pub fn is_expired(&self) -> bool {
         self.expiration_time < chrono::Utc::now().fixed_offset()
+    }
+    pub async fn is_on_stage(&self, stage: &Stage, db: &DbConn) -> bool {
+        let user = match self.session_type {
+            SessionType::User(ref u) => u,
+        };
+        let query = "SELECT * FROM r_user_join_stage WHERE in = type::record($user) AND out = type::record($stage ) LIMIT 1";
+        match db
+            .query(query)
+            .bind(json!({
+                "user": user.db_thing().to_string(),
+                "stage": stage.db_thing().to_string(),
+            }))
+            .await
+        {
+            Ok(mut res) => {
+                let v = res.take::<Vec<SurrealRecord>>(0).unwrap_or(vec![]);
+                println!("{:?}", v);
+                return v.len() > 0;
+            }
+            Err(_e) => return false,
+        };
     }
 }

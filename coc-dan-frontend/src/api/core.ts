@@ -4,6 +4,7 @@ import { IReqUserRegister } from "../bindings/api/user/register/IReqUserRegister
 import { ISession } from "../bindings/entity/basic/ISession"
 import { IReqCreateStage } from "../bindings/api/stage/create/IReqCreateStage";
 import { IStage } from "../bindings/entity/basic/IStage";
+import { IAvatar } from "../bindings/entity/avatar/IAvatar";
 
 type PostApiKeys =
   '/user/login' |
@@ -55,14 +56,14 @@ function url_format_base(url: string, params: Record<string, any> | undefined): 
   return new_url
 }
 
-function url_format_query(url: string, params: Record<string, any> | undefined): string {
-  if (params === undefined) {
-    return url
-  }
+// function url_format_query(url: string, params: Record<string, any> | undefined): string {
+//   if (params === undefined) {
+//     return url
+//   }
 
-  const searchParams = new URLSearchParams(params)
-  return `${url}?${searchParams.toString()}`
-}
+//   const searchParams = new URLSearchParams(params)
+//   return `${url}?${searchParams.toString()}`
+// }
 
 export async function post<Key extends PostApiKeys>(
   key: Key,
@@ -110,15 +111,18 @@ export async function post<Key extends PostApiKeys>(
 
 type GetApiKeys =
   '/user/me' |
-  '/stage/:id'
+  '/stage/:id' |
+  '/stage/:id/my_avatars'
 
 type GetRespType<Key extends GetApiKeys> =
   Key extends '/user/me' ? ISession :
   Key extends '/stage/:id' ? IStage :
+  Key extends '/stage/:id/my_avatars' ? Array<IAvatar> :
   never;
 
 type GetReqUrlType<Key extends GetApiKeys> =
   Key extends '/stage/:id' ? { id: string } :
+  Key extends '/stage/:id/my_avatars' ? { id: string } :
   undefined;
 
 export async function get<Key extends GetApiKeys>(

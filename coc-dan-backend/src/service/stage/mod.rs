@@ -5,6 +5,7 @@ use axum::{
 };
 mod create;
 mod get;
+mod list_avatar;
 mod remove;
 
 pub fn route() -> Router<AppState> {
@@ -20,6 +21,10 @@ pub fn route() -> Router<AppState> {
         // )
         .route("/new", post(create::create_stage))
         .route("/:stage_id/remove", post(remove::remove_stage))
+        .route(
+            "/:stage_id/my_avatars",
+            get(list_avatar::list_my_stage_avatars),
+        )
     // .route("/my_stages", get(crud::list_stages_by_user))
 }
 

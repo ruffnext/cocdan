@@ -40,6 +40,21 @@ impl MigrationTrait for M241028Init {
         DEFINE FIELD owner ON TABLE stage TYPE record<user>;
         DEFINE INDEX rawIdIdx ON TABLE stage COLUMNS raw_id UNIQUE;
 
+        DEFINE TABLE avatar SCHEMAFULL;
+        DEFINE FIELD raw_id ON TABLE avatar TYPE string;
+        DEFINE FIELD name ON TABLE avatar TYPE string;
+        DEFINE FIELD detail ON TABLE avatar TYPE object FLEXIBLE;
+        DEFINE FIELD stage ON TABLE avatar TYPE record<stage>;
+        DEFINE FIELD owner ON TABLE avatar TYPE record<user>;
+        DEFINE FIELD creation_time ON TABLE avatar TYPE datetime DEFAULT time::now();
+        DEFINE FIELD last_update_time ON TABLE avatar TYPE datetime DEFAULT time::now();
+        DEFINE FIELD header ON TABLE avatar TYPE option<string>;
+        DEFINE INDEX rawIdIdx ON TABLE avatar COLUMNS raw_id UNIQUE;
+        DEFINE INDEX ownerIdIdx ON TABLE avatar COLUMNS owner;
+        DEFINE INDEX stageIdIdx ON TABLE avatar COLUMNS stage;
+
+        DEFINE TABLE r_user_join_stage TYPE RELATION IN user OUT stage ENFORCED;
+
         COMMIT TRANSACTION;
         ";
 
@@ -53,6 +68,8 @@ impl MigrationTrait for M241028Init {
             REMOVE TABLE session;
             REMOVE TABLE user;
             REMOVE TABLE stage;
+            REMOVE TABLE avatar;
+            REMOVE TABLE r_user_join_stage;
         ";
 
         db.query(drop_db).await?;

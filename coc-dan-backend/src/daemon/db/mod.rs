@@ -12,7 +12,7 @@ use crate::{
 
 pub mod entities;
 #[allow(unused)]
-pub mod migration;
+mod migration;
 pub mod relations;
 
 #[derive(Clone)]
@@ -113,6 +113,36 @@ where
         Ok(())
     }
 }
+
+
+
+pub trait DbRelation<F, T, P>
+where
+    F: DbEntity,
+    T: DbEntity,
+    Self: Serialize + Sized + 'static + Clone,
+{
+    fn rel_id(&self) -> Id;
+
+    fn rel_new(f: &F, t: &T, p: &P) -> Self;
+    async fn rel_save(
+        f: &F,
+        t: &T,
+        payload: &P,
+        db: &DbConn,
+    ) -> Result<Self, Left> {
+        let table = Self::rel_table();
+        let s = Self::rel_new(f, t, payload);
+        let _: Option<Vec<SurrealRecord>> = db
+            .insert((table, RecordIdKey::from_inner(s.rel_id())))
+            .relation(s.clone())
+            .await
+            .map_err(mls!(ErrCode::DbError))?;
+        Ok(s)
+    }
+    fn rel_table() -> &'static str;
+}
+
 
 #[cfg(not(feature = "mock"))]
 pub async fn get_db(db_name: &str) -> Result<Surreal<surrealdb::engine::remote::ws::Client>, Left> {

@@ -11,7 +11,7 @@
   "dependencies": {
     "@ark-ui/solid": "4.3.0",
     "@solid-primitives/i18n": "^2.1.1",
-    "@solidjs/router": "^0.15",
+    "@solidjs/router": "^0.15.0",
     "bulma": "1.0.2",
     "flatten-type": "^1.0.1",
     "js-cookie": "^3.0.5",

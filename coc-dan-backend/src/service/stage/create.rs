@@ -5,7 +5,8 @@ use serde_json::json;
 use crate::{
     daemon::{
         entities::{Stage, StageRule, User},
-        DbEntity, SurrealRecord,
+        relations::RelUserToStage,
+        DbEntity, DbRelation, SurrealRecord,
     },
     left_span, mls,
     typedef::err::{ErrCode, Left},
@@ -73,6 +74,7 @@ pub async fn create_stage(
     if let Some(record) = response.into_iter().next() {
         let stage = Stage::db_load_by_id(record.id.id, &state.db.manager).await?;
         if let Some(stage) = stage {
+            RelUserToStage::rel_save(&user, &stage, &(), &state.db.manager).await?;
             return Ok(Json(stage));
         } else {
             return Err(left_span!(ErrCode::InternalServerError(

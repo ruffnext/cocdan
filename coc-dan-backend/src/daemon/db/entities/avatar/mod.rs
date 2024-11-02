@@ -1,6 +1,11 @@
 use std::collections::HashMap;
 
+use surrealdb::sql::{Id, Thing};
 use ts_rs::TS;
+
+use crate::daemon::db::DbConn;
+use crate::daemon::DbEntity;
+use crate::typedef::err::Left;
 
 use super::common::EraEnum;
 use super::skill::{OccupationalSkill, SkillAssigned};
@@ -164,7 +169,7 @@ pub struct Equipment {
 
 #[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IDetail", export_to = "entity/avatar/IDetail.d.ts")]
-pub struct Detail {
+pub struct AvatarDetail {
     pub status: Status,
     pub characteristics: Characteristics,
     pub descriptor: Descriptor,
@@ -173,7 +178,7 @@ pub struct Detail {
     pub equipments: Vec<Equipment>,
 }
 
-impl Default for Detail {
+impl Default for AvatarDetail {
     fn default() -> Self {
         Self {
             status: Default::default(),
@@ -214,11 +219,59 @@ impl Default for Occupation {
 
 #[derive(serde::Deserialize, serde::Serialize, TS, Debug, Clone)]
 #[ts(export, rename = "IAvatar", export_to = "entity/avatar/IAvatar.d.ts")]
-pub struct IAvatar {
+pub struct Avatar {
     pub raw_id: String,
-    pub of_stage: Stage,
+    pub stage: Stage,
     pub owner: User,
     pub name: String,
-    pub detail: Detail,
+    pub detail: AvatarDetail,
     pub header: Option<String>,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Clone)]
+struct AvatarDbAux {
+    pub raw_id: String,
+    pub stage: Thing,
+    pub owner: Thing,
+    pub name: String,
+    pub detail: AvatarDetail,
+    pub header: Option<String>,
+}
+
+impl DbEntity for AvatarDbAux {
+    fn db_id(&self) -> Id {
+        Id::from(self.raw_id.clone())
+    }
+
+    fn db_tab_name() -> &'static str {
+        "avatar"
+    }
+}
+
+impl DbEntity for Avatar {
+    fn db_id(&self) -> Id {
+        Id::from(self.raw_id.clone())
+    }
+
+    fn db_tab_name() -> &'static str {
+        "avatar"
+    }
+
+    async fn db_save(&self, db: &DbConn) -> Result<(), Left> {
+        let aux: AvatarDbAux = self.into();
+        aux.db_save(db).await
+    }
+}
+
+impl From<&Avatar> for AvatarDbAux {
+    fn from(avatar: &Avatar) -> Self {
+        Self {
+            raw_id: avatar.raw_id.clone(),
+            stage: avatar.stage.db_thing(),
+            owner: avatar.owner.db_thing(),
+            name: avatar.name.clone(),
+            detail: avatar.detail.clone(),
+            header: avatar.header.clone(),
+        }
+    }
 }

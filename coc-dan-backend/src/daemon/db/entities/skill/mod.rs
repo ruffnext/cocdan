@@ -55,6 +55,7 @@ pub enum OccupationalSkill {
     Enumeration(OptionalOccupationalSkill),
 }
 
+#[allow(unused)]
 pub enum SkillAssignType {
     Occupational = 1,
     Optional = 2,
