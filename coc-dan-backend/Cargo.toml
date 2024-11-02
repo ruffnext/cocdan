@@ -5,6 +5,10 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = []
+mock = ["surrealdb/kv-mem"]  # run test on mock db
+
 [dependencies]
 tokio = { version = "*", features = ["full"] }
 futures = "*"
@@ -19,7 +23,7 @@ uuid = { version = "1.11.0", features = ["v4"] }
 dotenvy = "0.15"
 rand = "0.8"
 chrono = { version = "*", features = ["std"] }
-surrealdb = "2.0.4"
+surrealdb = { version = "2.0.4" }
 surrealdb-core = "2.0.4"
 async-trait = "0.1"
 thiserror = "1"

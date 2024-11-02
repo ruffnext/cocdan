@@ -3,6 +3,8 @@
         "bulma",
         "Redfield",
         "solidjs",
+        "soslogo",
+        "textcolor",
         "unflatten"
     ],
     "editor.tabSize": 2

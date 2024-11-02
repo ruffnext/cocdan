@@ -1,7 +1,5 @@
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use surrealdb::{
-    engine::remote::ws::{Client, Ws},
-    opt::auth::Root,
     sql::{Id, Thing},
     RecordIdKey, Surreal,
 };
@@ -13,16 +11,20 @@ use crate::{
 };
 
 pub mod entities;
-#[cfg(test)]
+#[allow(unused)]
 pub mod migration;
 pub mod relations;
 
 #[derive(Clone)]
 pub struct DbService {
-    pub manager: Surreal<Client>,
+    pub manager: DbConn,
 }
 
-pub type DbConn = Surreal<Client>;
+#[cfg(not(feature = "mock"))]
+pub type DbConn = Surreal<surrealdb::engine::remote::ws::Client>;
+
+#[cfg(feature = "mock")]
+pub type DbConn = Surreal<surrealdb::engine::local::Db>;
 
 impl DbService {
     #[tracing::instrument(skip(self, binds))]
@@ -60,8 +62,9 @@ impl DbService {
     }
 
     pub async fn new() -> Result<Self, Left> {
-        let manager = get_db("manager").await?;
-        Ok(Self { manager })
+        return Ok(Self {
+            manager: get_db("manager").await?,
+        });
     }
 }
 
@@ -111,16 +114,17 @@ where
     }
 }
 
-pub async fn get_db(db_name: &str) -> Result<DbConn, Left> {
+#[cfg(not(feature = "mock"))]
+pub async fn get_db(db_name: &str) -> Result<Surreal<surrealdb::engine::remote::ws::Client>, Left> {
     let url = std::env::var("SURREAL_ENDPOINT").expect("SURREAL_URL must be set");
     let user = std::env::var("SURREAL_USER").expect("SURREAL_USER must be set");
     let pass = std::env::var("SURREAL_PASS").expect("SURREAL_PASS must be set");
 
-    let db = Surreal::new::<Ws>(url)
+    let db = Surreal::new::<surrealdb::engine::remote::ws::Ws>(url)
         .await
         .map_err(mls!(ErrCode::DbError))?;
 
-    db.signin(Root {
+    db.signin(surrealdb::opt::auth::Root {
         username: &user,
         password: &pass,
     })
@@ -138,13 +142,21 @@ pub async fn get_db(db_name: &str) -> Result<DbConn, Left> {
     Ok(db)
 }
 
-#[cfg(test)]
-pub async fn new_mock_db() -> DbService {
+#[cfg(feature = "mock")]
+pub async fn get_db(db_name: &str) -> Result<Surreal<surrealdb::engine::local::Db>, Left> {
     use migration::{drop_surreal, init_surreal};
 
-    std::env::set_var("SURREAL_NS", "test");
-    let db = DbService::new().await.expect("failed to connect to db");
-    drop_surreal(&db.manager).await.expect("failed to drop db");
-    init_surreal(&db.manager).await;
-    db
+    let db = Surreal::new::<surrealdb::engine::local::Mem>(())
+        .await
+        .map_err(mls!(ErrCode::DbError))?;
+
+    db.use_ns("test")
+        .use_db(db_name)
+        .await
+        .map_err(mls!(ErrCode::DbError))?;
+
+    drop_surreal(&db).await.expect("failed to drop db");
+    init_surreal(&db).await;
+
+    Ok(db)
 }

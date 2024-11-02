@@ -1,14 +1,13 @@
-use crate::{
-    daemon::entities::{Stage, StageRule},
-    service::{
-        stage::create::ReqCreateStage, tests::new_test_server,
-        user::tests::test_create_user_and_login,
-    },
-};
-use http::StatusCode;
-
+#[cfg(feature = "mock")]
 #[tokio::test]
 async fn test_stage_basic() {
+    use crate::service::user::tests::test_create_user_and_login;
+    use crate::{
+        daemon::entities::{Stage, StageRule},
+        service::{stage::create::ReqCreateStage, tests::new_test_server},
+    };
+    use http::StatusCode;
+
     let (server, _db) = new_test_server().await;
     let (_u, cookie) = test_create_user_and_login("user name", &server).await;
     let session = cookie.get("SESSION").unwrap().clone();

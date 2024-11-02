@@ -3,8 +3,9 @@ use surrealdb::{
     RecordIdKey,
 };
 
+use super::super::{DbEntity, SurrealRecord};
 use crate::{
-    daemon::{db::DbConn, DbEntity, SurrealRecord},
+    daemon::db::DbConn,
     mls,
     typedef::err::{ErrCode, Left},
 };

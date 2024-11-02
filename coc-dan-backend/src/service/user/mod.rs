@@ -20,6 +20,7 @@ pub fn route() -> Router<AppState> {
 }
 
 #[cfg(test)]
+#[cfg(feature = "mock")]
 pub(crate) mod tests {
     use axum_extra::extract::CookieJar;
     use axum_test::TestServer;

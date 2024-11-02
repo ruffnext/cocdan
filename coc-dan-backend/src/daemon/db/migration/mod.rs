@@ -1,13 +1,15 @@
 use serde::{Deserialize, Serialize};
 mod m241028_init;
 
+use super::DbService;
 use crate::{
-    daemon::DbService,
     mls,
     typedef::err::{ErrCode, Left},
 };
 
-use super::{DbConn, SurrealRecord};
+use super::SurrealRecord;
+
+type DbConn = super::DbConn;
 
 #[async_trait::async_trait]
 pub(super) trait MigrationTrait
@@ -85,14 +87,18 @@ async fn apply(db: &DbConn, m: &Box<dyn MigrationTrait>) -> Result<(), Left> {
     Ok(())
 }
 
+#[cfg(not(feature = "mock"))]
 #[tokio::test]
 #[ignore]
 pub async fn migrate() {
+    use super::get_db;
+
     dotenvy::dotenv().ok();
-    let db = DbService::new().await.unwrap();
-    init_surreal(&db.manager).await;
+    let manager = get_db("manager").await.unwrap();
+    init_surreal(&manager).await;
 }
 
+#[cfg(not(feature = "mock"))]
 #[tokio::test]
 #[ignore]
 pub async fn reset_surreal() {

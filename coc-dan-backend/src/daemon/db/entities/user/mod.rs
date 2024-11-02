@@ -2,10 +2,8 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use surrealdb::sql::Id;
 
-use crate::{
-    daemon::{db::DbEntity, DbService},
-    typedef::err::Left,
-};
+use super::super::{DbEntity, DbService};
+use crate::typedef::err::Left;
 
 #[derive(Deserialize, Serialize, Debug, Clone, ts_rs::TS)]
 #[ts(export, rename = "IUser", export_to = "entity/basic/IUser.d.ts")]
