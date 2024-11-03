@@ -3,4 +3,4 @@ import type { IDetail } from "./IDetail.d";
 import type { IStage } from "../basic/IStage.d";
 import type { IUser } from "../basic/IUser.d";
 
-export type IAvatar = { raw_id: string, of_stage: IStage, owner: IUser, name: string, detail: IDetail, header: string | null, };
+export type IAvatar = { raw_id: string, stage: IStage, owner: IUser, name: string, detail: IDetail, header: string | null, };

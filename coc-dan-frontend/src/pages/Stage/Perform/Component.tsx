@@ -1,11 +1,12 @@
-import { useParams } from "@solidjs/router"
+import { useNavigate, useParams } from "@solidjs/router"
 import { get } from "../../../api/core"
 import { createResource, createSignal, For } from "solid-js"
 import { IStage } from "../../../bindings/entity/basic/IStage"
 import { IAvatar } from "../../../bindings/entity/avatar/IAvatar"
-import LogContainer from "./Component/LogContainer/Component"
+import Playground from "./Component/Playground/Component"
 import { Suspense, Show } from "solid-js"
 import AvatarEditor from "./Component/AvatarEditor/Component"
+import { useSession } from "../../Login/context"
 // const PlaceHolder = () => {
 //   return (
 //     <div>loading...</div>
@@ -15,6 +16,7 @@ import AvatarEditor from "./Component/AvatarEditor/Component"
 export default () => {
   const param = useParams()
   const [isExtend, setIsExtend] = createSignal(true)
+
   const [stage] = createResource(async (): Promise<IStage | undefined> => {
     const resp = await get('/stage/:id', { id: param['id'] }, true)
     if ("Ok" in resp) {
@@ -34,7 +36,7 @@ export default () => {
     }
   })
 
-  const [selectedAvatar, setSelectedAvatar] = createSignal<IAvatar | undefined>(undefined)
+  const [selectedAvatar, setSelectedAvatar] = createSignal<IAvatar | "Add" | undefined>(undefined)
 
   return (
     <main class={`bg-bg w-full h-full max-w-100vw text-textcolor flex`}>
@@ -55,7 +57,7 @@ export default () => {
         </button>
         <hr class="w-full" />
         <div class="flex items-center px-2 flex-col flex-1">
-          <For each={avatars()} fallback={<div>loading...</div>}>
+          <For each={avatars()} fallback={<div></div>}>
             {avatar => (
               <button class={`w-16 h-16 mt-2 mb-2 rounded-md border-solid border-2 hover:bg-green-300 ${selectedAvatar() == avatar ? "border-green-300" : "border-black"}`} on:click={() => {
                 if (selectedAvatar() == avatar) {
@@ -68,7 +70,14 @@ export default () => {
               </button>
             )}
           </For>
-          <button class="w-12 h-12 mt-2 mb-2 text-black hover:text-green-500">
+          <button class={`w-12 h-12 mt-2 mb-2 hover:text-green-500 ${selectedAvatar() === "Add" ? "text-green-500" : "text-black"}`}
+            on:click={() => {
+              if (selectedAvatar() === "Add") {
+                setSelectedAvatar(undefined)
+              } else {
+                setSelectedAvatar("Add")
+              }
+            }}>
             <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -92,14 +101,15 @@ export default () => {
           <div class="h-4 w-full"></div>
         </div>
       </div>
-      <Show when={selectedAvatar()}>
-        <AvatarEditor avatar={selectedAvatar() as any} />
+      <Show when={selectedAvatar() && isExtend()}>
+        <AvatarEditor
+          avatar={selectedAvatar() as any}
+          stage={stage() as any}
+        />
       </Show>
-      <div>
-        <Suspense fallback={<div>...</div>}>
-          <LogContainer stage={stage() as any} />
-        </Suspense>
-      </div>
+      <Suspense fallback={<div>...</div>}>
+        <Playground stage={stage() as any} />
+      </Suspense>
     </main>
   );
 }

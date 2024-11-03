@@ -5,17 +5,20 @@ import { ISession } from "../bindings/entity/basic/ISession"
 import { IReqCreateStage } from "../bindings/api/stage/create/IReqCreateStage";
 import { IStage } from "../bindings/entity/basic/IStage";
 import { IAvatar } from "../bindings/entity/avatar/IAvatar";
+import { IReqCreateAvatar } from "../bindings/api/avatar/create/IReqCreateAvatar";
 
 type PostApiKeys =
   '/user/login' |
   '/user/register' |
   '/user/logout' |
-  '/stage/new'
+  '/stage/new' |
+  '/avatar/new'
 
 type PostReqBodyType<Key extends PostApiKeys> =
   Key extends '/user/login' ? IReqUserLogin :
   Key extends '/user/register' ? IReqUserRegister :
   Key extends '/stage/new' ? IReqCreateStage :
+  Key extends '/avatar/new' ? IReqCreateAvatar :
   undefined;
 
 type PostReqUrlType<Key extends PostApiKeys> =
@@ -37,6 +40,7 @@ type PostReqRespType<Key extends PostApiKeys> =
   Key extends '/user/register' ? ISession :
   Key extends '/user/logout' ? ISimpleResponse :
   Key extends '/stage/new' ? IStage :
+  Key extends '/avatar/new' ? IAvatar :
   undefined;
 
 type ApiError = {
