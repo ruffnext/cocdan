@@ -7,6 +7,7 @@ import { createComputed, createSignal, Match, Switch } from "solid-js"
 type Props = {
   avatar: IAvatar | "Add",
   stage: IStage,
+  onChanged: () => void
 }
 
 export default (props: Props) => {
@@ -92,6 +93,7 @@ export default (props: Props) => {
         }, undefined, true)
         if ("Ok" in resp) {
           setAvatar(resp.Ok)
+          props.onChanged()
         }
       } else {
         // todo

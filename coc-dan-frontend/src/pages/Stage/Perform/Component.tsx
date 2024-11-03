@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "@solidjs/router"
+import { useParams } from "@solidjs/router"
 import { get } from "../../../api/core"
 import { createResource, createSignal, For } from "solid-js"
 import { IStage } from "../../../bindings/entity/basic/IStage"
@@ -6,16 +6,12 @@ import { IAvatar } from "../../../bindings/entity/avatar/IAvatar"
 import Playground from "./Component/Playground/Component"
 import { Suspense, Show } from "solid-js"
 import AvatarEditor from "./Component/AvatarEditor/Component"
-import { useSession } from "../../Login/context"
-// const PlaceHolder = () => {
-//   return (
-//     <div>loading...</div>
-//   )
-// }
 
 export default () => {
   const param = useParams()
   const [isExtend, setIsExtend] = createSignal(true)
+  const [editingAvatar, setEditingAvatar] = createSignal<IAvatar | "Add" | undefined>(undefined)
+  const [selectedAvatar, setSelectedAvatar] = createSignal<IAvatar | undefined>(undefined)
 
   const [stage] = createResource(async (): Promise<IStage | undefined> => {
     const resp = await get('/stage/:id', { id: param['id'] }, true)
@@ -26,21 +22,22 @@ export default () => {
     }
   })
 
-  const [avatars] = createResource(async (): Promise<Array<IAvatar> | undefined> => {
+  const [avatars, { refetch }] = createResource(async (): Promise<Array<IAvatar> | undefined> => {
     const resp = await get('/stage/:id/my_avatars', { id: param['id'] }, true)
     if ("Ok" in resp) {
-      console.log(resp.Ok)
+      if (resp.Ok.length > 0) {
+        setSelectedAvatar(resp.Ok[0])
+      }
       return resp.Ok
     } else {
       return undefined
     }
   })
 
-  const [selectedAvatar, setSelectedAvatar] = createSignal<IAvatar | "Add" | undefined>(undefined)
 
   return (
     <main class={`bg-bg w-full h-full max-w-100vw text-textcolor flex`}>
-      <button class={`absolute top-1 left-1 h-8 w-16 ${isExtend() ? "hidden" : ""} justify-center items-center flex bg-green-300 rounded-md`} on:click={() => setIsExtend(true)}>
+      <button class={`absolute top-1 left-1 h-8 w-16 ${isExtend() ? "hidden" : ""} justify-center items-center flex bg-gray-200 rounded-md hover:bg-green-300`} on:click={() => setIsExtend(true)}>
         <svg class="h-8 w-8 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
         </svg>
@@ -59,23 +56,31 @@ export default () => {
         <div class="flex items-center px-2 flex-col flex-1">
           <For each={avatars()} fallback={<div></div>}>
             {avatar => (
-              <button class={`w-16 h-16 mt-2 mb-2 rounded-md border-solid border-2 hover:bg-green-300 ${selectedAvatar() == avatar ? "border-green-300" : "border-black"}`} on:click={() => {
-                if (selectedAvatar() == avatar) {
-                  setSelectedAvatar(undefined)
-                } else {
+              <button class={`w-16 h-16 mt-2 mb-2 rounded-md border-solid border-4 hover:bg-green-300 p-1
+                ${editingAvatar() == avatar ? "bg-green-300" : ""}
+                ${selectedAvatar() == avatar ? "border-green-500" : "border-gray-500"}
+                `}
+                on:dblclick={() => {
+                  if (editingAvatar() == avatar) {
+                    setEditingAvatar(undefined)
+                  } else {
+                    setEditingAvatar(avatar)
+                  }
+                }}
+                on:click={() => {
                   setSelectedAvatar(avatar)
-                }
-              }}>
+                }}
+              >
                 {avatar.name}
               </button>
             )}
           </For>
-          <button class={`w-12 h-12 mt-2 mb-2 hover:text-green-500 ${selectedAvatar() === "Add" ? "text-green-500" : "text-black"}`}
+          <button class={`w-12 h-12 mt-2 mb-2 hover:text-green-500 ${editingAvatar() === "Add" ? "text-green-500" : "text-black"}`}
             on:click={() => {
-              if (selectedAvatar() === "Add") {
-                setSelectedAvatar(undefined)
+              if (editingAvatar() === "Add") {
+                setEditingAvatar(undefined)
               } else {
-                setSelectedAvatar("Add")
+                setEditingAvatar("Add")
               }
             }}>
             <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,19 +101,27 @@ export default () => {
             </svg>
           </button>
           <button class="w-12 h-12 mt-2 mb-2 text-black hover:text-green-500">
-            <svg class="h-12 w-12" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z" />  <path d="M9 11l-4 4l4 4m-4 -4h11a4 4 0 0 0 0 -8h-1" /></svg>
+            <svg class="h-12 w-12" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" />
+              <path d="M9 11l-4 4l4 4m-4 -4h11a4 4 0 0 0 0 -8h-1" />
+            </svg>
           </button>
           <div class="h-4 w-full"></div>
         </div>
       </div>
-      <Show when={selectedAvatar() && isExtend()}>
+      <Show when={editingAvatar() && isExtend()}>
         <AvatarEditor
-          avatar={selectedAvatar() as any}
+          avatar={editingAvatar() as any}
           stage={stage() as any}
+          onChanged={() => {
+            refetch()
+          }}
         />
       </Show>
       <Suspense fallback={<div>...</div>}>
-        <Playground stage={stage() as any} />
+        {
+          selectedAvatar() ? <Playground stage={stage() as any} avatar={selectedAvatar() as any} /> : <div></div>
+        }
       </Suspense>
     </main>
   );
