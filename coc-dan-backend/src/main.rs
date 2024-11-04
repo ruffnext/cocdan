@@ -2,6 +2,7 @@ pub(self) mod daemon;
 mod service;
 mod state;
 mod typedef;
+mod utils;
 
 use daemon::DbService;
 use tracing::info;

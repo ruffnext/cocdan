@@ -1,4 +1,5 @@
 use axum::{extract::State, Json};
+use chrono::SecondsFormat;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -50,10 +51,11 @@ pub async fn create_stage(
             description: type::string($description),
             rule: type::string($rule),
             owner: type::record($owner),
-        }};
+        }} VERSION d'{time}';
 
         COMMIT TRANSACTION;
-    "#
+    "#,
+        time = chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true)
     );
 
     let mut query_res = state

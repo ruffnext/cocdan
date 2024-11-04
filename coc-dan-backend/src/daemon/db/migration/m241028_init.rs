@@ -48,7 +48,7 @@ impl MigrationTrait for M241028Init {
         DEFINE FIELD owner ON TABLE avatar TYPE record<user>;
         DEFINE FIELD creation_time ON TABLE avatar TYPE datetime DEFAULT time::now();
         DEFINE FIELD last_update_time ON TABLE avatar TYPE datetime DEFAULT time::now();
-        DEFINE FIELD header ON TABLE avatar TYPE option<string>;
+        DEFINE FIELD header ON TABLE avatar TYPE string DEFAULT \"\";
         DEFINE INDEX rawIdIdx ON TABLE avatar COLUMNS raw_id UNIQUE;
         DEFINE INDEX ownerIdIdx ON TABLE avatar COLUMNS owner;
         DEFINE INDEX stageIdIdx ON TABLE avatar COLUMNS stage;

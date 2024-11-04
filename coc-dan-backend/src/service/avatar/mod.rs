@@ -1,5 +1,7 @@
 use axum::{routing::post, Router};
 mod create;
+mod delete;
+mod update;
 // pub mod crud;
 
 use crate::AppState;
@@ -35,7 +37,10 @@ use crate::AppState;
 // }
 
 pub fn route() -> Router<AppState> {
-    Router::new().route("/new", post(create::create_avatar))
+    Router::new()
+        .route("/new", post(create::create_avatar))
+        .route("/update", post(update::update_avatar))
+        .route("/delete", post(delete::delete_avatar))
     // .route("/:id", get(crud::get_by_id_req).delete(crud::destroy))
     // .route(
     //     "/:id/transaction",

@@ -65,7 +65,6 @@ export default () => {
     })
   }
   const setHpStatus = (e: IHealthStatus): string => {
-    console.log(avatar)
     setAvatar("detail", "status", "health_status", e)
     return getHealthName(e)
   }

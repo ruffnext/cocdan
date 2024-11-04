@@ -1,11 +1,13 @@
-import { createSignal } from "solid-js"
+import { createSignal, Show, For } from "solid-js"
 import { IAvatar } from "../../../../../bindings/entity/avatar/IAvatar"
 import { IStage } from "../../../../../bindings/entity/basic/IStage"
-import { DOMElement } from "solid-js/jsx-runtime"
+import NoMessageHolder from "./Logs/NoMessageHolder"
 
 type Props = {
   stage: IStage,
-  avatar: IAvatar
+  avatar: IAvatar,
+  allControllableAvatar: Array<IAvatar>
+  onAvatarChange: (avatar: IAvatar) => void
 }
 
 export default (props: Props) => {
@@ -13,6 +15,7 @@ export default (props: Props) => {
   let inputElement: HTMLTextAreaElement | undefined = undefined
   const [height, setHeight] = createSignal<number>(minimumHeight)
   const [input, setInput] = createSignal<string>("")
+  const [isAvatarSelectorExtend, setIsAvatarSelectorExtend] = createSignal(false)
   function onInput(e: Event & {
     currentTarget: HTMLTextAreaElement;
   }) {
@@ -42,7 +45,6 @@ export default (props: Props) => {
     if (inputElement) {
       inputElement.value = ""
     }
-    console.log(input())
     setInput("")
   }
   return (
@@ -53,8 +55,10 @@ export default (props: Props) => {
           class="rounded-l-md border-solid border-l-2 border-t-2 border-b-2 border-r-0 text-nowrap pl-4 
                 pr-4 bg-gray-100 h-full overflow-hidden hover:bg-green-300"
           style={`height: ${height()}px;`}
-        >
-          {props.avatar.name}
+          on:click={() => setIsAvatarSelectorExtend(!isAvatarSelectorExtend())}>
+          <div>
+            {props.avatar.name}
+          </div>
         </button>
         <textarea ref={inputElement} class="flex-grow text-lg overflow-y-hidden resize-none border-solid border-l-2 border-t-2 
             border-b-2 border-r-0 pl-4 pt-2 pb-2 pr-4 focus:border-r-2 focus:border-green-500 focus:outline-none"
@@ -80,6 +84,23 @@ export default (props: Props) => {
           </svg>
         </button>
       </div>
+      <Show when={isAvatarSelectorExtend()}>
+        <div class="z-20 absolute ml-4 flex flex-col-reverse max-h-96 min-w-32 rounded-md p-4" style={`margin-bottom: ${height() + 8}px; box-shadow: rgba(0, 0, 0, 0.1) 0px -8px 15px -3px`}>
+          <For each={props.allControllableAvatar} fallback={<div></div>}>
+            {avatar => (
+              <button class={`rounded-md w-full hover:bg-gray-200 text-lg ${props.avatar.raw_id === avatar.raw_id ? "bg-green-300" : ""}`}
+                on:click={() => {
+                  setIsAvatarSelectorExtend(false)
+                  props.onAvatarChange(avatar)
+                }}>
+                {avatar.name}
+              </button>
+            )}
+          </For>
+        </div>
+        <div class="absolute h-full w-full top-0 left-0" on:click={() => setIsAvatarSelectorExtend(false)}></div>
+      </Show>
+      <NoMessageHolder />
     </div>
   )
 }

@@ -12,7 +12,6 @@ function Menu() {
 
   const checkIsLoggedIn = () => {
     const v = session()
-    console.log(v)
     if (v === "NotLoggedIn") {
       navigate("/login")
       return false

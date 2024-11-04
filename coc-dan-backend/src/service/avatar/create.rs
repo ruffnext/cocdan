@@ -1,12 +1,13 @@
 use axum::{extract::State, Json};
-use surrealdb::sql::Id;
+use serde_json::json;
+use surrealdb::sql::{Id, Thing};
 
 use crate::{
     daemon::{
         entities::{Avatar, AvatarDetail, Session, SessionType, Stage},
-        DbEntity,
+        DbEntity, SurrealRecord,
     },
-    left_span,
+    left_span, mls,
     typedef::err::{ErrCode, Left},
     AppState,
 };
@@ -22,7 +23,8 @@ pub struct ReqCreateAvatar {
     name: String,
     #[serde(default)]
     detail: AvatarDetail,
-    header: Option<String>,
+    #[serde(default)]
+    header: String,
 }
 
 pub async fn create_avatar(
@@ -47,17 +49,51 @@ pub async fn create_avatar(
         SessionType::User(ref u) => u,
     };
 
-    let new_avatar_id = uuid::Uuid::new_v4();
-    let new_avatar = Avatar {
-        raw_id: new_avatar_id.to_string(),
-        name: req.name,
-        detail: req.detail,
-        stage: stage.clone(),
-        owner: owner.clone(),
-        header: req.header,
-    };
+    let new_avatar_id = uuid::Uuid::new_v4().to_string();
 
-    new_avatar.db_save(&state.db.manager).await?;
+    let save_query = format!(
+        "
+        CREATE type::record($id) CONTENT {{
+            raw_id: $raw_id,
+            name: $name,
+            detail: $detail,
+            stage: type::record($stage),
+            owner: type::record($owner),
+            header: $header,
+        }} VERSION d'{time}';
+    ",
+        time = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
+    );
 
-    return Ok(Json(new_avatar));
+    let mut response = state
+        .db
+        .manager
+        .query(save_query)
+        .bind(json!({
+            "id": Thing::from((Avatar::db_tab_name(), new_avatar_id.as_ref())).to_string(),
+            "raw_id": new_avatar_id,
+            "name": req.name,
+            "detail": req.detail,
+            "stage": stage.db_thing().to_string(),
+            "owner": owner.db_thing().to_string(),
+            "header": req.header,
+        }))
+        .await
+        .map_err(mls!(ErrCode::DbError))?;
+
+    let new_avatar: Vec<SurrealRecord> = response.take(0).map_err(mls!(ErrCode::DbError))?;
+
+    if let Some(v) = new_avatar.into_iter().next() {
+        if let Some(v) = Avatar::db_load_by_id(v.id.id, &state.db.manager).await? {
+            return Ok(Json(v));
+        } else {
+            return Err(left_span!(ErrCode::InternalServerError(
+                "Failed to load new avatar".into()
+            )));
+        }
+    } else {
+        return Err(left_span!(ErrCode::InternalServerError(
+            "Failed to create new avatar".into()
+        )));
+    }
 }

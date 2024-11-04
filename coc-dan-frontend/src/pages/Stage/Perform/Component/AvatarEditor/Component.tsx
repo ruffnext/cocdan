@@ -2,12 +2,14 @@ import { post } from "../../../../../api/core"
 import { IAvatar } from "../../../../../bindings/entity/avatar/IAvatar"
 import { IStage } from "../../../../../bindings/entity/basic/IStage"
 import { useSession } from "../../../../Login/context"
-import { createComputed, createSignal, Match, Switch } from "solid-js"
+import { createComputed, createSignal, Match, Show, Switch } from "solid-js"
 
 type Props = {
-  avatar: IAvatar | "Add",
+  avatar: [string, IAvatar] | ["Add", undefined] | [undefined, undefined],
   stage: IStage,
-  onChanged: () => void
+  onChanged: (avatar: IAvatar) => void,
+  onDelete: (avatar: IAvatar) => void,
+  onAdd: (avatar: IAvatar) => void
 }
 
 export default (props: Props) => {
@@ -15,7 +17,7 @@ export default (props: Props) => {
   const [avatar, setAvatar] = createSignal<IAvatar | undefined>(undefined)
   var editType = "Edit"
   createComputed(() => {
-    if (props.avatar == "Add") {
+    if (props.avatar[0] === "Add" || props.avatar[0] === undefined) {
       editType = "Add"
       const sessionContent = session()
       if (sessionContent == "IsLoading" || sessionContent == "NotLoggedIn") {
@@ -28,7 +30,7 @@ export default (props: Props) => {
           stage: props.stage,
           owner: sessionContent.session_type.User,
           name: "new avatar",
-          header: null,
+          header: "",
           detail: {
             status: {
               hp: 0,
@@ -68,13 +70,15 @@ export default (props: Props) => {
               occupational_skills: []
             },
             equipments: []
-          }
+          },
+          creation_time: null,
+          last_update_time: null
         })
       }
       return
     } else {
       editType = "Edit"
-      setAvatar(props.avatar)
+      setAvatar(props.avatar[1])
     }
   })
   const editorInner = (initialAvatar: IAvatar) => {
@@ -85,18 +89,22 @@ export default (props: Props) => {
     })
     async function onSave() {
       if (editType === "Add") {
-        const resp = await post('/avatar/new', {
-          stage_id: avatar().stage.raw_id,
-          name: avatar().name,
-          detail: avatar().detail,
-          header: avatar().header
+        props.onAdd(avatar())
+      } else {
+        props.onChanged(avatar())
+      }
+    }
+
+    async function onDelete() {
+      if (editType === "Add") {
+        return
+      } else {
+        const resp = await post('/avatar/delete', {
+          raw_id: avatar().raw_id
         }, undefined, true)
         if ("Ok" in resp) {
-          setAvatar(resp.Ok)
-          props.onChanged()
+          props.onDelete(avatar())
         }
-      } else {
-        // todo
       }
     }
 
@@ -160,10 +168,18 @@ export default (props: Props) => {
             </Match>
           </Switch>
         </div>
-        <div class="w-full h-10 pl-4 pr-4">
+        <div class="w-full h-10 pl-4 pr-4 mb-4">
           <button class="w-full h-full rounded-md bg-green-300 hover:bg-green-500"
             on:click={onSave}>Save</button>
         </div>
+        <Show when={editType === "Edit"}>
+          <div class="w-full h-10 pl-4 pr-4 mb-4">
+            <button class="w-full h-full rounded-md bg-red-300 hover:bg-red-500"
+              on:click={onDelete}>
+              Delete
+            </button>
+          </div>
+        </Show>
       </div>
     )
   }

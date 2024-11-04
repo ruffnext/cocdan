@@ -1,11 +1,14 @@
+use crate::utils::serde::optional_datetime_from_rfc3339;
 use std::collections::HashMap;
 
-use surrealdb::sql::{Id, Thing};
+use chrono::{DateTime, FixedOffset, Utc};
+use surrealdb::sql::{Datetime, Id, Thing};
 use ts_rs::TS;
 
 use crate::daemon::db::DbConn;
 use crate::daemon::DbEntity;
-use crate::typedef::err::Left;
+use crate::mls;
+use crate::typedef::err::{ErrCode, Left};
 
 use super::common::EraEnum;
 use super::skill::{OccupationalSkill, SkillAssigned};
@@ -225,7 +228,13 @@ pub struct Avatar {
     pub owner: User,
     pub name: String,
     pub detail: AvatarDetail,
-    pub header: Option<String>,
+    pub header: String,
+    #[serde(with = "optional_datetime_from_rfc3339")]
+    #[ts(as = "Option<String>")]
+    pub creation_time: Option<DateTime<FixedOffset>>,
+    #[serde(with = "optional_datetime_from_rfc3339")]
+    #[ts(as = "Option<String>")]
+    pub last_update_time: Option<DateTime<FixedOffset>>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Clone)]
@@ -235,7 +244,9 @@ struct AvatarDbAux {
     pub owner: Thing,
     pub name: String,
     pub detail: AvatarDetail,
-    pub header: Option<String>,
+    pub header: String,
+    pub creation_time: Option<Datetime>,
+    pub last_update_time: Option<Datetime>,
 }
 
 impl DbEntity for AvatarDbAux {
@@ -261,6 +272,21 @@ impl DbEntity for Avatar {
         let aux: AvatarDbAux = self.into();
         aux.db_save(db).await
     }
+
+    async fn db_load_by_id(id: Id, db: &DbConn) -> Result<Option<Self>, Left> {
+        let query = "SELECT * FROM $id FETCH owner, stage, stage.owner;";
+        let mut response = db
+            .query(query)
+            .bind(("id", Thing::from((Self::db_tab_name(), id))))
+            .await
+            .map_err(mls!(ErrCode::DbError))?;
+        let res: Vec<Self> = response.take(0).map_err(mls!(ErrCode::DbError))?;
+        if let Some(v) = res.into_iter().next() {
+            Ok(Some(v))
+        } else {
+            Ok(None)
+        }
+    }
 }
 
 impl From<&Avatar> for AvatarDbAux {
@@ -272,6 +298,12 @@ impl From<&Avatar> for AvatarDbAux {
             name: avatar.name.clone(),
             detail: avatar.detail.clone(),
             header: avatar.header.clone(),
+            creation_time: if let Some(v) = avatar.creation_time {
+                Some(Datetime::from(v.to_utc()))
+            } else {
+                Some(Datetime::from(Utc::now()))
+            },
+            last_update_time: Some(Datetime::from(Utc::now())),
         }
     }
 }
