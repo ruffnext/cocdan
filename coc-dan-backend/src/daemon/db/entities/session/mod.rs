@@ -29,6 +29,8 @@ pub enum SessionType {
 }
 
 impl DbEntity for Session {
+    type IdType = String;
+
     fn db_id(&self) -> Id {
         self.raw_id.clone().into()
     }

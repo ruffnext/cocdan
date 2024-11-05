@@ -63,7 +63,7 @@ pub async fn query_session_by_raw_id(
             SessionType::User(u) => match u.active_status {
                 UserActiveStatus::Active => {
                     if v.is_expired() {
-                        Session::db_del(v.db_id(), &state.db.manager).await?;
+                        Session::db_del(v.raw_id, &state.db.manager).await?;
                         return Err(left_span!(
                             ErrCode::PermissionDenied("Session is expired".into()),
                             "224c7d40"
@@ -71,7 +71,7 @@ pub async fn query_session_by_raw_id(
                     }
                 }
                 UserActiveStatus::Banned => {
-                    Session::db_del(v.db_id(), &state.db.manager).await?;
+                    Session::db_del(v.raw_id, &state.db.manager).await?;
                     return Err(left_span!(
                         ErrCode::PermissionDenied("User is banned".into()),
                         "6d0ce117"

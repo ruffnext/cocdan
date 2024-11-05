@@ -24,6 +24,8 @@ pub enum UserActiveStatus {
 }
 
 impl DbEntity for User {
+    type IdType = i64;
+
     fn db_id(&self) -> Id {
         self.raw_id.into()
     }

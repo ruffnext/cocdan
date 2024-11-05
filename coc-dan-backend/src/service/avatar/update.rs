@@ -1,6 +1,5 @@
 use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
-use surrealdb::sql::Id;
 
 use crate::{
     daemon::{
@@ -30,15 +29,14 @@ pub async fn update_avatar(
     session: Session,
     Json(req): Json<ReqUpdateAvatar>,
 ) -> Result<Json<Avatar>, Left> {
-    let avatar = if let Some(v) =
-        Avatar::db_load_by_id(Id::from(req.raw_id.clone()), &state.db.manager).await?
-    {
-        v
-    } else {
-        return Err(left_span!(ErrCode::PermissionDenied(
-            format!("You have no access to update avatar {}", req.raw_id).into()
-        )));
-    };
+    let avatar =
+        if let Some(v) = Avatar::db_load_by_id(req.raw_id.clone(), &state.db.manager).await? {
+            v
+        } else {
+            return Err(left_span!(ErrCode::PermissionDenied(
+                format!("You have no access to update avatar {}", req.raw_id).into()
+            )));
+        };
 
     match (session.session_type, avatar.stage.owner.clone()) {
         (SessionType::User(u), stage_owner)

@@ -11,7 +11,7 @@ type Props = {
 }
 
 export default (props: Props) => {
-  const minimumHeight = 48; // pex
+  const minimumHeight = 48; // px
   let inputElement: HTMLTextAreaElement | undefined = undefined
   const [height, setHeight] = createSignal<number>(minimumHeight)
   const [input, setInput] = createSignal<string>("")

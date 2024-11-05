@@ -72,6 +72,7 @@ impl ErrCode {
 macro_rules! mls {
     ( $status:expr) => {{
         |e| {
+            println!("{:#?}", e);
             tracing::error!("{} {}:{} {e:#?}", $status, file!(), line!());
             crate::typedef::err::Left {
                 status: $status.to_http_code(),

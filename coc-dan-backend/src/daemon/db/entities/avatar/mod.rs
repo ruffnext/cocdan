@@ -250,6 +250,8 @@ struct AvatarDbAux {
 }
 
 impl DbEntity for AvatarDbAux {
+    type IdType = String;
+
     fn db_id(&self) -> Id {
         Id::from(self.raw_id.clone())
     }
@@ -260,6 +262,8 @@ impl DbEntity for AvatarDbAux {
 }
 
 impl DbEntity for Avatar {
+    type IdType = String;
+
     fn db_id(&self) -> Id {
         Id::from(self.raw_id.clone())
     }
@@ -273,11 +277,11 @@ impl DbEntity for Avatar {
         aux.db_save(db).await
     }
 
-    async fn db_load_by_id(id: Id, db: &DbConn) -> Result<Option<Self>, Left> {
+    async fn db_load_by_id(id: Self::IdType, db: &DbConn) -> Result<Option<Self>, Left> {
         let query = "SELECT * FROM $id FETCH owner, stage, stage.owner;";
         let mut response = db
             .query(query)
-            .bind(("id", Thing::from((Self::db_tab_name(), id))))
+            .bind(("id", Thing::from((Self::db_tab_name(), Id::from(id)))))
             .await
             .map_err(mls!(ErrCode::DbError))?;
         let res: Vec<Self> = response.take(0).map_err(mls!(ErrCode::DbError))?;

@@ -16,7 +16,7 @@ tracing = "0.1"
 tracing-subscriber = "*"
 serde = "1"
 serde_json = "*"
-axum = { version = "*", features = ["json"] }
+axum = { version = "*", features = ["json", "ws" ] }
 axum-extra = { version = "*", features = ["cookie"] }
 http = "1.1"
 uuid = { version = "1.11.0", features = ["v4"] }

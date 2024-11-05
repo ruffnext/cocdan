@@ -9,7 +9,7 @@ impl MigrationTrait for M241028Init {
     }
 
     async fn setup(&self, db: &super::DbConn) -> Result<(), surrealdb::Error> {
-        let create_db = "
+        let create_db = r#"
         BEGIN TRANSACTION;
 
         DEFINE TABLE user SCHEMAFULL;
@@ -35,7 +35,7 @@ impl MigrationTrait for M241028Init {
         DEFINE TABLE stage SCHEMAFULL;
         DEFINE FIELD raw_id ON TABLE stage TYPE int;
         DEFINE FIELD title ON TABLE stage TYPE string;
-        DEFINE FIELD description ON TABLE stage TYPE string DEFAULT \"\";
+        DEFINE FIELD description ON TABLE stage TYPE string DEFAULT "";
         DEFINE FIELD rule ON TABLE stage TYPE string;
         DEFINE FIELD owner ON TABLE stage TYPE record<user>;
         DEFINE INDEX rawIdIdx ON TABLE stage COLUMNS raw_id UNIQUE;
@@ -48,15 +48,25 @@ impl MigrationTrait for M241028Init {
         DEFINE FIELD owner ON TABLE avatar TYPE record<user>;
         DEFINE FIELD creation_time ON TABLE avatar TYPE datetime DEFAULT time::now();
         DEFINE FIELD last_update_time ON TABLE avatar TYPE datetime DEFAULT time::now();
-        DEFINE FIELD header ON TABLE avatar TYPE string DEFAULT \"\";
+        DEFINE FIELD header ON TABLE avatar TYPE string DEFAULT "";
         DEFINE INDEX rawIdIdx ON TABLE avatar COLUMNS raw_id UNIQUE;
         DEFINE INDEX ownerIdIdx ON TABLE avatar COLUMNS owner;
         DEFINE INDEX stageIdIdx ON TABLE avatar COLUMNS stage;
 
         DEFINE TABLE r_user_join_stage TYPE RELATION IN user OUT stage ENFORCED;
 
+        DEFINE TABLE tx SCHEMAFULL;
+        DEFINE FIELD tx_id ON TABLE tx TYPE int;
+        DEFINE FIELD stage ON TABLE tx TYPE record<stage>;
+        DEFINE FIELD user ON TABLE tx TYPE record<user>;
+        DEFINE FIELD time ON TABLE tx TYPE datetime DEFAULT time::now();
+        DEFINE FIELD action ON TABLE tx TYPE object FLEXIBLE;
+        DEFINE INDEX txIdIdx ON TABLE tx COLUMNS tx_id;
+        DEFINE INDEX stageIdIdx ON TABLE tx COLUMNS stage;
+        DEFINE INDEX timeIdx ON TABLE tx COLUMNS time;
+
         COMMIT TRANSACTION;
-        ";
+        "#;
 
         db.query(create_db).await?;
 
@@ -70,6 +80,7 @@ impl MigrationTrait for M241028Init {
             REMOVE TABLE stage;
             REMOVE TABLE avatar;
             REMOVE TABLE r_user_join_stage;
+            REMOVE TABLE tx;
         ";
 
         db.query(drop_db).await?;

@@ -1,6 +1,6 @@
 use axum::{extract::State, Json};
 use serde_json::json;
-use surrealdb::sql::{Id, Thing};
+use surrealdb::sql::Thing;
 
 use crate::{
     daemon::{
@@ -32,12 +32,11 @@ pub async fn create_avatar(
     session: Session,
     Json(req): Json<ReqCreateAvatar>,
 ) -> Result<Json<Avatar>, Left> {
-    let stage =
-        if let Some(v) = Stage::db_load_by_id(Id::from(req.stage_id), &state.db.manager).await? {
-            v
-        } else {
-            return Err(left_span!(ErrCode::InvalidParameter("stage_id".into())));
-        };
+    let stage = if let Some(v) = Stage::db_load_by_id(req.stage_id, &state.db.manager).await? {
+        v
+    } else {
+        return Err(left_span!(ErrCode::InvalidParameter("stage_id".into())));
+    };
 
     if !session.is_on_stage(&stage, &state.db.manager).await {
         return Err(left_span!(ErrCode::PermissionDenied(
@@ -84,7 +83,9 @@ pub async fn create_avatar(
     let new_avatar: Vec<SurrealRecord> = response.take(0).map_err(mls!(ErrCode::DbError))?;
 
     if let Some(v) = new_avatar.into_iter().next() {
-        if let Some(v) = Avatar::db_load_by_id(v.id.id, &state.db.manager).await? {
+        if let Some(v) =
+            Avatar::db_load_by_id(v.id.id.to_raw().parse().unwrap(), &state.db.manager).await?
+        {
             return Ok(Json(v));
         } else {
             return Err(left_span!(ErrCode::InternalServerError(

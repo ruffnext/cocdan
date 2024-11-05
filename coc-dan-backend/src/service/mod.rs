@@ -2,11 +2,11 @@ use axum::Router;
 
 use crate::AppState;
 
-pub mod avatar;
+mod avatar;
 // mod db_relation;
-pub mod stage;
-// pub mod transaction;
-pub mod user;
+mod stage;
+mod tx;
+mod user;
 
 pub fn app() -> Router<AppState> {
     Router::new().nest(
@@ -14,7 +14,8 @@ pub fn app() -> Router<AppState> {
         Router::new()
             .nest("/user", user::route())
             .nest("/stage", stage::route())
-            .nest("/avatar", avatar::route()),
+            .nest("/avatar", avatar::route())
+            .nest("/tx", tx::router()),
     )
 }
 

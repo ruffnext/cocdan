@@ -3,7 +3,6 @@ use axum::{
     Json,
 };
 use serde_json::json;
-use surrealdb::sql::Id;
 
 use crate::{
     daemon::{
@@ -32,14 +31,13 @@ pub async fn list_my_stage_avatars(
         SessionType::User(u) => u,
     };
 
-    let stage =
-        if let Some(stage) = Stage::db_load_by_id(Id::from(stage_id), &state.db.manager).await? {
-            stage
-        } else {
-            return Err(left_span!(ErrCode::InvalidParameter(
-                "Stage not found".into()
-            )));
-        };
+    let stage = if let Some(stage) = Stage::db_load_by_id(stage_id, &state.db.manager).await? {
+        stage
+    } else {
+        return Err(left_span!(ErrCode::InvalidParameter(
+            "Stage not found".into()
+        )));
+    };
 
     let query = "SELECT * FROM avatar WHERE owner = type::record($owner) AND stage = type::record($stage) FETCH owner, stage, stage.owner";
 

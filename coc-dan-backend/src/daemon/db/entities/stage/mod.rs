@@ -53,6 +53,8 @@ impl From<Stage> for DbStage {
 }
 
 impl DbEntity for Stage {
+    type IdType = i64;
+
     fn db_id(&self) -> Id {
         self.raw_id.into()
     }
@@ -61,11 +63,11 @@ impl DbEntity for Stage {
         "stage"
     }
 
-    async fn db_load_by_id(id: Id, db: &DbConn) -> Result<Option<Self>, Left> {
+    async fn db_load_by_id(id: Self::IdType, db: &DbConn) -> Result<Option<Self>, Left> {
         let query = "SELECT * FROM $id FETCH owner";
         let mut response = db
             .query(query)
-            .bind(("id", Thing::from((Self::db_tab_name(), id))))
+            .bind(("id", Thing::from((Self::db_tab_name(), Id::from(id)))))
             .await
             .map_err(mls!(ErrCode::DbError))?;
         let records: Vec<Self> = response.take(0).map_err(mls!(ErrCode::DbError))?;
@@ -80,6 +82,29 @@ impl DbEntity for Stage {
         let _: Option<SurrealRecord> = db
             .upsert((Self::db_tab_name(), RecordIdKey::from_inner(self.db_id())))
             .content(DbStage::from(self.clone()))
+            .await
+            .map_err(mls!(ErrCode::DbError))?;
+        Ok(())
+    }
+
+    async fn db_del(id: Self::IdType, db: &DbConn) -> Result<(), Left> {
+        let query = format!(
+            "
+            BEGIN TRANSACTION;
+
+            DELETE $id;
+
+            DELETE FROM avatar WHERE stage = $id;
+            
+            DELETE FROM r_user_join_stage WHERE out = $id;
+
+            DELETE FROM tx WHERE stage = $id;
+
+            COMMIT TRANSACTION;
+        "
+        );
+        db.query(query)
+            .bind(("id", Thing::from((Self::db_tab_name(), Id::from(id)))))
             .await
             .map_err(mls!(ErrCode::DbError))?;
         Ok(())

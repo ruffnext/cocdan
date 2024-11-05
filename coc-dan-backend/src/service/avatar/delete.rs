@@ -1,7 +1,6 @@
 use axum::{extract::State, Json};
 use serde::Deserialize;
 use serde_json::json;
-use surrealdb::sql::Id;
 
 use crate::{
     daemon::{
@@ -28,15 +27,14 @@ pub async fn delete_avatar(
     session: Session,
     Json(req): Json<ReqDeleteAvatar>,
 ) -> Result<Json<serde_json::Value>, Left> {
-    let avatar = if let Some(v) =
-        Avatar::db_load_by_id(Id::from(req.raw_id.clone()), &state.db.manager).await?
-    {
-        v
-    } else {
-        return Err(left_span!(ErrCode::PermissionDenied(
-            format!("You have no access to delete avatar {}", req.raw_id).into()
-        )));
-    };
+    let avatar =
+        if let Some(v) = Avatar::db_load_by_id(req.raw_id.clone(), &state.db.manager).await? {
+            v
+        } else {
+            return Err(left_span!(ErrCode::PermissionDenied(
+                format!("You have no access to delete avatar {}", req.raw_id).into()
+            )));
+        };
 
     match session.session_type {
         SessionType::User(user) if user.raw_id == avatar.owner.raw_id => {}
@@ -47,7 +45,7 @@ pub async fn delete_avatar(
         }
     }
 
-    Avatar::db_del(avatar.db_id(), &state.db.manager).await?;
+    Avatar::db_del(avatar.raw_id, &state.db.manager).await?;
 
     Ok(Json(json!( {
         "message": "Avatar deleted",

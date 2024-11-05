@@ -1,0 +1,84 @@
+use axum::{
+    extract::{Path, State},
+    Json,
+};
+use serde::Deserialize;
+
+use crate::{
+    daemon::{
+        entities::{Avatar, RolePlay, Session, SessionType, Stage, TxAction, TxAux},
+        DbEntity,
+    },
+    left_span, mls,
+    typedef::err::{ErrCode, Left},
+    AppState,
+};
+
+#[derive(Deserialize, ts_rs::TS)]
+#[ts(
+    export,
+    export_to = "src/daemon/db/entities/tx/tx_role_play.d.ts",
+    rename = "IReqRolePlay"
+)]
+pub struct IReqRolePlay {
+    avatar_id: String,
+    text: String,
+}
+
+pub async fn role_play(
+    State(state): State<AppState>,
+    session: Session,
+    Path(stage_id): Path<String>,
+    Json(req): Json<IReqRolePlay>,
+) -> Result<Json<TxAux>, Left> {
+    let user = match session.session_type {
+        SessionType::User(user) => user,
+    };
+
+    let stage_id = stage_id
+        .parse::<i64>()
+        .map_err(mls!(ErrCode::InvalidParameter("Invalid stage_id".into())))?;
+
+    let stage = if let Some(stage) = Stage::db_load_by_id(stage_id, &state.db.manager).await? {
+        stage
+    } else {
+        return Err(left_span!(ErrCode::InvalidParameter(
+            format!("Stage not found: {}", stage_id).into()
+        )));
+    };
+
+    let avatar = if let Some(avatar) =
+        Avatar::db_load_by_id(req.avatar_id.clone(), &state.db.manager).await?
+    {
+        avatar
+    } else {
+        return Err(left_span!(ErrCode::InvalidParameter(
+            format!("Avatar not found: {}", req.avatar_id).into()
+        )));
+    };
+
+    if user.raw_id != avatar.owner.raw_id {
+        return Err(left_span!(ErrCode::PermissionDenied(
+            "You have no access to role play with this avatar".into()
+        )));
+    }
+
+    if avatar.stage.raw_id != stage.raw_id {
+        return Err(left_span!(ErrCode::PermissionDenied(
+            "You have no access to role play with this avatar".into()
+        )));
+    }
+
+    let tx = TxAux::new(
+        stage.db_thing(),
+        user.db_thing(),
+        TxAction::RolePlay(RolePlay {
+            avatar: avatar.db_thing(),
+            text: req.text.clone(),
+        }),
+        &state.db.manager,
+    )
+    .await?;
+
+    Ok(Json(tx))
+}

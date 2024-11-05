@@ -1,5 +1,4 @@
 use axum::{extract::State, Json};
-use chrono::SecondsFormat;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -31,6 +30,10 @@ pub async fn create_stage(
     user: User,
     Json(req): Json<ReqCreateStage>,
 ) -> Result<Json<Stage>, Left> {
+    #[cfg(feature = "mock")]
+    let version = "";
+    #[cfg(not(feature = "mock"))]
+    let version = " VERSION time::now()";
     let create_statement = format!(
         r#"
         BEGIN TRANSACTION;
@@ -51,11 +54,10 @@ pub async fn create_stage(
             description: type::string($description),
             rule: type::string($rule),
             owner: type::record($owner),
-        }} VERSION d'{time}';
+        }} {version};
 
         COMMIT TRANSACTION;
-    "#,
-        time = chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true)
+    "#
     );
 
     let mut query_res = state
@@ -74,7 +76,8 @@ pub async fn create_stage(
     let response: Vec<SurrealRecord> = query_res.take(3).map_err(mls!(ErrCode::DbError))?;
 
     if let Some(record) = response.into_iter().next() {
-        let stage = Stage::db_load_by_id(record.id.id, &state.db.manager).await?;
+        let stage =
+            Stage::db_load_by_id(record.id.id.to_raw().parse().unwrap(), &state.db.manager).await?;
         if let Some(stage) = stage {
             RelUserToStage::rel_save(&user, &stage, &(), &state.db.manager).await?;
             return Ok(Json(stage));

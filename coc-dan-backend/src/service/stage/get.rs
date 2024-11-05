@@ -2,10 +2,15 @@ use axum::{
     extract::{Path, State},
     Json,
 };
-use surrealdb::sql::Id;
 
 use crate::{
-    daemon::{entities::{Session, Stage}, DbEntity}, left_span, mls, typedef::err::{ErrCode, Left}, AppState
+    daemon::{
+        entities::{Session, Stage},
+        DbEntity,
+    },
+    left_span, mls,
+    typedef::err::{ErrCode, Left},
+    AppState,
 };
 
 pub async fn get_stage(
@@ -17,12 +22,13 @@ pub async fn get_stage(
         .parse::<i64>()
         .map_err(mls!(ErrCode::InvalidParameter("bad stage id".into())))?;
 
-    let stage = if let Some(stage) = Stage::db_load_by_id(Id::Number(stage_id), &state.db.manager).await? {
+    let stage = if let Some(stage) = Stage::db_load_by_id(stage_id, &state.db.manager).await? {
         stage
     } else {
-        return Err(
-            left_span!(ErrCode::NoContent, format!("stage not found: {}", stage_id))
-        );
+        return Err(left_span!(
+            ErrCode::NoContent,
+            format!("stage not found: {}", stage_id)
+        ));
     };
 
     Ok(Json(stage))

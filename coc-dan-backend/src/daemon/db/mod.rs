@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use surrealdb::{
     sql::{Id, Thing},
@@ -78,15 +80,16 @@ pub trait DbEntity
 where
     Self: Serialize + DeserializeOwned + Sized + Clone + 'static,
 {
+    type IdType: Into<Id> + Debug;
     fn db_id(&self) -> Id;
     fn db_thing(&self) -> Thing {
         Thing::from((Self::db_tab_name().to_string(), self.db_id()))
     }
     fn db_tab_name() -> &'static str;
 
-    async fn db_load_by_id(id: Id, db: &DbConn) -> Result<Option<Self>, Left> {
+    async fn db_load_by_id(id: Self::IdType, db: &DbConn) -> Result<Option<Self>, Left> {
         let r: Option<Self> = db
-            .select((Self::db_tab_name(), RecordIdKey::from_inner(id)))
+            .select((Self::db_tab_name(), RecordIdKey::from_inner(id.into())))
             .await
             .map_err(mls!(ErrCode::DbError))?;
         Ok(r)
@@ -105,9 +108,9 @@ where
     }
 
     #[tracing::instrument(skip(db))]
-    async fn db_del(id: Id, db: &DbConn) -> Result<(), Left> {
+    async fn db_del(id: Self::IdType, db: &DbConn) -> Result<(), Left> {
         let _: Option<SurrealRecord> = db
-            .delete((Self::db_tab_name(), RecordIdKey::from_inner(id)))
+            .delete((Self::db_tab_name(), RecordIdKey::from_inner(id.into())))
             .await
             .map_err(mls!(ErrCode::DbError))?;
         Ok(())
@@ -126,7 +129,7 @@ where
     async fn rel_save(f: &F, t: &T, payload: &P, db: &DbConn) -> Result<Self, Left> {
         let table = Self::rel_table();
         let s = Self::rel_new(f, t, payload);
-        let _: Option<Vec<SurrealRecord>> = db
+        let _: Option<SurrealRecord> = db
             .insert((table, RecordIdKey::from_inner(s.rel_id())))
             .relation(s.clone())
             .await

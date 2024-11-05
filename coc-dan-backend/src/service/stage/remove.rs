@@ -4,7 +4,6 @@ use axum::{
     Json,
 };
 use serde_json::json;
-use surrealdb::sql::Id;
 
 use crate::{
     daemon::{
@@ -23,10 +22,9 @@ pub async fn remove_stage(
 ) -> Result<Response, Left> {
     let stage_id = stage_id
         .parse::<i64>()
-        .and_then(|x| Ok(Id::from(x)))
         .map_err(mls!(ErrCode::InvalidParameter("Invalid stage id".into())))?;
 
-    if let Some(stage) = Stage::db_load_by_id(stage_id.clone(), &state.db.manager).await? {
+    if let Some(stage) = Stage::db_load_by_id(stage_id, &state.db.manager).await? {
         if stage.owner.raw_id != user.raw_id {
             return Err(left_span!(ErrCode::PermissionDenied(
                 "You are not the owner of this stage".into()

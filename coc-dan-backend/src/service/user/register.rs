@@ -59,6 +59,7 @@ pub async fn register(
             username: type::string($username),
             nickname: type::string($nickname),
             password: crypto::argon2::generate(type::string($password)),
+            registration_time: time::now(),
             active_status: "Active",
         }};
 
