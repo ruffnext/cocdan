@@ -9,7 +9,6 @@ import { IReqCreateAvatar } from "../bindings/api/avatar/create/IReqCreateAvatar
 import { IReqUpdateAvatar } from "../bindings/api/avatar/update/IReqUpdateAvatar";
 import { IReqDeleteAvatar } from "../bindings/api/avatar/delete/IReqDeleteAvatar";
 import { IReqRolePlay } from "../bindings/api/tx/role_play/IReqRolePlay";
-import { ITxAux } from "../bindings/entity/tx/ITxAux";
 
 type PostApiKeys =
   '/user/login' |
