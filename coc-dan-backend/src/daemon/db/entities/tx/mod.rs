@@ -1,46 +1,59 @@
 use serde::{Deserialize, Serialize};
-use serde_json::json;
-use surrealdb::sql::Thing;
+use surrealdb::sql::{Id, Thing};
 
 use crate::{
-    daemon::db::DbConn,
+    daemon::{db::DbConn, DbEntity},
     left_span, mls,
     typedef::err::{ErrCode, Left},
 };
 
-#[derive(Serialize, Deserialize, ts_rs::TS)]
-#[ts(
-    export,
-    export_to = "src/daemon/db/entities/tx/tx_aux.d.ts",
-    rename = "ITxAux"
-)]
+use super::AvatarAux;
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct TxAux {
     pub tx_id: i64,
 
-    #[ts(type = "String")]
+    pub raw_id: i64,
+
     pub stage: Thing,
 
-    #[ts(type = "String")]
     pub user: Thing,
 
-    #[ts(type = "String")]
+    pub avatar: Thing,
+
     pub time: surrealdb::sql::Datetime,
 
     pub action: TxAction,
 }
 
+impl DbEntity for TxAux {
+    type IdType = String;
+    fn db_tab_name() -> &'static str {
+        "tx"
+    }
+    fn db_id(&self) -> surrealdb::sql::Id {
+        Id::from(self.raw_id.clone())
+    }
+}
+
 impl TxAux {
     pub async fn new(
+        raw_id: i64,
         stage: Thing,
         user: Thing,
+        avatar: Thing,
         action: TxAction,
         db: &DbConn,
     ) -> Result<Self, Left> {
         let create_statement = format!(
-            r#"`
+            r#"
             BEGIN TRANSACTION;
 
-            let $max_id = math::max(SELECT VALUE tx_id AS max_id FROM tx WHERE stage = type::record($stage));
+            let $stage = type::record({stage});
+
+            let $user = type::record({user});
+
+            let $max_id = math::max(SELECT VALUE tx_id AS max_id FROM tx WHERE stage = $stage);
 
             let $max_id = return if $max_id == None {{
                 1
@@ -48,31 +61,34 @@ impl TxAux {
                 type::int($max_id) + 1
             }};
 
-            let $id = type::record(string::concat("tx:", type::string($max_id)));
+            let $id = type::record({id});
 
             CREATE $id CONTENT {{
                 tx_id: $max_id,
-                stage: type::record($stage),
-                user: type::record($user),
+                raw_id: {raw_id},
+                stage: $stage,
+                user: $user,
+                avatar: type::record({avatar}),
                 time: time::now(),
-                action: {action},
+                action: $action,
             }};
 
             COMMIT TRANSACTION;
         "#,
-            action = serde_json::to_string(&action).unwrap()
+            stage = stage.to_string(),
+            user = user.to_string(),
+            avatar = avatar.to_string(),
+            raw_id = raw_id,
+            id = Thing::from((TxAux::db_tab_name(), Id::from(raw_id))).to_string(),
         );
 
         let mut query_res = db
             .query(create_statement)
-            .bind(json!({
-                "stage": stage.to_string(),
-                "user": user.to_string(),
-            }))
+            .bind(("action", action))
             .await
             .map_err(mls!(ErrCode::DbError))?;
 
-        let response: Vec<TxAux> = query_res.take(3).map_err(mls!(ErrCode::DbError))?;
+        let response: Vec<TxAux> = query_res.take(5).map_err(mls!(ErrCode::DbError))?;
 
         if let Some(tx) = response.into_iter().next() {
             Ok(tx)
@@ -82,24 +98,18 @@ impl TxAux {
     }
 }
 
-#[derive(Serialize, Deserialize, ts_rs::TS)]
-#[ts(
-    export,
-    export_to = "src/daemon/db/entities/tx/tx_action.d.ts",
-    rename = "ITxAction"
-)]
+#[derive(Serialize, Deserialize, Clone, ts_rs::TS)]
+#[ts(export, export_to = "entity/tx/ITxAction.d.ts", rename = "ITxAction")]
 pub enum TxAction {
     RolePlay(RolePlay),
+    AvatarAdd(AvatarAux),
+    AvatarDel(AvatarAux),
+    /// before, after
+    AvatarModify(AvatarAux, AvatarAux),
 }
 
-#[derive(Serialize, Deserialize, ts_rs::TS)]
-#[ts(
-    export,
-    export_to = "src/daemon/db/entities/tx/tx_role_play.d.ts",
-    rename = "IRolePlay"
-)]
+#[derive(Serialize, Deserialize, Clone, ts_rs::TS)]
+#[ts(export, export_to = "entity/tx/IRolePlay.d.ts", rename = "IRolePlay")]
 pub struct RolePlay {
-    #[ts(type = "String")]
-    pub avatar: Thing,
     pub text: String,
 }

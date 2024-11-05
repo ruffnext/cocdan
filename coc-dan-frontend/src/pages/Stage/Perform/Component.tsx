@@ -85,6 +85,9 @@ export default () => {
         mutate(avatarsDeref.concat([resp.Ok]))
         setEditingAvatar([resp.Ok.raw_id, resp.Ok])
       }
+      if (!selectedAvatar()[0]) {
+        setSelectedAvatar([resp.Ok.raw_id, resp.Ok])
+      }
     }
   }
 

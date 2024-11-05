@@ -1,4 +1,5 @@
 use axum::{extract::State, Json};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -31,9 +32,12 @@ pub async fn create_stage(
     Json(req): Json<ReqCreateStage>,
 ) -> Result<Json<Stage>, Left> {
     #[cfg(feature = "mock")]
-    let version = "";
+    let version = "".to_string();
     #[cfg(not(feature = "mock"))]
-    let version = " VERSION time::now()";
+    let version = format!(
+        " VERSION d'{}'",
+        Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
+    );
     let create_statement = format!(
         r#"
         BEGIN TRANSACTION;

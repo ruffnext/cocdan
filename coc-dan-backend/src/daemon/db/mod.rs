@@ -129,7 +129,7 @@ where
     async fn rel_save(f: &F, t: &T, payload: &P, db: &DbConn) -> Result<Self, Left> {
         let table = Self::rel_table();
         let s = Self::rel_new(f, t, payload);
-        let _: Option<SurrealRecord> = db
+        let _: Option<Vec<SurrealRecord>> = db
             .insert((table, RecordIdKey::from_inner(s.rel_id())))
             .relation(s.clone())
             .await

@@ -38,7 +38,7 @@ pub async fn create_avatar(
         return Err(left_span!(ErrCode::InvalidParameter("stage_id".into())));
     };
 
-    if !session.is_on_stage(&stage, &state.db.manager).await {
+    if !session.is_on_stage(stage.raw_id, &state.db.manager).await {
         return Err(left_span!(ErrCode::PermissionDenied(
             "You have no access to create avatar on this stage".into()
         )));

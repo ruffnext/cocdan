@@ -1,14 +1,14 @@
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use surrealdb::sql::Id;
+use surrealdb::sql::{Id, Thing};
 
 use crate::daemon::{
     db::{DbConn, DbEntity},
     SurrealRecord,
 };
 
-use super::{Stage, User};
+use super::User;
 
 #[derive(Deserialize, Serialize, Debug, Clone, ts_rs::TS)]
 #[ts(export, rename = "ISession", export_to = "entity/basic/ISession.d.ts")]
@@ -44,7 +44,7 @@ impl Session {
     pub fn is_expired(&self) -> bool {
         self.expiration_time < chrono::Utc::now().fixed_offset()
     }
-    pub async fn is_on_stage(&self, stage: &Stage, db: &DbConn) -> bool {
+    pub async fn is_on_stage(&self, stage: i64, db: &DbConn) -> bool {
         let user = match self.session_type {
             SessionType::User(ref u) => u,
         };
@@ -53,7 +53,7 @@ impl Session {
             .query(query)
             .bind(json!({
                 "user": user.db_thing().to_string(),
-                "stage": stage.db_thing().to_string(),
+                "stage": Thing::from(("stage", Id::from(stage))).to_string(),
             }))
             .await
         {

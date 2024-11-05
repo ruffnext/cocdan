@@ -1,8 +1,11 @@
 use axum::{
     extract::{Path, State},
+    response::{IntoResponse, Response},
     Json,
 };
+use rand::Rng;
 use serde::Deserialize;
+use serde_json::json;
 
 use crate::{
     daemon::{
@@ -17,7 +20,7 @@ use crate::{
 #[derive(Deserialize, ts_rs::TS)]
 #[ts(
     export,
-    export_to = "src/daemon/db/entities/tx/tx_role_play.d.ts",
+    export_to = "api/tx/role_play/IReqRolePlay.d.ts",
     rename = "IReqRolePlay"
 )]
 pub struct IReqRolePlay {
@@ -30,7 +33,7 @@ pub async fn role_play(
     session: Session,
     Path(stage_id): Path<String>,
     Json(req): Json<IReqRolePlay>,
-) -> Result<Json<TxAux>, Left> {
+) -> Result<Response, Left> {
     let user = match session.session_type {
         SessionType::User(user) => user,
     };
@@ -69,16 +72,22 @@ pub async fn role_play(
         )));
     }
 
-    let tx = TxAux::new(
+    let new_id: i64 = rand::thread_rng().gen::<i64>().abs();
+
+    let _tx = TxAux::new(
+        new_id,
         stage.db_thing(),
         user.db_thing(),
+        avatar.db_thing(),
         TxAction::RolePlay(RolePlay {
-            avatar: avatar.db_thing(),
             text: req.text.clone(),
         }),
         &state.db.manager,
     )
     .await?;
 
-    Ok(Json(tx))
+    Ok(Json(json!({
+        "message": "Role play success",
+    }))
+    .into_response())
 }

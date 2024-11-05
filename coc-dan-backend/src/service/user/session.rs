@@ -32,15 +32,16 @@ where
             .await
             .map_err(|x| x.into_response())?;
         if let Some(v) = session {
-            Ok(v)
-        } else {
-            Err((Left {
-                status: StatusCode::UNAUTHORIZED,
-                message: "Unauthorized".to_string(),
-                code: Some("c6c3cb95".to_string()),
-            })
-            .into_response())
+            if !v.is_expired() {
+                return Ok(v);
+            }
         }
+        Err((Left {
+            status: StatusCode::UNAUTHORIZED,
+            message: "Unauthorized".to_string(),
+            code: Some("c6c3cb95".to_string()),
+        })
+        .into_response())
     }
 }
 

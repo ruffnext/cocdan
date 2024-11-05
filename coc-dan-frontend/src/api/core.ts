@@ -8,8 +8,8 @@ import { IAvatar } from "../bindings/entity/avatar/IAvatar";
 import { IReqCreateAvatar } from "../bindings/api/avatar/create/IReqCreateAvatar";
 import { IReqUpdateAvatar } from "../bindings/api/avatar/update/IReqUpdateAvatar";
 import { IReqDeleteAvatar } from "../bindings/api/avatar/delete/IReqDeleteAvatar";
-import { IReqRolePlay } from "../bindings/src/daemon/db/entities/tx/tx_role_play";
-import { ITxAux } from "../bindings/src/daemon/db/entities/tx/tx_aux";
+import { IReqRolePlay } from "../bindings/api/tx/role_play/IReqRolePlay";
+import { ITxAux } from "../bindings/entity/tx/ITxAux";
 
 type PostApiKeys =
   '/user/login' |
@@ -53,7 +53,7 @@ type PostReqRespType<Key extends PostApiKeys> =
   Key extends '/avatar/new' ? IAvatar :
   Key extends '/avatar/update' ? IAvatar :
   Key extends '/avatar/delete' ? ISimpleResponse :
-  Key extends '/tx/:stage_id/role_play' ? ITxAux :
+  Key extends '/tx/:stage_id/role_play' ? ISimpleResponse :
   undefined;
 
 type ApiError = {

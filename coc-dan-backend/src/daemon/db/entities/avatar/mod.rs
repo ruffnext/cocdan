@@ -237,19 +237,32 @@ pub struct Avatar {
     pub last_update_time: Option<DateTime<FixedOffset>>,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone)]
-struct AvatarDbAux {
+#[derive(serde::Deserialize, serde::Serialize, Clone, ts_rs::TS)]
+#[ts(
+    export,
+    rename = "IAvatarAux",
+    export_to = "entity/avatar/IAvatarAux.d.ts"
+)]
+pub struct AvatarAux {
     pub raw_id: String,
+
+    #[ts(type = "String")]
     pub stage: Thing,
+
+    #[ts(type = "String")]
     pub owner: Thing,
     pub name: String,
     pub detail: AvatarDetail,
     pub header: String,
+
+    #[ts(type = "Option<String>")]
     pub creation_time: Option<Datetime>,
+
+    #[ts(type = "Option<String>")]
     pub last_update_time: Option<Datetime>,
 }
 
-impl DbEntity for AvatarDbAux {
+impl DbEntity for AvatarAux {
     type IdType = String;
 
     fn db_id(&self) -> Id {
@@ -273,7 +286,7 @@ impl DbEntity for Avatar {
     }
 
     async fn db_save(&self, db: &DbConn) -> Result<(), Left> {
-        let aux: AvatarDbAux = self.into();
+        let aux: AvatarAux = self.into();
         aux.db_save(db).await
     }
 
@@ -293,7 +306,7 @@ impl DbEntity for Avatar {
     }
 }
 
-impl From<&Avatar> for AvatarDbAux {
+impl From<&Avatar> for AvatarAux {
     fn from(avatar: &Avatar) -> Self {
         Self {
             raw_id: avatar.raw_id.clone(),

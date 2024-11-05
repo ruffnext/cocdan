@@ -1,3 +1,6 @@
+use serde::Serializer;
+use surrealdb::sql::Thing;
+
 pub mod datetime_from_rfc3339 {
     use chrono::{DateTime, FixedOffset};
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -44,4 +47,8 @@ pub mod optional_datetime_from_rfc3339 {
             None => None::<String>.serialize(serializer),
         }
     }
+}
+
+pub fn thing_as_string<S: Serializer>(x: &Thing, s: S) -> Result<S::Ok, S::Error> {
+    s.serialize_str(x.to_string().as_str())
 }

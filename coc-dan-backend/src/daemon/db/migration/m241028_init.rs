@@ -56,14 +56,19 @@ impl MigrationTrait for M241028Init {
         DEFINE TABLE r_user_join_stage TYPE RELATION IN user OUT stage ENFORCED;
 
         DEFINE TABLE tx SCHEMAFULL;
+        DEFINE FIELD raw_id ON TABLE tx TYPE int;
         DEFINE FIELD tx_id ON TABLE tx TYPE int;
         DEFINE FIELD stage ON TABLE tx TYPE record<stage>;
         DEFINE FIELD user ON TABLE tx TYPE record<user>;
+        DEFINE FIELD avatar ON TABLE tx TYPE record<avatar>;
         DEFINE FIELD time ON TABLE tx TYPE datetime DEFAULT time::now();
         DEFINE FIELD action ON TABLE tx TYPE object FLEXIBLE;
         DEFINE INDEX txIdIdx ON TABLE tx COLUMNS tx_id;
         DEFINE INDEX stageIdIdx ON TABLE tx COLUMNS stage;
         DEFINE INDEX timeIdx ON TABLE tx COLUMNS time;
+        DEFINE INDEX rawIdIdx ON TABLE tx COLUMNS raw_id UNIQUE;
+        DEFINE INDEX userIdIdx ON TABLE tx COLUMNS user;
+        DEFINE INDEX avatarIdIdx ON TABLE tx COLUMNS avatar;
 
         COMMIT TRANSACTION;
         "#;

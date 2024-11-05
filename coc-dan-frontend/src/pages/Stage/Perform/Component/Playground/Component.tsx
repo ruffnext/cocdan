@@ -2,6 +2,7 @@ import { createSignal, Show, For } from "solid-js"
 import { IAvatar } from "../../../../../bindings/entity/avatar/IAvatar"
 import { IStage } from "../../../../../bindings/entity/basic/IStage"
 import NoMessageHolder from "./Logs/NoMessageHolder"
+import { post } from "../../../../../api/core"
 
 type Props = {
   stage: IStage,
@@ -42,6 +43,10 @@ export default (props: Props) => {
     if (input() === "") {
       return
     }
+    const message = input()
+    const resp = await post('/tx/:stage_id/role_play', { avatar_id: props.avatar.raw_id, text: message }, { stage_id: props.stage.raw_id.toString() }, true)
+    console.log(resp)
+
     if (inputElement) {
       inputElement.value = ""
     }

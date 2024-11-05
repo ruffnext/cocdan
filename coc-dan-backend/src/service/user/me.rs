@@ -8,7 +8,9 @@ use axum_extra::extract::CookieJar;
 use http::{request::Parts, StatusCode};
 
 use crate::{
-    daemon::entities::{Session, SessionType, User}, typedef::err::Left, AppState
+    daemon::entities::{Session, SessionType, User},
+    typedef::err::Left,
+    AppState,
 };
 
 use super::session::get_session_user;
