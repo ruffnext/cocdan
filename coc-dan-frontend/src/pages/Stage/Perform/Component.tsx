@@ -1,4 +1,4 @@
-import { useParams } from "@solidjs/router"
+import { useNavigate, useParams } from "@solidjs/router"
 import { get, post } from "../../../api/core"
 import { createEffect, createResource, createSignal, For, on } from "solid-js"
 import { IStage } from "../../../bindings/entity/basic/IStage"
@@ -7,16 +7,30 @@ import Playground from "./Component/Playground/Component"
 import { Suspense, Show } from "solid-js"
 import AvatarEditor from "./Component/AvatarEditor/Component"
 import { deepClone } from "../../../core/utils"
+import { new_stage_websocket, StageWebsocket } from "../../../api/ws"
+import { useSession } from "../../Login/context"
 
 export default () => {
   const param = useParams()
+  const { session } = useSession()
+  const navigate = useNavigate()
   const [isExtend, setIsExtend] = createSignal(true)
   const [editingAvatar, setEditingAvatar] = createSignal<[string, IAvatar] | ["Add", undefined] | [undefined, undefined]>([undefined, undefined])
   const [selectedAvatar, setSelectedAvatar] = createSignal<[string, IAvatar] | [undefined, undefined]>([undefined, undefined])
+  const [stageWs, setStageWs] = createSignal<StageWebsocket | undefined>(undefined)
+
+  createEffect(() => {
+    if (session() == "NotLoggedIn") {
+      navigate("/login")
+    }
+  })
 
   const [stage] = createResource(async (): Promise<IStage | undefined> => {
     const resp = await get('/stage/:id', { id: param['id'] }, true)
     if ("Ok" in resp) {
+      const stageWs = new_stage_websocket(resp.Ok.raw_id, session() as any);
+      stageWs.addMessageListener("log", (data) => { console.log(data) })
+      setStageWs(stageWs)
       return resp.Ok
     } else {
       return undefined
@@ -192,6 +206,7 @@ export default () => {
             onAvatarChange={(avatar) => {
               setSelectedAvatar([avatar.raw_id, avatar])
             }}
+            stageWs={stageWs() as any}
           /> : <div></div>
         }
       </Suspense>

@@ -3,9 +3,13 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use surrealdb::sql::{Id, Thing};
 
-use crate::daemon::{
-    db::{DbConn, DbEntity},
-    SurrealRecord,
+use crate::{
+    daemon::{
+        db::{DbConn, DbEntity},
+        SurrealRecord,
+    },
+    mls,
+    typedef::err::{ErrCode, Left},
 };
 
 use super::User;
@@ -37,6 +41,22 @@ impl DbEntity for Session {
 
     fn db_tab_name() -> &'static str {
         "session"
+    }
+
+    async fn db_load_by_id(id: Self::IdType, db: &DbConn) -> Result<Option<Self>, Left> {
+        let query_str = "
+            SELECT * FROM session WHERE raw_id == $id LIMIT 1 FETCH session_type.User;
+        ";
+
+        let mut response = db
+            .query(query_str)
+            .bind(("id", id))
+            .await
+            .map_err(mls!(ErrCode::DbError))?;
+
+        let sessions: Vec<Session> = response.take(0).map_err(mls!(ErrCode::DbError))?;
+
+        return Ok(sessions.into_iter().next());
     }
 }
 

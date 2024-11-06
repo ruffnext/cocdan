@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
-use surrealdb::sql::{Id, Thing};
+use surrealdb::{
+    sql::Datetime,
+    sql::{Id, Thing},
+};
 
 use crate::{
     daemon::{db::DbConn, DbEntity},
@@ -9,8 +12,10 @@ use crate::{
 
 use super::AvatarAux;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TxAux {
+    pub id: Thing,
+
     pub tx_id: i64,
 
     pub raw_id: i64,
@@ -63,15 +68,14 @@ impl TxAux {
 
             let $id = type::record({id});
 
-            CREATE $id CONTENT {{
-                tx_id: $max_id,
-                raw_id: {raw_id},
-                stage: $stage,
-                user: $user,
-                avatar: type::record({avatar}),
-                time: time::now(),
-                action: $action,
-            }};
+            CREATE $id SET
+                tx_id = $max_id,
+                raw_id = {raw_id},
+                stage = $stage,
+                user = $user,
+                avatar = type::record({avatar}),
+                time = time::now(),
+                action = None;
 
             COMMIT TRANSACTION;
         "#,
@@ -84,21 +88,49 @@ impl TxAux {
 
         let mut query_res = db
             .query(create_statement)
-            .bind(("action", action))
             .await
             .map_err(mls!(ErrCode::DbError))?;
 
-        let response: Vec<TxAux> = query_res.take(5).map_err(mls!(ErrCode::DbError))?;
+        #[derive(Deserialize)]
+        struct TxHelper {
+            id: Thing,
+            tx_id: i64,
+            time: Datetime,
+        }
+
+        let response: Vec<TxHelper> = query_res.take(5).map_err(mls!(ErrCode::DbError))?;
 
         if let Some(tx) = response.into_iter().next() {
-            Ok(tx)
+            // for trigger live select
+            let tx_aux = TxAux {
+                id: tx.id,
+                tx_id: tx.tx_id,
+                raw_id,
+                stage,
+                user,
+                avatar,
+                time: tx.time,
+                action,
+            };
+            let res: Option<TxAux> = db
+                .upsert((TxAux::db_tab_name(), raw_id))
+                .content(tx_aux)
+                .await
+                .map_err(mls!(ErrCode::DbError))?;
+            if let Some(v) = res {
+                Ok(v)
+            } else {
+                Err(left_span!(ErrCode::InternalServerError(
+                    "Failed to create tx".into()
+                )))
+            }
         } else {
             Err(left_span!(ErrCode::DbError))
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, ts_rs::TS)]
+#[derive(Serialize, Deserialize, Clone, ts_rs::TS, Debug)]
 #[ts(export, export_to = "entity/tx/ITxAction.d.ts", rename = "ITxAction")]
 pub enum TxAction {
     RolePlay(RolePlay),
@@ -108,8 +140,20 @@ pub enum TxAction {
     AvatarModify(AvatarAux, AvatarAux),
 }
 
-#[derive(Serialize, Deserialize, Clone, ts_rs::TS)]
+#[derive(Serialize, Deserialize, Clone, ts_rs::TS, Debug)]
 #[ts(export, export_to = "entity/tx/IRolePlay.d.ts", rename = "IRolePlay")]
 pub struct RolePlay {
     pub text: String,
+}
+
+#[derive(Serialize, ts_rs::TS, Clone)]
+#[ts(export, export_to = "api/ws/tx/ITxEvent.d.ts", rename = "ITxEvent")]
+pub struct TxEvent {
+    pub tx_id: i64,
+    pub raw_id: i64,
+    pub stage_id: i64,
+    pub user_id: i64,
+    pub avatar_id: String,
+    pub time: String,
+    pub action: TxAction,
 }

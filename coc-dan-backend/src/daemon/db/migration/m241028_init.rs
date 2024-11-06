@@ -62,7 +62,7 @@ impl MigrationTrait for M241028Init {
         DEFINE FIELD user ON TABLE tx TYPE record<user>;
         DEFINE FIELD avatar ON TABLE tx TYPE record<avatar>;
         DEFINE FIELD time ON TABLE tx TYPE datetime DEFAULT time::now();
-        DEFINE FIELD action ON TABLE tx TYPE object FLEXIBLE;
+        DEFINE FIELD action ON TABLE tx TYPE option<object> FLEXIBLE;
         DEFINE INDEX txIdIdx ON TABLE tx COLUMNS tx_id;
         DEFINE INDEX stageIdIdx ON TABLE tx COLUMNS stage;
         DEFINE INDEX timeIdx ON TABLE tx COLUMNS time;

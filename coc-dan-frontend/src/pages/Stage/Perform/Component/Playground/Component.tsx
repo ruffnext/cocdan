@@ -3,12 +3,14 @@ import { IAvatar } from "../../../../../bindings/entity/avatar/IAvatar"
 import { IStage } from "../../../../../bindings/entity/basic/IStage"
 import NoMessageHolder from "./Logs/NoMessageHolder"
 import { post } from "../../../../../api/core"
+import { StageWebsocket } from "../../../../../api/ws"
 
 type Props = {
   stage: IStage,
   avatar: IAvatar,
   allControllableAvatar: Array<IAvatar>
-  onAvatarChange: (avatar: IAvatar) => void
+  onAvatarChange: (avatar: IAvatar) => void,
+  stageWs: StageWebsocket
 }
 
 export default (props: Props) => {

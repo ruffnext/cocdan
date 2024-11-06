@@ -1,12 +1,31 @@
-use std::{collections::HashSet, time::Duration};
+use std::{collections::HashSet, str::FromStr, time::Duration};
 
 use axum::extract::ws::Message;
 use futures::{SinkExt, StreamExt};
 use tokio::time;
+use tracing::{error, info};
 
-use crate::daemon::{entities::TxAux, DbEntity};
+use crate::daemon::{
+    entities::{TxAux, TxEvent},
+    DbEntity,
+};
 
 use super::WsServer;
+
+impl TryFrom<&TxAux> for TxEvent {
+    type Error = <i64 as FromStr>::Err;
+    fn try_from(value: &TxAux) -> Result<Self, Self::Error> {
+        Ok(Self {
+            tx_id: value.tx_id,
+            raw_id: value.raw_id,
+            stage_id: value.stage.id.to_raw().parse()?,
+            user_id: value.user.id.to_raw().parse()?,
+            avatar_id: value.avatar.id.to_raw().to_string(),
+            time: value.time.to_string(),
+            action: value.action.clone(),
+        })
+    }
+}
 
 impl WsServer {
     pub(super) async fn live_tx(self) {
@@ -22,11 +41,16 @@ impl WsServer {
                         match &val {
                             Ok(notify_tx) => {
                                 let notify: &surrealdb::Notification<TxAux> = notify_tx;
-                                let tx = &notify.data;
+                                let tx: TxEvent = match TxEvent::try_from(&notify.data) {
+                                    Ok(v) => v,
+                                    Err(e) => {
+                                        error!("tx val error {:#?}", e);
+                                        is_last_error = true;
+                                        continue;
+                                    }
+                                };
                                 let channels = self.stage_tx.read().await;
-                                let channel = if let Some(v) =
-                                    channels.get(&tx.stage.id.to_raw().parse().unwrap())
-                                {
+                                let channel = if let Some(v) = channels.get(&tx.stage_id) {
                                     v.clone()
                                 } else {
                                     continue;
@@ -60,13 +84,15 @@ impl WsServer {
                                     lock.retain(|(ws_id, _)| !error_subscribers.contains(ws_id));
                                 }
                             }
-                            Err(_) => {
+                            Err(e) => {
+                                info!("tx val error {:#?}", e);
                                 is_last_error = true;
                             }
                         }
                     }
                 }
-                Err(_) => {
+                Err(e) => {
+                    info!("tx stream error {:#?}", e);
                     is_last_error = true;
                 }
             }

@@ -237,7 +237,7 @@ pub struct Avatar {
     pub last_update_time: Option<DateTime<FixedOffset>>,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, ts_rs::TS)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, ts_rs::TS, Debug)]
 #[ts(
     export,
     rename = "IAvatarAux",
