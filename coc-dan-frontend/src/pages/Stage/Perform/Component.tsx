@@ -28,7 +28,7 @@ export default () => {
   const [stage] = createResource(async (): Promise<IStage | undefined> => {
     const resp = await get('/stage/:id', { id: param['id'] }, true)
     if ("Ok" in resp) {
-      const stageWs = new_stage_websocket(resp.Ok.raw_id, session() as any);
+      const stageWs = new_stage_websocket(resp.Ok.raw_id);
       stageWs.addMessageListener("log", (data) => { console.log(data) })
       setStageWs(stageWs)
       return resp.Ok

@@ -4,7 +4,7 @@ use surrealdb::sql::Thing;
 
 use crate::{
     daemon::{
-        entities::{Avatar, AvatarDetail, Session, SessionType, Stage},
+        entities::{Avatar, AvatarAux, AvatarDetail, Session, SessionType, Stage, TxAction, TxAux},
         DbEntity, SurrealRecord,
     },
     left_span, mls,
@@ -83,10 +83,18 @@ pub async fn create_avatar(
     let new_avatar: Vec<SurrealRecord> = response.take(0).map_err(mls!(ErrCode::DbError))?;
 
     if let Some(v) = new_avatar.into_iter().next() {
-        if let Some(v) =
+        if let Some(avatar) =
             Avatar::db_load_by_id(v.id.id.to_raw().parse().unwrap(), &state.db.manager).await?
         {
-            return Ok(Json(v));
+            let _tx = TxAux::new(
+                stage.db_thing(),
+                owner.db_thing(),
+                avatar.db_thing(),
+                TxAction::AvatarAdd(AvatarAux::from(&avatar)),
+                &state.db.manager,
+            )
+            .await?;
+            return Ok(Json(avatar));
         } else {
             return Err(left_span!(ErrCode::InternalServerError(
                 "Failed to load new avatar".into()

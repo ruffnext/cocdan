@@ -70,10 +70,15 @@ impl DbService {
     }
 }
 
-#[allow(unused)]
 #[derive(Deserialize, Debug)]
 pub struct SurrealRecord {
     pub id: Thing,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SurrealRecordT<T> {
+    pub id: Thing,
+    pub raw_id: T,
 }
 
 pub trait DbEntity

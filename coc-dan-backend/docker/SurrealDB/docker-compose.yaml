@@ -6,6 +6,7 @@ services:
       - root
       - --pass
       - root
+      - --allow-all
       - surrealkv://data
     image: surrealdb/surrealdb:v2.0.4
     environment:

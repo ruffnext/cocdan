@@ -1,3 +1,4 @@
+use crate::daemon::entities::TxAction;
 use crate::utils::serde::optional_datetime_from_rfc3339;
 use std::collections::HashMap;
 
@@ -14,7 +15,7 @@ use super::common::EraEnum;
 use super::skill::{OccupationalSkill, SkillAssigned};
 
 use super::weapon::Weapon;
-use super::{Stage, User};
+use super::{Stage, TxAux, User};
 
 #[derive(serde::Serialize, serde::Deserialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IGender", export_to = "entity/avatar/IGender.d.ts")]
@@ -237,7 +238,19 @@ pub struct Avatar {
     pub last_update_time: Option<DateTime<FixedOffset>>,
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone, ts_rs::TS, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+pub struct AvatarDbAux {
+    pub raw_id: String,
+    pub stage: Thing,
+    pub owner: Thing,
+    pub name: String,
+    pub detail: AvatarDetail,
+    pub header: String,
+    pub creation_time: Option<Datetime>,
+    pub last_update_time: Option<Datetime>,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, ts_rs::TS)]
 #[ts(
     export,
     rename = "IAvatarAux",
@@ -245,24 +258,58 @@ pub struct Avatar {
 )]
 pub struct AvatarAux {
     pub raw_id: String,
-
-    #[ts(type = "String")]
-    pub stage: Thing,
-
-    #[ts(type = "String")]
-    pub owner: Thing,
+    pub stage_id: i64,
+    pub owner_id: i64,
     pub name: String,
     pub detail: AvatarDetail,
-    pub header: String,
-
-    #[ts(type = "Option<String>")]
-    pub creation_time: Option<Datetime>,
-
-    #[ts(type = "Option<String>")]
-    pub last_update_time: Option<Datetime>,
+    pub creation_time: Option<String>,
+    pub last_update_time: Option<String>,
 }
 
-impl DbEntity for AvatarAux {
+impl From<&Avatar> for AvatarAux {
+    fn from(value: &Avatar) -> Self {
+        Self {
+            raw_id: value.raw_id.clone(),
+            stage_id: value.stage.raw_id,
+            owner_id: value.owner.raw_id,
+            name: value.name.clone(),
+            detail: value.detail.clone(),
+            creation_time: value
+                .creation_time
+                .map(|v| v.to_rfc3339_opts(chrono::SecondsFormat::Secs, true)),
+            last_update_time: value
+                .last_update_time
+                .map(|v| v.to_rfc3339_opts(chrono::SecondsFormat::Secs, true)),
+        }
+    }
+}
+
+impl From<&Avatar> for AvatarDbAux {
+    fn from(value: &Avatar) -> Self {
+        Self {
+            raw_id: value.raw_id.clone(),
+            stage: value.stage.db_thing(),
+            owner: value.owner.db_thing(),
+            name: value.name.clone(),
+            detail: value.detail.clone(),
+            header: value.header.clone(),
+            creation_time: Some(
+                value
+                    .creation_time
+                    .map(|v| Datetime::from(v.to_utc()))
+                    .unwrap_or(Datetime::from(Utc::now())),
+            ),
+            last_update_time: Some(
+                value
+                    .last_update_time
+                    .map(|v| Datetime::from(v.to_utc()))
+                    .unwrap_or(Datetime::from(Utc::now())),
+            ),
+        }
+    }
+}
+
+impl DbEntity for AvatarDbAux {
     type IdType = String;
 
     fn db_id(&self) -> Id {
@@ -286,7 +333,7 @@ impl DbEntity for Avatar {
     }
 
     async fn db_save(&self, db: &DbConn) -> Result<(), Left> {
-        let aux: AvatarAux = self.into();
+        let aux: AvatarDbAux = self.into();
         aux.db_save(db).await
     }
 
@@ -304,23 +351,25 @@ impl DbEntity for Avatar {
             Ok(None)
         }
     }
-}
 
-impl From<&Avatar> for AvatarAux {
-    fn from(avatar: &Avatar) -> Self {
-        Self {
-            raw_id: avatar.raw_id.clone(),
-            stage: avatar.stage.db_thing(),
-            owner: avatar.owner.db_thing(),
-            name: avatar.name.clone(),
-            detail: avatar.detail.clone(),
-            header: avatar.header.clone(),
-            creation_time: if let Some(v) = avatar.creation_time {
-                Some(Datetime::from(v.to_utc()))
-            } else {
-                Some(Datetime::from(Utc::now()))
-            },
-            last_update_time: Some(Datetime::from(Utc::now())),
-        }
+    async fn db_del(id: Self::IdType, db: &DbConn) -> Result<(), Left> {
+        let avatar = if let Some(v) = Self::db_load_by_id(id.clone(), db).await? {
+            v
+        } else {
+            return Ok(());
+        };
+
+        AvatarDbAux::db_del(id, db).await?;
+
+        let _tx = TxAux::new(
+            avatar.stage.db_thing(),
+            avatar.owner.db_thing(),
+            avatar.db_thing(),
+            TxAction::AvatarDel(AvatarAux::from(&avatar)),
+            db,
+        )
+        .await?;
+
+        Ok(())
     }
 }

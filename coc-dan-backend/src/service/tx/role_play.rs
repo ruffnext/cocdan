@@ -3,7 +3,6 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use rand::Rng;
 use serde::Deserialize;
 use serde_json::json;
 
@@ -72,10 +71,7 @@ pub async fn role_play(
         )));
     }
 
-    let new_id: i64 = rand::thread_rng().gen::<i64>().abs();
-
     let _tx = TxAux::new(
-        new_id,
         stage.db_thing(),
         user.db_thing(),
         avatar.db_thing(),

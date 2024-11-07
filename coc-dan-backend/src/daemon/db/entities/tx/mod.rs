@@ -43,13 +43,13 @@ impl DbEntity for TxAux {
 
 impl TxAux {
     pub async fn new(
-        raw_id: i64,
         stage: Thing,
         user: Thing,
         avatar: Thing,
         action: TxAction,
         db: &DbConn,
     ) -> Result<Self, Left> {
+        let raw_id = rand::random::<i64>();
         let create_statement = format!(
             r#"
             BEGIN TRANSACTION;
