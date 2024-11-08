@@ -10,9 +10,9 @@ function gen_ws_url(rel_path: string): string {
   return res;
 }
 
-const WS_CACHE = new Map<bigint, StageWebsocket>();
+const WS_CACHE = new Map<string, StageWebsocket>();
 
-export function new_stage_websocket(stage_id: bigint): StageWebsocket {
+export function new_stage_websocket(stage_id: string): StageWebsocket {
   const cache = WS_CACHE.get(stage_id);
   if (cache) {
     return cache;
@@ -24,9 +24,9 @@ export function new_stage_websocket(stage_id: bigint): StageWebsocket {
 export class StageWebsocket {
   private ws: WebSocket;
   private status: "pending" | "connected" | "closed" = "pending"
-  private stage_id: bigint;
+  private stage_id: string;
   private on_message: Map<string, (data: any) => void> = new Map();
-  constructor(stage_id: bigint) {
+  constructor(stage_id: string) {
     this.ws = new WebSocket(gen_ws_url(`/api/tx/${stage_id}/ws`));
     this.stage_id = stage_id;
     this.ws.onopen = () => {

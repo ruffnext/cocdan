@@ -32,6 +32,8 @@ export default (props: Props) => {
           name: "new avatar",
           header: "",
           detail: {
+            name: 'avatar name',
+            header: '',
             status: {
               hp: 0,
               mp: 0,
@@ -115,11 +117,16 @@ export default (props: Props) => {
             Name
           </label>
           <input type="text" class="shadow mb-2 appearance-none border rounded-md w-full py-2 px-3" placeholder="Name"
-            on:change={(e) => setAvatar({
-              ...avatar(),
-              name: e.target.value
-            })}
-            value={avatar().name} />
+            on:change={(e) =>
+              setAvatar({
+                ...avatar(),
+                detail: {
+                  ...avatar().detail,
+                  name: e.target.value,
+                }
+              })
+            }
+            value={avatar().detail.name} />
 
           <label class="block text-gray-700 text-sm font-bold mb-2">
             Age

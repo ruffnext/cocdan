@@ -1,6 +1,7 @@
 use axum::{extract::State, Json};
 use axum_extra::extract::CookieJar;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use crate::{
     daemon::entities::User,
@@ -40,22 +41,14 @@ pub async fn register(
         ));
     }
 
+    let uid = Uuid::new_v4().to_string();
+
     let create_statement = format!(
         r#"
         BEGIN TRANSACTION;
 
-        let $max_id = math::max(SELECT VALUE raw_id as max_id FROM user WHERE raw_id);
-
-        let $max_id = return if $max_id == None {{
-            1
-        }} else {{
-            type::int($max_id) + 1
-        }};
-
-        let $id = type::record(string::concat("user:", type::string($max_id)));
-
-        CREATE $id CONTENT {{
-            raw_id: $max_id,
+        CREATE type::record('user:`{uid}`') CONTENT {{
+            raw_id: "{uid}",
             username: type::string($username),
             nickname: type::string($nickname),
             password: crypto::argon2::generate(type::string($password)),
@@ -75,7 +68,7 @@ pub async fn register(
         .await
         .map_err(mls!(ErrCode::DbError))?;
 
-    let response: Vec<User> = query_res.take(3).map_err(mls!(ErrCode::DbError))?;
+    let response: Vec<User> = query_res.take(0).map_err(mls!(ErrCode::DbError))?;
 
     if let Some(user) = response.into_iter().next() {
         Ok(Json(user))

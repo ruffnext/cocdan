@@ -64,7 +64,7 @@ export default (props: Props) => {
           style={`height: ${height()}px;`}
           on:click={() => setIsAvatarSelectorExtend(!isAvatarSelectorExtend())}>
           <div>
-            {props.avatar.name}
+            {props.avatar.detail.name}
           </div>
         </button>
         <textarea ref={inputElement} class="flex-grow text-lg overflow-y-hidden resize-none border-solid border-l-2 border-t-2 
@@ -100,7 +100,7 @@ export default (props: Props) => {
                   setIsAvatarSelectorExtend(false)
                   props.onAvatarChange(avatar)
                 }}>
-                {avatar.name}
+                {avatar.detail.name}
               </button>
             )}
           </For>

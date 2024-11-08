@@ -16,10 +16,10 @@ impl TryFrom<&TxAux> for TxEvent {
     type Error = <i64 as FromStr>::Err;
     fn try_from(value: &TxAux) -> Result<Self, Self::Error> {
         Ok(Self {
-            tx_id: value.tx_id,
-            raw_id: value.raw_id,
-            stage_id: value.stage.id.to_raw().parse()?,
-            user_id: value.user.id.to_raw().parse()?,
+            raw_id: value.raw_id.clone(),
+            tx_index: value.tx_index,
+            stage_id: value.stage.id.to_raw(),
+            user_id: value.user.id.to_raw(),
             avatar_id: value.avatar.id.to_raw().to_string(),
             time: value.time.to_string(),
             action: value.action.clone(),

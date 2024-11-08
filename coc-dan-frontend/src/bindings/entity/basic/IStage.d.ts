@@ -2,4 +2,4 @@
 import type { IStageRule } from "./IStageRule.d";
 import type { IUser } from "./IUser.d";
 
-export type IStage = { raw_id: bigint, title: string, rule: IStageRule, description: string, owner: IUser, };
+export type IStage = { raw_id: string, title: string, rule: IStageRule, description: string, owner: IUser, };

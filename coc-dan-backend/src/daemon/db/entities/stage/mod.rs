@@ -15,7 +15,7 @@ use super::User;
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone, ts_rs::TS)]
 #[ts(export, rename = "IStage", export_to = "entity/basic/IStage.d.ts")]
 pub struct Stage {
-    pub raw_id: i64,
+    pub raw_id: String,
     pub title: String,
     pub rule: StageRule,
     pub description: String,
@@ -35,7 +35,7 @@ pub enum StageRule {
 
 #[derive(serde::Serialize)]
 struct DbStage {
-    pub raw_id: i64,
+    pub raw_id: String,
     pub title: String,
     pub description: String,
     pub owner: Thing,
@@ -53,10 +53,10 @@ impl From<Stage> for DbStage {
 }
 
 impl DbEntity for Stage {
-    type IdType = i64;
+    type IdType = String;
 
     fn db_id(&self) -> Id {
-        self.raw_id.into()
+        Id::from(self.raw_id.clone())
     }
 
     fn db_tab_name() -> &'static str {

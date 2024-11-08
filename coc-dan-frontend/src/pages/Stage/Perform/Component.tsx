@@ -9,6 +9,7 @@ import AvatarEditor from "./Component/AvatarEditor/Component"
 import { deepClone } from "../../../core/utils"
 import { new_stage_websocket, StageWebsocket } from "../../../api/ws"
 import { useSession } from "../../Login/context"
+import { IGameState } from "../../../bindings/api/tx/state/IGameState"
 
 export default () => {
   const param = useParams()
@@ -18,6 +19,10 @@ export default () => {
   const [editingAvatar, setEditingAvatar] = createSignal<[string, IAvatar] | ["Add", undefined] | [undefined, undefined]>([undefined, undefined])
   const [selectedAvatar, setSelectedAvatar] = createSignal<[string, IAvatar] | [undefined, undefined]>([undefined, undefined])
   const [stageWs, setStageWs] = createSignal<StageWebsocket | undefined>(undefined)
+  const [gameState, setGameState] = createSignal<IGameState>({
+    avatars: {},
+    logs: []
+  })
 
   createEffect(() => {
     if (session() == "NotLoggedIn") {
@@ -28,6 +33,12 @@ export default () => {
   const [stage] = createResource(async (): Promise<IStage | undefined> => {
     const resp = await get('/stage/:id', { id: param['id'] }, true)
     if ("Ok" in resp) {
+      const gameStateResp = await post('/tx/:stage_id/state', { n_page: 0, n_per_page: 50 }, { stage_id: resp.Ok.raw_id })
+      if ("Ok" in gameStateResp) {
+        console.log(gameStateResp.Ok)
+        setGameState(gameStateResp.Ok)
+      }
+
       const stageWs = new_stage_websocket(resp.Ok.raw_id);
       stageWs.addMessageListener("log", (data) => { console.log(data) })
       setStageWs(stageWs)
@@ -89,8 +100,6 @@ export default () => {
   async function onAvatarAdd(avatar: IAvatar) {
     const resp = await post('/avatar/new', {
       stage_id: avatar.stage.raw_id,
-      name: avatar.name,
-      header: avatar.header,
       detail: avatar.detail,
     }, undefined, true)
     if ("Ok" in resp) {
@@ -108,8 +117,6 @@ export default () => {
   async function onAvatarChange(avatar: IAvatar) {
     const resp = await post('/avatar/update', {
       raw_id: avatar.raw_id,
-      name: avatar.name,
-      header: avatar.header,
       detail: avatar.detail,
     }, undefined, true)
     if ("Ok" in resp) {
@@ -150,7 +157,7 @@ export default () => {
                   }
                 }}
               >
-                {avatar.name}
+                {avatar.detail.name}
               </button>
             )}
           </For>

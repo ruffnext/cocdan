@@ -64,11 +64,11 @@ impl Session {
     pub fn is_expired(&self) -> bool {
         self.expiration_time < chrono::Utc::now().fixed_offset()
     }
-    pub async fn is_on_stage(&self, stage: i64, db: &DbConn) -> bool {
+    pub async fn is_on_stage(&self, stage: String, db: &DbConn) -> bool {
         let user = match self.session_type {
             SessionType::User(ref u) => u,
         };
-        let query = "SELECT * FROM r_user_join_stage WHERE in = type::record($user) AND out = type::record($stage ) LIMIT 1";
+        let query = "SELECT * FROM r_user_join_stage WHERE in = type::record($user) AND out = type::record($stage) LIMIT 1";
         match db
             .query(query)
             .bind(json!({

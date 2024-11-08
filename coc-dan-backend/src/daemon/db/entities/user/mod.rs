@@ -8,7 +8,7 @@ use crate::typedef::err::Left;
 #[derive(Deserialize, Serialize, Debug, Clone, ts_rs::TS)]
 #[ts(export, rename = "IUser", export_to = "entity/basic/IUser.d.ts")]
 pub struct User {
-    pub raw_id: i64,
+    pub raw_id: String,
     pub username: String,
     pub nickname: String,
     #[ts(inline)]
@@ -24,10 +24,10 @@ pub enum UserActiveStatus {
 }
 
 impl DbEntity for User {
-    type IdType = i64;
+    type IdType = String;
 
     fn db_id(&self) -> Id {
-        self.raw_id.into()
+        Id::from(self.raw_id.clone())
     }
 
     fn db_tab_name() -> &'static str {

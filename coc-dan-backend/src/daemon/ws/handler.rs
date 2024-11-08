@@ -42,7 +42,6 @@ impl WsServer {
         let ws_id = Uuid::new_v4().to_string();
         let mut stage_tx = self.stage_tx.write().await;
         let entry = stage_tx.entry(stage.raw_id).or_insert(StageTx {
-            stage_id: stage.raw_id,
             subscribers: Arc::new(RwLock::new(Vec::new())),
         });
         entry.subscribers.write().await.push((

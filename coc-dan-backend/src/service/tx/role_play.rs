@@ -11,7 +11,7 @@ use crate::{
         entities::{Avatar, RolePlay, Session, SessionType, Stage, TxAction, TxAux},
         DbEntity,
     },
-    left_span, mls,
+    left_span,
     typedef::err::{ErrCode, Left},
     AppState,
 };
@@ -37,17 +37,14 @@ pub async fn role_play(
         SessionType::User(user) => user,
     };
 
-    let stage_id = stage_id
-        .parse::<i64>()
-        .map_err(mls!(ErrCode::InvalidParameter("Invalid stage_id".into())))?;
-
-    let stage = if let Some(stage) = Stage::db_load_by_id(stage_id, &state.db.manager).await? {
-        stage
-    } else {
-        return Err(left_span!(ErrCode::InvalidParameter(
-            format!("Stage not found: {}", stage_id).into()
-        )));
-    };
+    let stage =
+        if let Some(stage) = Stage::db_load_by_id(stage_id.clone(), &state.db.manager).await? {
+            stage
+        } else {
+            return Err(left_span!(ErrCode::InvalidParameter(
+                format!("Stage not found: {}", stage_id).into()
+            )));
+        };
 
     let avatar = if let Some(avatar) =
         Avatar::db_load_by_id(req.avatar_id.clone(), &state.db.manager).await?
@@ -72,9 +69,9 @@ pub async fn role_play(
     }
 
     let _tx = TxAux::new(
-        stage.db_thing(),
-        user.db_thing(),
-        avatar.db_thing(),
+        stage.raw_id,
+        user.raw_id,
+        avatar.raw_id,
         TxAction::RolePlay(RolePlay {
             text: req.text.clone(),
         }),

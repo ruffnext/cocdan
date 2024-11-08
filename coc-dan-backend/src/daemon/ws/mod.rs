@@ -10,14 +10,12 @@ use super::{entities::Session, DbService};
 
 #[derive(Clone)]
 pub struct WsServer {
-    stage_tx: Arc<RwLock<HashMap<i64, StageTx>>>,
+    stage_tx: Arc<RwLock<HashMap<String, StageTx>>>,
     db: DbService,
 }
 
 #[derive(Clone)]
 struct StageTx {
-    #[allow(unused)]
-    stage_id: i64,
     subscribers: Arc<RwLock<Vec<(String, Arc<Mutex<StageTxSubscriber>>)>>>,
 }
 

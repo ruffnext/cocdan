@@ -9,6 +9,8 @@ import { IReqCreateAvatar } from "../bindings/api/avatar/create/IReqCreateAvatar
 import { IReqUpdateAvatar } from "../bindings/api/avatar/update/IReqUpdateAvatar";
 import { IReqDeleteAvatar } from "../bindings/api/avatar/delete/IReqDeleteAvatar";
 import { IReqRolePlay } from "../bindings/api/tx/role_play/IReqRolePlay";
+import { IReqFetchGameState } from "../bindings/api/tx/state/IReqFetchGameState";
+import { IGameState } from "../bindings/api/tx/state/IGameState";
 
 type PostApiKeys =
   '/user/login' |
@@ -18,7 +20,8 @@ type PostApiKeys =
   '/avatar/new' |
   '/avatar/update' |
   '/avatar/delete' |
-  '/tx/:stage_id/role_play'
+  '/tx/:stage_id/role_play' |
+  '/tx/:stage_id/state'
 
 type PostReqBodyType<Key extends PostApiKeys> =
   Key extends '/user/login' ? IReqUserLogin :
@@ -28,10 +31,12 @@ type PostReqBodyType<Key extends PostApiKeys> =
   Key extends '/avatar/update' ? IReqUpdateAvatar :
   Key extends '/avatar/delete' ? IReqDeleteAvatar :
   Key extends '/tx/:stage_id/role_play' ? IReqRolePlay :
+  Key extends '/tx/:stage_id/state' ? IReqFetchGameState :
   undefined;
 
 type PostReqUrlType<Key extends PostApiKeys> =
   Key extends '/tx/:stage_id/role_play' ? { stage_id: string } :
+  Key extends '/tx/:stage_id/state' ? { stage_id: string } :
   undefined
 
 type ISimpleResponse = {
@@ -53,6 +58,7 @@ type PostReqRespType<Key extends PostApiKeys> =
   Key extends '/avatar/update' ? IAvatar :
   Key extends '/avatar/delete' ? ISimpleResponse :
   Key extends '/tx/:stage_id/role_play' ? ISimpleResponse :
+  Key extends '/tx/:stage_id/state' ? IGameState :
   undefined;
 
 type ApiError = {

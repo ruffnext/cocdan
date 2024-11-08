@@ -1,24 +1,25 @@
 use serde::{Deserialize, Serialize};
 use surrealdb::{
-    sql::Datetime,
-    sql::{Id, Thing},
+    sql::{Datetime, Id, Thing},
+    RecordIdKey,
 };
+use tracing::info;
 
 use crate::{
-    daemon::{db::DbConn, DbEntity},
+    daemon::{db::DbConn, entities::Stage, DbEntity},
     left_span, mls,
     typedef::err::{ErrCode, Left},
 };
 
-use super::AvatarAux;
+use super::AvatarDetail;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TxAux {
     pub id: Thing,
 
-    pub tx_id: i64,
+    pub raw_id: String,
 
-    pub raw_id: i64,
+    pub tx_index: i64,
 
     pub stage: Thing,
 
@@ -43,22 +44,21 @@ impl DbEntity for TxAux {
 
 impl TxAux {
     pub async fn new(
-        stage: Thing,
-        user: Thing,
-        avatar: Thing,
+        stage: String,
+        user: String,
+        avatar: String,
         action: TxAction,
         db: &DbConn,
     ) -> Result<Self, Left> {
-        let raw_id = rand::random::<i64>();
         let create_statement = format!(
             r#"
             BEGIN TRANSACTION;
 
-            let $stage = type::record({stage});
+            let $stage = type::record(stage:`{stage}`);
 
-            let $user = type::record({user});
+            let $user = type::record(user:`{user}`);
 
-            let $max_id = math::max(SELECT VALUE tx_id AS max_id FROM tx WHERE stage = $stage);
+            let $max_id = math::max(SELECT VALUE tx_index AS max_id FROM tx WHERE stage = $stage);
 
             let $max_id = return if $max_id == None {{
                 1
@@ -66,25 +66,22 @@ impl TxAux {
                 type::int($max_id) + 1
             }};
 
-            let $id = type::record({id});
+            let $raw_id = string::concat('{stage}-',  $max_id);
 
-            CREATE $id SET
-                tx_id = $max_id,
-                raw_id = {raw_id},
+            CREATE type::record(string::concat('tx:', '`', $raw_id, '`')) SET
+                raw_id = $raw_id,
+                tx_index = $max_id,
                 stage = $stage,
                 user = $user,
-                avatar = type::record({avatar}),
+                avatar = type::record(string::concat('avatar:', '`', '{avatar}', '`')),
                 time = time::now(),
                 action = None;
 
             COMMIT TRANSACTION;
-        "#,
-            stage = stage.to_string(),
-            user = user.to_string(),
-            avatar = avatar.to_string(),
-            raw_id = raw_id,
-            id = Thing::from((TxAux::db_tab_name(), Id::from(raw_id))).to_string(),
+        "#
         );
+
+        info!("{}", create_statement);
 
         let mut query_res = db
             .query(create_statement)
@@ -94,7 +91,8 @@ impl TxAux {
         #[derive(Deserialize)]
         struct TxHelper {
             id: Thing,
-            tx_id: i64,
+            tx_index: i64,
+            raw_id: String,
             time: Datetime,
         }
 
@@ -104,16 +102,19 @@ impl TxAux {
             // for trigger live select
             let tx_aux = TxAux {
                 id: tx.id,
-                tx_id: tx.tx_id,
-                raw_id,
-                stage,
-                user,
-                avatar,
+                tx_index: tx.tx_index,
+                raw_id: tx.raw_id,
+                stage: Thing::from((Stage::db_tab_name(), Id::from(stage))),
+                user: Thing::from(("user", Id::from(user))),
+                avatar: Thing::from(("avatar", Id::from(avatar))),
                 time: tx.time,
                 action,
             };
             let res: Option<TxAux> = db
-                .upsert((TxAux::db_tab_name(), raw_id))
+                .upsert((
+                    TxAux::db_tab_name(),
+                    RecordIdKey::from_inner(tx_aux.db_id()),
+                ))
                 .content(tx_aux)
                 .await
                 .map_err(mls!(ErrCode::DbError))?;
@@ -134,10 +135,10 @@ impl TxAux {
 #[ts(export, export_to = "entity/tx/ITxAction.d.ts", rename = "ITxAction")]
 pub enum TxAction {
     RolePlay(RolePlay),
-    AvatarAdd(AvatarAux),
-    AvatarDel(AvatarAux),
-    /// before, after
-    AvatarModify(AvatarAux, AvatarAux),
+    AvatarAdd((String, AvatarDetail)),
+    AvatarDel((String, AvatarDetail)),
+    /// id before, after
+    AvatarModify((String, AvatarDetail, AvatarDetail)),
 }
 
 #[derive(Serialize, Deserialize, Clone, ts_rs::TS, Debug)]
@@ -146,13 +147,13 @@ pub struct RolePlay {
     pub text: String,
 }
 
-#[derive(Serialize, ts_rs::TS, Clone)]
+#[derive(Serialize, Deserialize, ts_rs::TS, Clone)]
 #[ts(export, export_to = "api/ws/tx/ITxEvent.d.ts", rename = "ITxEvent")]
 pub struct TxEvent {
-    pub tx_id: i64,
-    pub raw_id: i64,
-    pub stage_id: i64,
-    pub user_id: i64,
+    pub raw_id: String,
+    pub tx_index: i64,
+    pub stage_id: String,
+    pub user_id: String,
     pub avatar_id: String,
     pub time: String,
     pub action: TxAction,

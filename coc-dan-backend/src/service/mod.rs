@@ -22,7 +22,7 @@ pub fn app() -> Router<AppState> {
 #[cfg(test)]
 #[cfg(feature = "mock")]
 pub(crate) mod tests {
-    use crate::daemon::DbService;
+    use crate::daemon::{DbService, WsServer};
 
     use super::app;
     use axum_test::{TestResponse, TestServer};
@@ -30,7 +30,8 @@ pub(crate) mod tests {
     pub async fn new_test_server() -> (TestServer, DbService) {
         dotenvy::dotenv().ok();
         let db = DbService::new().await.unwrap();
-        let state = crate::AppState { db: db.clone() };
+        let ws = WsServer::new(db.clone()).await;
+        let state = crate::AppState { db: db.clone(), ws };
         (TestServer::new(app().with_state(state)).unwrap(), db)
     }
 

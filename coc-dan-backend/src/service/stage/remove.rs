@@ -10,7 +10,7 @@ use crate::{
         entities::{Stage, User},
         DbEntity,
     },
-    left_span, mls,
+    left_span,
     typedef::err::{ErrCode, Left},
     AppState,
 };
@@ -20,11 +20,7 @@ pub async fn remove_stage(
     Path(stage_id): Path<String>,
     user: User,
 ) -> Result<Response, Left> {
-    let stage_id = stage_id
-        .parse::<i64>()
-        .map_err(mls!(ErrCode::InvalidParameter("Invalid stage id".into())))?;
-
-    if let Some(stage) = Stage::db_load_by_id(stage_id, &state.db.manager).await? {
+    if let Some(stage) = Stage::db_load_by_id(stage_id.clone(), &state.db.manager).await? {
         if stage.owner.raw_id != user.raw_id {
             return Err(left_span!(ErrCode::PermissionDenied(
                 "You are not the owner of this stage".into()

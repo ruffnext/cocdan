@@ -174,6 +174,8 @@ pub struct Equipment {
 #[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
 #[ts(export, rename = "IDetail", export_to = "entity/avatar/IDetail.d.ts")]
 pub struct AvatarDetail {
+    pub name: String,
+    pub header: String,
     pub status: Status,
     pub characteristics: Characteristics,
     pub descriptor: Descriptor,
@@ -185,6 +187,8 @@ pub struct AvatarDetail {
 impl Default for AvatarDetail {
     fn default() -> Self {
         Self {
+            name: "AvatarName".to_string(),
+            header: "".to_string(),
             status: Default::default(),
             characteristics: Default::default(),
             descriptor: Default::default(),
@@ -227,9 +231,7 @@ pub struct Avatar {
     pub raw_id: String,
     pub stage: Stage,
     pub owner: User,
-    pub name: String,
     pub detail: AvatarDetail,
-    pub header: String,
     #[serde(with = "optional_datetime_from_rfc3339")]
     #[ts(as = "Option<String>")]
     pub creation_time: Option<DateTime<FixedOffset>>,
@@ -243,45 +245,9 @@ pub struct AvatarDbAux {
     pub raw_id: String,
     pub stage: Thing,
     pub owner: Thing,
-    pub name: String,
     pub detail: AvatarDetail,
-    pub header: String,
     pub creation_time: Option<Datetime>,
     pub last_update_time: Option<Datetime>,
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, ts_rs::TS)]
-#[ts(
-    export,
-    rename = "IAvatarAux",
-    export_to = "entity/avatar/IAvatarAux.d.ts"
-)]
-pub struct AvatarAux {
-    pub raw_id: String,
-    pub stage_id: i64,
-    pub owner_id: i64,
-    pub name: String,
-    pub detail: AvatarDetail,
-    pub creation_time: Option<String>,
-    pub last_update_time: Option<String>,
-}
-
-impl From<&Avatar> for AvatarAux {
-    fn from(value: &Avatar) -> Self {
-        Self {
-            raw_id: value.raw_id.clone(),
-            stage_id: value.stage.raw_id,
-            owner_id: value.owner.raw_id,
-            name: value.name.clone(),
-            detail: value.detail.clone(),
-            creation_time: value
-                .creation_time
-                .map(|v| v.to_rfc3339_opts(chrono::SecondsFormat::Secs, true)),
-            last_update_time: value
-                .last_update_time
-                .map(|v| v.to_rfc3339_opts(chrono::SecondsFormat::Secs, true)),
-        }
-    }
 }
 
 impl From<&Avatar> for AvatarDbAux {
@@ -290,9 +256,7 @@ impl From<&Avatar> for AvatarDbAux {
             raw_id: value.raw_id.clone(),
             stage: value.stage.db_thing(),
             owner: value.owner.db_thing(),
-            name: value.name.clone(),
             detail: value.detail.clone(),
-            header: value.header.clone(),
             creation_time: Some(
                 value
                     .creation_time
@@ -362,10 +326,10 @@ impl DbEntity for Avatar {
         AvatarDbAux::db_del(id, db).await?;
 
         let _tx = TxAux::new(
-            avatar.stage.db_thing(),
-            avatar.owner.db_thing(),
-            avatar.db_thing(),
-            TxAction::AvatarDel(AvatarAux::from(&avatar)),
+            avatar.stage.raw_id.clone(),
+            avatar.owner.raw_id.clone(),
+            avatar.raw_id.clone(),
+            TxAction::AvatarDel((avatar.raw_id.clone(), avatar.detail.clone())),
             db,
         )
         .await?;

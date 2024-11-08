@@ -1,10 +1,11 @@
 use axum::{extract::State, Json};
+use chrono::Utc;
 use serde_json::json;
 use surrealdb::sql::Thing;
 
 use crate::{
     daemon::{
-        entities::{Avatar, AvatarAux, AvatarDetail, Session, SessionType, Stage, TxAction, TxAux},
+        entities::{Avatar, AvatarDetail, Session, SessionType, Stage, TxAction, TxAux},
         DbEntity, SurrealRecord,
     },
     left_span, mls,
@@ -19,12 +20,9 @@ use crate::{
     export_to = "api/avatar/create/IReqCreateAvatar.d.ts"
 )]
 pub struct ReqCreateAvatar {
-    stage_id: i64,
-    name: String,
+    stage_id: String,
     #[serde(default)]
     detail: AvatarDetail,
-    #[serde(default)]
-    header: String,
 }
 
 pub async fn create_avatar(
@@ -38,7 +36,10 @@ pub async fn create_avatar(
         return Err(left_span!(ErrCode::InvalidParameter("stage_id".into())));
     };
 
-    if !session.is_on_stage(stage.raw_id, &state.db.manager).await {
+    if !session
+        .is_on_stage(stage.raw_id.clone(), &state.db.manager)
+        .await
+    {
         return Err(left_span!(ErrCode::PermissionDenied(
             "You have no access to create avatar on this stage".into()
         )));
@@ -51,46 +52,38 @@ pub async fn create_avatar(
     let new_avatar_id = uuid::Uuid::new_v4().to_string();
 
     let save_query = format!(
-        "
-        CREATE type::record($id) CONTENT {{
-            raw_id: $raw_id,
-            name: $name,
-            detail: $detail,
-            stage: type::record($stage),
-            owner: type::record($owner),
-            header: $header,
-        }} VERSION d'{time}';
-    ",
-        time = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
+        "CREATE type::record($id) SET
+            raw_id = $raw_id,
+            detail = $detail,
+            stage = type::record($stage),
+            owner = type::record($owner) VERSION d'{}';",
+        Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
     );
 
-    let mut response = state
+    let new_avatar: Vec<SurrealRecord> = state
         .db
-        .manager
-        .query(save_query)
-        .bind(json!({
-            "id": Thing::from((Avatar::db_tab_name(), new_avatar_id.as_ref())).to_string(),
-            "raw_id": new_avatar_id,
-            "name": req.name,
-            "detail": req.detail,
-            "stage": stage.db_thing().to_string(),
-            "owner": owner.db_thing().to_string(),
-            "header": req.header,
-        }))
+        .query_manager_bind(
+            &save_query,
+            json!({
+                "id": Thing::from((Avatar::db_tab_name(), new_avatar_id.as_ref())).to_string(),
+                "raw_id": new_avatar_id,
+                "detail": req.detail,
+                "stage": stage.db_thing().to_string(),
+                "owner": owner.db_thing().to_string(),
+            }),
+        )
         .await
         .map_err(mls!(ErrCode::DbError))?;
-
-    let new_avatar: Vec<SurrealRecord> = response.take(0).map_err(mls!(ErrCode::DbError))?;
 
     if let Some(v) = new_avatar.into_iter().next() {
         if let Some(avatar) =
             Avatar::db_load_by_id(v.id.id.to_raw().parse().unwrap(), &state.db.manager).await?
         {
             let _tx = TxAux::new(
-                stage.db_thing(),
-                owner.db_thing(),
-                avatar.db_thing(),
-                TxAction::AvatarAdd(AvatarAux::from(&avatar)),
+                stage.raw_id.clone(),
+                owner.raw_id.clone(),
+                avatar.raw_id.clone(),
+                TxAction::AvatarAdd((avatar.raw_id.clone(), avatar.detail.clone())),
                 &state.db.manager,
             )
             .await?;

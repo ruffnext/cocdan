@@ -19,9 +19,7 @@ use crate::{
 )]
 pub struct ReqUpdateAvatar {
     raw_id: String,
-    name: String,
     detail: AvatarDetail,
-    header: String,
 }
 
 pub async fn update_avatar(
@@ -51,7 +49,6 @@ pub async fn update_avatar(
     let new_avatar = Avatar {
         owner: avatar.owner.clone(),
         stage: avatar.stage.clone(),
-        name: req.name.clone(),
         ..avatar
     };
 

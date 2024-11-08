@@ -19,14 +19,6 @@ pub async fn list_my_stage_avatars(
     Path(stage_id): Path<String>,
     session: Session,
 ) -> Result<Json<Vec<Avatar>>, Left> {
-    let stage_id: i64 = if let Ok(v) = stage_id.parse() {
-        v
-    } else {
-        return Err(left_span!(ErrCode::InvalidParameter(
-            "Invalid stage id".into()
-        )));
-    };
-
     let user = match session.session_type {
         SessionType::User(u) => u,
     };
