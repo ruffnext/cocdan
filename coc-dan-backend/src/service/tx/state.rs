@@ -111,7 +111,7 @@ pub async fn fetch_game_state(
     let query_avatars = format!(
         "(
             SELECT VALUE
-                fn::load_version(id, d'{first_log_time}')
+                fn::load_version(id, {first_log_time})
             FROM avatar WHERE stage == {stage}
             FETCH version
         ).filter(|$x| $x.version != None);

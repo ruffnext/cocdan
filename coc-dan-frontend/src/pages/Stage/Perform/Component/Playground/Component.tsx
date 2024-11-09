@@ -1,16 +1,18 @@
-import { createSignal, Show, For } from "solid-js"
+import { createSignal, Show, For, Accessor } from "solid-js"
 import { IAvatar } from "../../../../../bindings/entity/avatar/IAvatar"
 import { IStage } from "../../../../../bindings/entity/basic/IStage"
-import NoMessageHolder from "./Logs/NoMessageHolder"
 import { post } from "../../../../../api/core"
 import { StageWebsocket } from "../../../../../api/ws"
+import { IGameLog } from "../../../../../core/state/core"
+import Logs from "./Logs/Component"
 
 type Props = {
   stage: IStage,
   avatar: IAvatar,
   allControllableAvatar: Array<IAvatar>
   onAvatarChange: (avatar: IAvatar) => void,
-  stageWs: StageWebsocket
+  stageWs: StageWebsocket,
+  gameLogs: Accessor<Array<IGameLog>>
 }
 
 export default (props: Props) => {
@@ -107,7 +109,7 @@ export default (props: Props) => {
         </div>
         <div class="absolute h-full w-full top-0 left-0" on:click={() => setIsAvatarSelectorExtend(false)}></div>
       </Show>
-      <NoMessageHolder />
+      <Logs logs={props.gameLogs}></Logs>
     </div>
   )
 }

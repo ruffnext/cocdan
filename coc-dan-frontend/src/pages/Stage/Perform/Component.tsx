@@ -9,7 +9,7 @@ import AvatarEditor from "./Component/AvatarEditor/Component"
 import { deepClone } from "../../../core/utils"
 import { new_stage_websocket, StageWebsocket } from "../../../api/ws"
 import { useSession } from "../../Login/context"
-import { IGameStateFragment } from "../../../bindings/api/tx/state/IGameStateFragment"
+import { GameState, IGameLog } from "../../../core/state/core"
 
 export default () => {
   const param = useParams()
@@ -19,13 +19,8 @@ export default () => {
   const [editingAvatar, setEditingAvatar] = createSignal<[string, IAvatar] | ["Add", undefined] | [undefined, undefined]>([undefined, undefined])
   const [selectedAvatar, setSelectedAvatar] = createSignal<[string, IAvatar] | [undefined, undefined]>([undefined, undefined])
   const [stageWs, setStageWs] = createSignal<StageWebsocket | undefined>(undefined)
-  const [gameState, setGameState] = createSignal<IGameStateFragment>({
-    begin_tx_index: 0,
-    end_tx_index: 0,
-    stage_id: "",
-    avatars: {},
-    logs: []
-  })
+  const [gameLogs, setGameLogs] = createSignal<Array<IGameLog>>([])
+  const gameState = new GameState()
 
   createEffect(() => {
     if (session() == "NotLoggedIn") {
@@ -38,12 +33,18 @@ export default () => {
     if ("Ok" in resp) {
       const gameStateResp = await post('/tx/:stage_id/state', { end_tx_index: null, count: 50 }, { stage_id: resp.Ok.raw_id })
       if ("Ok" in gameStateResp) {
-        console.log(gameStateResp.Ok)
-        setGameState(gameStateResp.Ok)
+        gameState.init(gameStateResp.Ok)
+        setGameLogs(deepClone(gameState.logs).reverse())
       }
 
       const stageWs = new_stage_websocket(resp.Ok.raw_id);
-      stageWs.addMessageListener("log", (data) => { console.log(data) })
+      stageWs.addMessageListener("console.log", (data) => { console.log(data) })
+      stageWs.addMessageListener("gameLog", (data) => {
+        const res = gameState.performTx(data)
+        if (res !== undefined) {
+          setGameLogs([res].concat(gameLogs()))
+        }
+      })
       setStageWs(stageWs)
       return resp.Ok
     } else {
@@ -209,15 +210,17 @@ export default () => {
       </Show>
       <Suspense fallback={<div>...</div>}>
         {
-          selectedAvatar()[1] ? <Playground
-            stage={stage() as any}
-            avatar={selectedAvatar()[1] as any}
-            allControllableAvatar={avatars() ? deepClone(avatars())!.reverse() : []}
-            onAvatarChange={(avatar) => {
-              setSelectedAvatar([avatar.raw_id, avatar])
-            }}
-            stageWs={stageWs() as any}
-          /> : <div></div>
+          selectedAvatar()[1] ?
+            <Playground
+              stage={stage() as any}
+              avatar={selectedAvatar()[1] as any}
+              allControllableAvatar={avatars() ? deepClone(avatars())!.reverse() : []}
+              onAvatarChange={(avatar) => {
+                setSelectedAvatar([avatar.raw_id, avatar])
+              }}
+              stageWs={stageWs() as any}
+              gameLogs={gameLogs}
+            /> : <div></div>
         }
       </Suspense>
     </main>

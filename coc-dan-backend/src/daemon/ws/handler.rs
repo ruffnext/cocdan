@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use axum::extract::ws::{Message, WebSocket};
-use futures::{stream::SplitSink, SinkExt, StreamExt};
+use axum::extract::ws::WebSocket;
+use futures::StreamExt;
 use tokio::sync::{Mutex, RwLock};
 use uuid::Uuid;
 
@@ -20,25 +20,9 @@ pub enum RespJoinStage {
     Fail(String),
 }
 
-impl RespJoinStage {
-    async fn send(&self, sender: &mut SplitSink<WebSocket, Message>) -> Result<(), axum::Error> {
-        return sender
-            .send(Message::Text(serde_json::to_string(self).unwrap()))
-            .await;
-    }
-}
-
 impl WsServer {
     pub async fn handle_socket(self, ws: WebSocket, session: Session, stage: Stage) {
-        let (mut ws_sender, _) = ws.split();
-
-        if let Err(_) = RespJoinStage::Success("Success".into())
-            .send(&mut ws_sender)
-            .await
-        {
-            return;
-        }
-
+        let (ws_sender, _) = ws.split();
         let ws_id = Uuid::new_v4().to_string();
         let mut stage_tx = self.stage_tx.write().await;
         let entry = stage_tx.entry(stage.raw_id).or_insert(StageTx {

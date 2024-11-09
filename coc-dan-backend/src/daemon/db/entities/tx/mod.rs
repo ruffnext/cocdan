@@ -19,7 +19,7 @@ pub struct TxAux {
 
     pub raw_id: String,
 
-    pub tx_index: i64,
+    pub tx_index: u32,
 
     pub stage: Thing,
 
@@ -150,7 +150,7 @@ impl TxAux {
         #[derive(Deserialize)]
         struct TxHelper {
             id: Thing,
-            tx_index: i64,
+            tx_index: u32,
             raw_id: String,
             time: Datetime,
         }
@@ -211,7 +211,7 @@ pub struct RolePlay {
 #[ts(export, export_to = "api/ws/tx/ITxEvent.d.ts", rename = "ITxEvent")]
 pub struct TxEvent {
     pub raw_id: String,
-    pub tx_index: i64,
+    pub tx_index: u32,
     pub stage_id: String,
     pub user_id: String,
     pub avatar_id: String,
