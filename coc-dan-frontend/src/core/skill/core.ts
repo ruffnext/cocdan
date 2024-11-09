@@ -46,12 +46,12 @@ export function remainInterestSkillPoints(raw : IAvatar) : number {
 }
 
 export function genAvatarAvailableOptionalOccupationSkills(avatar : IAvatar) : Map<ISkillCategory, [Array<ISkill>, number]> {
-  const available : Array<IOptionalOccupationalSkill> = getOccupationAvailableSkillCategories(deepClone(avatar.detail.occupation))
+  const available : Array<IOptionalOccupationalSkill> = getOccupationAvailableSkillCategories(deepClone(avatar.version.occupation))
   const selected : Map<string, ISkillAssigned> = new Map()
 
   // setup additional selected
-  for (const key in avatar.detail.skills) {
-    const item = avatar.detail.skills[key]
+  for (const key in avatar.version.skills) {
+    const item = avatar.version.skills[key]
     selected.set(item.name, item)
   }
   const resRaw : Map<ISkillCategory, [Array<ISkill>, number]> = new Map()

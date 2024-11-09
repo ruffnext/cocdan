@@ -31,7 +31,7 @@ export default (props: Props) => {
           owner: sessionContent.session_type.User,
           name: "new avatar",
           header: "",
-          detail: {
+          version: {
             name: 'avatar name',
             header: '',
             status: {
@@ -57,7 +57,7 @@ export default (props: Props) => {
               luk: 0,
               mov_adj: 0
             },
-            descriptor: {
+            basic_info: {
               age: 0,
               gender: "Other",
               homeland: "",
@@ -120,13 +120,13 @@ export default (props: Props) => {
             on:change={(e) =>
               setAvatar({
                 ...avatar(),
-                detail: {
-                  ...avatar().detail,
+                version: {
+                  ...avatar().version,
                   name: e.target.value,
                 }
               })
             }
-            value={avatar().detail.name} />
+            value={avatar().version.name} />
 
           <label class="block text-gray-700 text-sm font-bold mb-2">
             Age
@@ -134,15 +134,15 @@ export default (props: Props) => {
           <input type="text" class="shadow mb-2 appearance-none border rounded-md w-full py-2 px-3" placeholder="Age"
             on:change={(e) => setAvatar({
               ...avatar(),
-              detail: {
-                ...avatar().detail,
+              version: {
+                ...avatar().version,
                 descriptor: {
-                  ...avatar().detail.descriptor,
+                  ...avatar().version.basic_info,
                   age: parseInt(e.target.value)
                 }
               }
             })}
-            value={avatar().detail.descriptor.age} />
+            value={avatar().version.basic_info.age} />
 
         </div>
       )

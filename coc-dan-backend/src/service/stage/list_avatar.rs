@@ -31,7 +31,11 @@ pub async fn list_my_stage_avatars(
         )));
     };
 
-    let query = "SELECT * FROM avatar WHERE owner = type::record($owner) AND stage = type::record($stage) FETCH owner, stage, stage.owner";
+    let query = "
+        SELECT * FROM 
+            SELECT VALUE fn::load_version(id, time::now()) FROM avatar WHERE owner = type::record($owner) AND stage = type::record($stage)
+        FETCH owner, stage, stage.owner, version
+    ";
 
     let avatars: Vec<Avatar> = state
         .db

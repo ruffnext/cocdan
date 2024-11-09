@@ -27,9 +27,67 @@ pub struct TxAux {
 
     pub avatar: Thing,
 
-    pub time: surrealdb::sql::Datetime,
+    pub time: Datetime,
 
     pub action: TxAction,
+
+    pub validate: TxValidate,
+}
+
+#[derive(Serialize, Deserialize, Clone, ts_rs::TS, Debug, PartialEq)]
+#[ts(
+    export,
+    export_to = "entity/tx/ITxValidate.d.ts",
+    rename = "ITxValidate"
+)]
+pub enum TxValidate {
+    Pending,
+    Valid,
+    Invalid,
+}
+
+impl TxAux {
+    pub async fn set_validate(&mut self, db: &DbConn) -> Result<(), Left> {
+        match &self.validate {
+            TxValidate::Invalid => {
+                return Err(left_span!(ErrCode::InvalidParameter("Invalid tx".into())))
+            }
+            TxValidate::Valid => return Ok(()),
+            TxValidate::Pending => {}
+        };
+        let query = "UPDATE type::record($id) SET validate = 'Valid';";
+        let mut res = db
+            .query(query)
+            .bind(("id", self.id.to_string()))
+            .await
+            .map_err(mls!(ErrCode::DbError))?;
+        let records: Option<Self> = res.take(0).map_err(mls!(ErrCode::DbError))?;
+        if records.is_some() {
+            self.validate = TxValidate::Valid;
+            Ok(())
+        } else {
+            Err(left_span!(ErrCode::DbError))
+        }
+    }
+    pub async fn set_invalid(&mut self, db: &DbConn) -> Result<(), Left> {
+        match &self.validate {
+            TxValidate::Invalid => return Ok(()),
+            _ => {}
+        };
+        let query = "UPDATE type::record($id) SET validate = 'Invalid';";
+        let mut res = db
+            .query(query)
+            .bind(("id", self.id.to_string()))
+            .await
+            .map_err(mls!(ErrCode::DbError))?;
+        let records: Option<Self> = res.take(0).map_err(mls!(ErrCode::DbError))?;
+        if records.is_some() {
+            self.validate = TxValidate::Invalid;
+            Ok(())
+        } else {
+            Err(left_span!(ErrCode::DbError))
+        }
+    }
 }
 
 impl DbEntity for TxAux {
@@ -75,7 +133,8 @@ impl TxAux {
                 user = $user,
                 avatar = type::record(string::concat('avatar:', '`', '{avatar}', '`')),
                 time = time::now(),
-                action = None;
+                action = None,
+                validate = "Pending";
 
             COMMIT TRANSACTION;
         "#
@@ -109,6 +168,7 @@ impl TxAux {
                 avatar: Thing::from(("avatar", Id::from(avatar))),
                 time: tx.time,
                 action,
+                validate: TxValidate::Pending,
             };
             let res: Option<TxAux> = db
                 .upsert((
@@ -155,6 +215,7 @@ pub struct TxEvent {
     pub stage_id: String,
     pub user_id: String,
     pub avatar_id: String,
-    pub time: String,
+    #[ts(type = "String")]
+    pub time: Datetime,
     pub action: TxAction,
 }

@@ -3,10 +3,7 @@ use serde::Deserialize;
 use serde_json::json;
 
 use crate::{
-    daemon::{
-        entities::{Avatar, Session, SessionType},
-        DbEntity,
-    },
+    daemon::entities::{Avatar, Session, SessionType},
     left_span,
     typedef::err::{ErrCode, Left},
     AppState,

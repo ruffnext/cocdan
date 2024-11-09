@@ -1,5 +1,4 @@
 use axum::{extract::State, Json};
-use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
@@ -32,14 +31,6 @@ pub async fn create_stage(
     user: User,
     Json(req): Json<ReqCreateStage>,
 ) -> Result<Json<Stage>, Left> {
-    #[cfg(feature = "mock")]
-    let version = "".to_string();
-    #[cfg(not(feature = "mock"))]
-    let version = format!(
-        " VERSION d'{}'",
-        Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
-    );
-
     let raw_id = Uuid::new_v4().to_string();
 
     let create_statement = format!(
@@ -50,7 +41,7 @@ pub async fn create_stage(
             description: type::string($description),
             rule: type::string($rule),
             owner: type::record($owner),
-        }} {version};
+        }};
     "#
     );
 

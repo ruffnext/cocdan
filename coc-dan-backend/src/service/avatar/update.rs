@@ -2,10 +2,7 @@ use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    daemon::{
-        entities::{Avatar, AvatarDetail, Session, SessionType},
-        DbEntity,
-    },
+    daemon::entities::{Avatar, AvatarDetail, Session, SessionType},
     left_span,
     typedef::err::{ErrCode, Left},
     AppState,
@@ -46,13 +43,18 @@ pub async fn update_avatar(
         }
     };
 
-    let new_avatar = Avatar {
-        owner: avatar.owner.clone(),
-        stage: avatar.stage.clone(),
-        ..avatar
-    };
+    avatar
+        .db_update(Some(req.detail), &state.db.manager)
+        .await?;
 
-    new_avatar.db_save(&state.db.manager).await?;
+    let new_avatar =
+        if let Some(v) = Avatar::db_load_by_id(req.raw_id.clone(), &state.db.manager).await? {
+            v
+        } else {
+            return Err(left_span!(ErrCode::InternalServerError(
+                "Failed to load updated avatar".into()
+            )));
+        };
 
     Ok(Json(new_avatar))
 }

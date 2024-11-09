@@ -38,8 +38,8 @@ export default () => {
     // @ts-ignore
     const text = t("additionalOccupationalSkillEditor.select", prop.remain, ts("category." + prop.category))
     const insertAdditionalOccupationalSkill = (val : string) : string => {
-      if (val in avatar.detail.skills) {
-        const isExists = deepClone(avatar.detail.skills[val])
+      if (val in avatar.version.skills) {
+        const isExists = deepClone(avatar.version.skills[val])
         if (isExists.assign_type & ISkillAssignType.Occupational) {
           return text
         }
@@ -75,8 +75,8 @@ export default () => {
 
   const getOccupationalSkills = (): Array<ISkillAssigned> => {
     const res: Array<ISkillAssigned> = []
-    for (const key in avatar.detail.skills) {
-      const item = avatar.detail.skills[key]
+    for (const key in avatar.version.skills) {
+      const item = avatar.version.skills[key]
       if (item == undefined) {
         continue
       }

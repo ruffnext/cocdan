@@ -40,13 +40,26 @@ impl MigrationTrait for M241028Init {
         DEFINE FIELD owner ON TABLE stage TYPE record<user>;
         DEFINE INDEX rawIdIdx ON TABLE stage COLUMNS raw_id UNIQUE;
 
+        DEFINE TABLE avatar_version SCHEMALESS;
+        DEFINE FIELD name ON TABLE avatar_version TYPE string;
+        DEFINE FIELD header ON TABLE avatar_version TYPE string;
+        DEFINE FIELD status ON TABLE avatar_version TYPE object;
+        DEFINE FIELD characteristics ON TABLE avatar_version TYPE object;
+        DEFINE FIELD basic_info ON TABLE avatar_version TYPE object;
+        DEFINE FIELD skills ON TABLE avatar_version TYPE object;
+        DEFINE FIELD occupation ON TABLE avatar_version TYPE object;
+        DEFINE field equipments ON TABLE avatar_version TYPE array<object>;
+
         DEFINE TABLE avatar SCHEMAFULL;
         DEFINE FIELD raw_id ON TABLE avatar TYPE string;
-        DEFINE FIELD detail ON TABLE avatar TYPE object FLEXIBLE;
+        DEFINE FIELD versions ON TABLE avatar TYPE array<{
+            time: datetime,
+            version: record<avatar_version>,
+            tx: record<tx>
+        }>;
         DEFINE FIELD stage ON TABLE avatar TYPE record<stage>;
         DEFINE FIELD owner ON TABLE avatar TYPE record<user>;
         DEFINE FIELD creation_time ON TABLE avatar TYPE datetime DEFAULT time::now();
-        DEFINE FIELD last_update_time ON TABLE avatar TYPE datetime DEFAULT time::now();
         DEFINE INDEX rawIdIdx ON TABLE avatar COLUMNS raw_id UNIQUE;
         DEFINE INDEX ownerIdIdx ON TABLE avatar COLUMNS owner;
         DEFINE INDEX stageIdIdx ON TABLE avatar COLUMNS stage;
@@ -61,6 +74,7 @@ impl MigrationTrait for M241028Init {
         DEFINE FIELD avatar ON TABLE tx TYPE record<avatar>;
         DEFINE FIELD time ON TABLE tx TYPE datetime DEFAULT time::now();
         DEFINE FIELD action ON TABLE tx TYPE option<object> FLEXIBLE;
+        DEFINE FIELD validate ON TABLE tx TYPE "Pending" | "Valid" | "Invalid";
         DEFINE INDEX txIndexIdx ON TABLE tx COLUMNS tx_index;
         DEFINE INDEX stageIdIdx ON TABLE tx COLUMNS stage;
         DEFINE INDEX timeIdx ON TABLE tx COLUMNS time;
@@ -68,8 +82,27 @@ impl MigrationTrait for M241028Init {
         DEFINE INDEX userIdIdx ON TABLE tx COLUMNS user;
         DEFINE INDEX avatarIdIdx ON TABLE tx COLUMNS avatar;
 
-        COMMIT TRANSACTION;
-        "#;
+        DEFINE FUNCTION OVERWRITE fn::load_version($item: record, $time: datetime) {
+            let $len = array::len($item.versions);
+
+            IF $len == 0 {
+                return None;
+            };
+            
+            FOR $index IN 0..=($len - 1) {
+                IF $item.versions[$index].time > $time {
+                    IF $index > 0 {
+                        return $item.versions[$index - 1];
+                    } ELSE {
+                        return None;
+                    }
+                }
+            };
+            return array::first(SELECT *, $item.versions[$len - 1].version AS version OMIT versions FROM $item);
+        };
+
+
+        COMMIT TRANSACTION;"#;
 
         db.query(create_db).await?;
 
@@ -82,8 +115,10 @@ impl MigrationTrait for M241028Init {
             REMOVE TABLE user;
             REMOVE TABLE stage;
             REMOVE TABLE avatar;
+            REMOVE TABLE avatar_version;
             REMOVE TABLE r_user_join_stage;
             REMOVE TABLE tx;
+            REMOVE FUNCTION fn::load_version;
         ";
 
         db.query(drop_db).await?;

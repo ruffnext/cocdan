@@ -17,9 +17,9 @@ import { IAvatar } from "../../../../bindings/IAvatar"
 import { SetStoreFunction } from "solid-js/store"
 
 function resetInterestSkill(avatar : IAvatar, setAvatar : SetStoreFunction<IAvatar>) : Partial<IAvatar> {
-  const res : any = deepClone(avatar.detail.skills)
-  for (const key in avatar.detail.skills) {
-    const item = avatar.detail.skills[key]
+  const res : any = deepClone(avatar.version.skills)
+  for (const key in avatar.version.skills) {
+    const item = avatar.version.skills[key]
     if (item.assign_type & ISkillAssignType.Interest) {
       if (item.assign_type & ISkillAssignType.Occupational) {
         res[key]['interest_skill_point'] = 0
@@ -42,8 +42,8 @@ export default () => {
 
   const getInterestSkills = () : Array<ISkillAssigned> => {
     const res : ISkillAssigned[] = []
-    for (const key in avatar.detail.skills) {
-      const item = avatar.detail.skills[key]
+    for (const key in avatar.version.skills) {
+      const item = avatar.version.skills[key]
       if (item.assign_type & ISkillAssignType.Interest) {
         res.push(deepClone(item))
       }
@@ -54,8 +54,8 @@ export default () => {
   const getAvailableInterestSkills = () : Array<IDropdownItem> => {
     const res : Array<IDropdownItem> = []
     const selected : Map<string, ISkillAssigned> = new Map()
-    for (const key in avatar.detail.skills) {
-      selected.set(key, avatar.detail.skills[key])
+    for (const key in avatar.version.skills) {
+      selected.set(key, avatar.version.skills[key])
     }
     for (const [key, val] of SKILLS) {
       const isSelected = selected.get(key)
@@ -85,8 +85,8 @@ export default () => {
     var assignType = ISkillAssignType.Interest
     var occupation_initial = 0
     if (raw == undefined) return buttonLabel
-    if (skillName in avatar.detail.skills) {
-      const ori = avatar.detail.skills[skillName]
+    if (skillName in avatar.version.skills) {
+      const ori = avatar.version.skills[skillName]
       raw = ori
       occupation_initial = ori.occupation_skill_point
       assignType = assignType | ori.assign_type

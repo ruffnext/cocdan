@@ -7,7 +7,7 @@ services:
       - --pass
       - root
       - --allow-all
-      - surrealkv://data
+      - rocksdb://data
     image: surrealdb/surrealdb:v2.0.4
     environment:
       - SURREAL_EXPERIMENTAL_GRAPHQL=true

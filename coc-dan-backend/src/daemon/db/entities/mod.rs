@@ -6,6 +6,7 @@ mod stage;
 mod tx;
 mod user;
 pub mod weapon;
+mod version;
 
 pub use avatar::*;
 pub use session::*;

@@ -6,4 +6,4 @@ import type { IOccupation } from "./IOccupation.d";
 import type { ISkillAssigned } from "./ISkillAssigned.d";
 import type { IStatus } from "./IStatus.d";
 
-export type IDetail = { name: string, header: string, status: IStatus, characteristics: ICharacteristics, descriptor: IDescriptor, skills: { [key in string]?: ISkillAssigned }, occupation: IOccupation, equipments: Array<IEquipment>, };
+export type IDetail = { name: string, header: string, status: IStatus, characteristics: ICharacteristics, basic_info: IDescriptor, skills: { [key in string]?: ISkillAssigned }, occupation: IOccupation, equipments: Array<IEquipment>, };

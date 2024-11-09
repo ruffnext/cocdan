@@ -20,7 +20,7 @@ export default () => {
   const setAge = (val : string) : string => {
     const newVal = parseInt(val)
     if (isNaN(newVal) || newVal < 0) {
-      return avatar.detail.descriptor.age.toFixed(0)
+      return avatar.version.descriptor.age.toFixed(0)
     }
     setAvatar("detail", "descriptor", "age", newVal)
     return newVal.toFixed(0)
@@ -45,7 +45,7 @@ export default () => {
     const occupation = getOccupationOrDefault(val)
     setAvatar("detail", "occupation", occupation)
     const newAvatar = deepClone(avatar)
-    newAvatar.detail.occupation = occupation
+    newavatar.version.occupation = occupation
     resetSkill(newAvatar, setAvatar)
     return getOccupationName(val)
   }
@@ -83,18 +83,18 @@ export default () => {
           <tr>
             <td style="width : 17%">{t("investor.gender")}</td>
             <td style="width : 33%">
-              <Dropdown items={genders} initialLabel={getGenderName(avatar.detail.descriptor.gender)} setValue={setGender}/>
+              <Dropdown items={genders} initialLabel={getGenderName(avatar.version.descriptor.gender)} setValue={setGender}/>
             </td>
             <td style="width : 17%">{t("investor.age")}</td>
-            <td style="width : 33%"><CellInput value={avatar.detail.descriptor.age.toFixed(0)} setValue={setAge} /></td>
+            <td style="width : 33%"><CellInput value={avatar.version.descriptor.age.toFixed(0)} setValue={setAge} /></td>
           </tr>
           <tr>
             <td>{t("investor.career")}</td>
             <td>
-              <Dropdown items={occupations} initialLabel={getOccupationName(avatar.detail.occupation.name)} setValue={setOccupation} />
+              <Dropdown items={occupations} initialLabel={getOccupationName(avatar.version.occupation.name)} setValue={setOccupation} />
             </td>
             <td>{t("investor.homeland")}</td>
-            <td><CellInput value={avatar.detail.descriptor.homeland} setValue={setHomeland} /></td>
+            <td><CellInput value={avatar.version.descriptor.homeland} setValue={setHomeland} /></td>
           </tr>
         </tbody>
       </table>

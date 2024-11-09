@@ -9,7 +9,7 @@ import AvatarEditor from "./Component/AvatarEditor/Component"
 import { deepClone } from "../../../core/utils"
 import { new_stage_websocket, StageWebsocket } from "../../../api/ws"
 import { useSession } from "../../Login/context"
-import { IGameState } from "../../../bindings/api/tx/state/IGameState"
+import { IGameStateFragment } from "../../../bindings/api/tx/state/IGameStateFragment"
 
 export default () => {
   const param = useParams()
@@ -19,7 +19,10 @@ export default () => {
   const [editingAvatar, setEditingAvatar] = createSignal<[string, IAvatar] | ["Add", undefined] | [undefined, undefined]>([undefined, undefined])
   const [selectedAvatar, setSelectedAvatar] = createSignal<[string, IAvatar] | [undefined, undefined]>([undefined, undefined])
   const [stageWs, setStageWs] = createSignal<StageWebsocket | undefined>(undefined)
-  const [gameState, setGameState] = createSignal<IGameState>({
+  const [gameState, setGameState] = createSignal<IGameStateFragment>({
+    begin_tx_index: 0,
+    end_tx_index: 0,
+    stage_id: "",
     avatars: {},
     logs: []
   })
@@ -33,7 +36,7 @@ export default () => {
   const [stage] = createResource(async (): Promise<IStage | undefined> => {
     const resp = await get('/stage/:id', { id: param['id'] }, true)
     if ("Ok" in resp) {
-      const gameStateResp = await post('/tx/:stage_id/state', { n_page: 0, n_per_page: 50 }, { stage_id: resp.Ok.raw_id })
+      const gameStateResp = await post('/tx/:stage_id/state', { end_tx_index: null, count: 50 }, { stage_id: resp.Ok.raw_id })
       if ("Ok" in gameStateResp) {
         console.log(gameStateResp.Ok)
         setGameState(gameStateResp.Ok)
@@ -100,7 +103,7 @@ export default () => {
   async function onAvatarAdd(avatar: IAvatar) {
     const resp = await post('/avatar/new', {
       stage_id: avatar.stage.raw_id,
-      detail: avatar.detail,
+      detail: avatar.version,
     }, undefined, true)
     if ("Ok" in resp) {
       const avatarsDeref = avatars()
@@ -117,7 +120,7 @@ export default () => {
   async function onAvatarChange(avatar: IAvatar) {
     const resp = await post('/avatar/update', {
       raw_id: avatar.raw_id,
-      detail: avatar.detail,
+      detail: avatar.version,
     }, undefined, true)
     if ("Ok" in resp) {
       refetch()
@@ -157,7 +160,7 @@ export default () => {
                   }
                 }}
               >
-                {avatar.detail.name}
+                {avatar.version.name}
               </button>
             )}
           </For>

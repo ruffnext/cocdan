@@ -6,7 +6,7 @@ use tokio::time;
 use tracing::{error, info};
 
 use crate::daemon::{
-    entities::{TxAux, TxEvent},
+    entities::{TxAux, TxEvent, TxValidate},
     DbEntity,
 };
 
@@ -21,7 +21,7 @@ impl TryFrom<&TxAux> for TxEvent {
             stage_id: value.stage.id.to_raw(),
             user_id: value.user.id.to_raw(),
             avatar_id: value.avatar.id.to_raw().to_string(),
-            time: value.time.to_string(),
+            time: value.time.clone(),
             action: value.action.clone(),
         })
     }
@@ -41,6 +41,9 @@ impl WsServer {
                         match &val {
                             Ok(notify_tx) => {
                                 let notify: &surrealdb::Notification<TxAux> = notify_tx;
+                                if notify.data.validate != TxValidate::Valid {
+                                    continue;
+                                };
                                 let tx: TxEvent = match TxEvent::try_from(&notify.data) {
                                     Ok(v) => v,
                                     Err(e) => {

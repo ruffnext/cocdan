@@ -68,7 +68,7 @@ pub async fn role_play(
         )));
     }
 
-    let _tx = TxAux::new(
+    let mut tx = TxAux::new(
         stage.raw_id,
         user.raw_id,
         avatar.raw_id,
@@ -78,6 +78,8 @@ pub async fn role_play(
         &state.db.manager,
     )
     .await?;
+
+    tx.set_validate(&state.db.manager).await?;
 
     Ok(Json(json!({
         "message": "Role play success",

@@ -13,7 +13,7 @@ export default () => {
   const t = getCardI18n(i18n)
   const getFightingSkills = () : Map<string, number> => {
     const fightingSkills : Map<string, number> = new Map()
-    for (const equipment of avatar.detail.equipments) {
+    for (const equipment of avatar.version.equipments) {
       const item = equipment.item;
       if ("Weapon" in item) {
         const weapon = item.Weapon;
@@ -23,8 +23,8 @@ export default () => {
         }
       }
     }
-    for (const key in avatar.detail.skills) {
-      const raw = avatar.detail.skills[key]
+    for (const key in avatar.version.skills) {
+      const raw = avatar.version.skills[key]
       const item = SKILLS.get(key)
       if (item != undefined) {
         if (item.category == "Fighting") {
@@ -33,7 +33,7 @@ export default () => {
       }
     }
     if (!("Dodge" in fightingSkills)) {
-      fightingSkills.set("Dodge", avatar.detail.characteristics.dex / 2)
+      fightingSkills.set("Dodge", avatar.version.characteristics.dex / 2)
     }
     return fightingSkills
   }

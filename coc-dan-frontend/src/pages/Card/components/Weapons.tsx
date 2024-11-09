@@ -71,8 +71,8 @@ export default () => {
   // filter out all weapons of avatar
   const getWeapons = () : Array<[IWeapon, string]> => {
     const res : Array<[IWeapon, string]> = []
-    for (const key in avatar.detail.equipments) {
-      const weapon = avatar.detail.equipments[key].item
+    for (const key in avatar.version.equipments) {
+      const weapon = avatar.version.equipments[key].item
       if (weapon != undefined && 'Weapon' in weapon) {
         res.push([weapon.Weapon, key])
       }
@@ -102,7 +102,7 @@ export default () => {
   }
 
   const getWeaponSkillSuccessPossibility = (skill : string) : string => {
-    const avatarSkill : ISkillAssigned | undefined = avatar.detail.skills[skill]
+    const avatarSkill : ISkillAssigned | undefined = avatar.version.skills[skill]
     // if avatar has learnt this skill
     if (avatarSkill != undefined) {
       return (avatarSkill.initial + avatarSkill.interest_skill_point + avatarSkill.occupation_skill_point).toFixed(0)

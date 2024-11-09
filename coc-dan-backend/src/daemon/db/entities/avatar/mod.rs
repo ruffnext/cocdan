@@ -3,13 +3,14 @@ use crate::utils::serde::optional_datetime_from_rfc3339;
 use std::collections::HashMap;
 
 use chrono::{DateTime, FixedOffset, Utc};
+use serde_json::json;
 use surrealdb::sql::{Datetime, Id, Thing};
 use ts_rs::TS;
 
 use crate::daemon::db::DbConn;
-use crate::daemon::DbEntity;
-use crate::mls;
+use crate::daemon::{DbEntity, SurrealRecord};
 use crate::typedef::err::{ErrCode, Left};
+use crate::{left_span, mls};
 
 use super::common::EraEnum;
 use super::skill::{OccupationalSkill, SkillAssigned};
@@ -37,7 +38,7 @@ impl Default for Gender {
     rename = "IDescriptor",
     export_to = "entity/avatar/IDescriptor.d.ts"
 )]
-pub struct Descriptor {
+pub struct AvatarBasicInfo {
     age: u32,
     gender: Gender,
     homeland: String,
@@ -178,7 +179,7 @@ pub struct AvatarDetail {
     pub header: String,
     pub status: Status,
     pub characteristics: Characteristics,
-    pub descriptor: Descriptor,
+    pub basic_info: AvatarBasicInfo,
     pub skills: HashMap<String, SkillAssigned>,
     pub occupation: Occupation,
     pub equipments: Vec<Equipment>,
@@ -191,7 +192,7 @@ impl Default for AvatarDetail {
             header: "".to_string(),
             status: Default::default(),
             characteristics: Default::default(),
-            descriptor: Default::default(),
+            basic_info: Default::default(),
             skills: Default::default(),
             occupation: Default::default(),
             equipments: Default::default(),
@@ -231,13 +232,10 @@ pub struct Avatar {
     pub raw_id: String,
     pub stage: Stage,
     pub owner: User,
-    pub detail: AvatarDetail,
+    pub version: AvatarDetail,
     #[serde(with = "optional_datetime_from_rfc3339")]
     #[ts(as = "Option<String>")]
     pub creation_time: Option<DateTime<FixedOffset>>,
-    #[serde(with = "optional_datetime_from_rfc3339")]
-    #[ts(as = "Option<String>")]
-    pub last_update_time: Option<DateTime<FixedOffset>>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
@@ -245,9 +243,8 @@ pub struct AvatarDbAux {
     pub raw_id: String,
     pub stage: Thing,
     pub owner: Thing,
-    pub detail: AvatarDetail,
+    pub version: AvatarDetail,
     pub creation_time: Option<Datetime>,
-    pub last_update_time: Option<Datetime>,
 }
 
 impl From<&Avatar> for AvatarDbAux {
@@ -256,16 +253,10 @@ impl From<&Avatar> for AvatarDbAux {
             raw_id: value.raw_id.clone(),
             stage: value.stage.db_thing(),
             owner: value.owner.db_thing(),
-            detail: value.detail.clone(),
+            version: value.version.clone(),
             creation_time: Some(
                 value
                     .creation_time
-                    .map(|v| Datetime::from(v.to_utc()))
-                    .unwrap_or(Datetime::from(Utc::now())),
-            ),
-            last_update_time: Some(
-                value
-                    .last_update_time
                     .map(|v| Datetime::from(v.to_utc()))
                     .unwrap_or(Datetime::from(Utc::now())),
             ),
@@ -285,30 +276,85 @@ impl DbEntity for AvatarDbAux {
     }
 }
 
-impl DbEntity for Avatar {
-    type IdType = String;
-
-    fn db_id(&self) -> Id {
-        Id::from(self.raw_id.clone())
-    }
-
-    fn db_tab_name() -> &'static str {
+impl Avatar {
+    pub fn db_tab_name() -> &'static str {
         "avatar"
     }
 
-    async fn db_save(&self, db: &DbConn) -> Result<(), Left> {
-        let aux: AvatarDbAux = self.into();
-        aux.db_save(db).await
+    pub async fn db_update(&self, version: Option<AvatarDetail>, db: &DbConn) -> Result<(), Left> {
+        let mut tx = if let Some(version) = &version {
+            TxAux::new(
+                self.stage.raw_id.clone(),
+                self.owner.raw_id.clone(),
+                self.raw_id.clone(),
+                TxAction::AvatarModify((
+                    self.raw_id.clone(),
+                    self.version.clone(),
+                    version.clone(),
+                )),
+                db,
+            )
+            .await?
+        } else {
+            TxAux::new(
+                self.stage.raw_id.clone(),
+                self.owner.raw_id.clone(),
+                self.raw_id.clone(),
+                TxAction::AvatarDel((self.raw_id.clone(), self.version.clone())),
+                db,
+            )
+            .await?
+        };
+
+        let statement = "
+            BEGIN TRANSACTION;
+
+            let $res = INSERT INTO avatar_version $version;
+
+            let $tx_record = type::record($tx);
+
+            UPDATE type::record($id) SET
+                versions += {
+                    time: $tx_record.time,
+                    version: type::record(array::first($res.id)),
+                    tx: $tx_record,
+                };
+
+            COMMIT TRANSACTION;
+        ";
+
+        let response = db
+            .query(statement)
+            .bind(json!({
+                "id": Thing::from((Self::db_tab_name(), self.raw_id.as_str())).to_string(),
+                "version": version,
+                "tx": tx.id.to_string(),
+            }))
+            .await
+            .and_then(|mut x| x.take::<Option<SurrealRecord>>(2))
+            .map_err(mls!(ErrCode::DbError));
+
+        match response {
+            Ok(Some(_v)) => {
+                tx.set_validate(db).await?;
+                return Ok(());
+            }
+
+            _ => {
+                tx.set_invalid(db).await?;
+                return Err(left_span!(ErrCode::DbError));
+            }
+        };
     }
 
-    async fn db_load_by_id(id: Self::IdType, db: &DbConn) -> Result<Option<Self>, Left> {
-        let query = "SELECT * FROM $id FETCH owner, stage, stage.owner;";
+    pub async fn db_load_by_id(id: String, db: &DbConn) -> Result<Option<Self>, Left> {
+        let query = "SELECT * FROM fn::load_version(type::record($id), time::now()) FETCH version, owner, stage, stage.owner;";
         let mut response = db
             .query(query)
             .bind(("id", Thing::from((Self::db_tab_name(), Id::from(id)))))
             .await
             .map_err(mls!(ErrCode::DbError))?;
-        let res: Vec<Self> = response.take(0).map_err(mls!(ErrCode::DbError))?;
+        let res: Option<Self> = response.take(0).map_err(mls!(ErrCode::DbError))?;
         if let Some(v) = res.into_iter().next() {
             Ok(Some(v))
         } else {
@@ -316,23 +362,14 @@ impl DbEntity for Avatar {
         }
     }
 
-    async fn db_del(id: Self::IdType, db: &DbConn) -> Result<(), Left> {
+    pub async fn db_del(id: String, db: &DbConn) -> Result<(), Left> {
         let avatar = if let Some(v) = Self::db_load_by_id(id.clone(), db).await? {
             v
         } else {
             return Ok(());
         };
 
-        AvatarDbAux::db_del(id, db).await?;
-
-        let _tx = TxAux::new(
-            avatar.stage.raw_id.clone(),
-            avatar.owner.raw_id.clone(),
-            avatar.raw_id.clone(),
-            TxAction::AvatarDel((avatar.raw_id.clone(), avatar.detail.clone())),
-            db,
-        )
-        .await?;
+        avatar.db_update(None, db).await?;
 
         Ok(())
     }

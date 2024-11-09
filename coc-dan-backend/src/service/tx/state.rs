@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, u32};
 
 use axum::{
     extract::{Path, State},
@@ -19,23 +19,41 @@ use crate::{
 #[derive(Deserialize, Serialize, ts_rs::TS)]
 #[ts(
     export,
-    export_to = "api/tx/state/IGameState.d.ts",
-    rename = "IGameState"
+    export_to = "api/tx/state/IGameStateFragment.d.ts",
+    rename = "IGameStateFragment"
 )]
-pub struct GameState {
+pub struct GameStateFragment {
+    pub begin_tx_index: u32,
+    pub end_tx_index: u32,
+    pub stage_id: String,
     pub avatars: HashMap<String, AvatarDetail>,
     pub logs: Vec<TxEvent>,
+}
+
+impl Default for GameStateFragment {
+    fn default() -> Self {
+        Self {
+            begin_tx_index: 0,
+            end_tx_index: 0,
+            stage_id: "".into(),
+            avatars: HashMap::new(),
+            logs: Vec::new(),
+        }
+    }
 }
 
 #[derive(Deserialize, ts_rs::TS)]
 #[ts(
     export,
-    export_to = "api/tx/state/IReqFetchGameState.d.ts",
-    rename = "IReqFetchGameState"
+    export_to = "api/tx/state/IReqFetchGameStateFragment.d.ts",
+    rename = "IReqFetchGameStateFragment"
 )]
 pub struct ReqFetchGameState {
-    pub n_page: u32,
-    pub n_per_page: u32,
+    /// end of the transaction id (exclusive)
+    pub end_tx_index: Option<u32>,
+
+    /// number of logs
+    pub count: u32,
 }
 
 pub async fn fetch_game_state(
@@ -43,7 +61,7 @@ pub async fn fetch_game_state(
     Path(stage_id): Path<String>,
     session: Session,
     Json(req): Json<ReqFetchGameState>,
-) -> Result<Json<GameState>, Left> {
+) -> Result<Json<GameStateFragment>, Left> {
     let stage =
         if let Some(stage) = Stage::db_load_by_id(stage_id.clone(), &state.db.manager).await? {
             stage
@@ -53,7 +71,10 @@ pub async fn fetch_game_state(
             )));
         };
 
-    if !session.is_on_stage(stage_id, &state.db.manager).await {
+    if !session
+        .is_on_stage(stage_id.clone(), &state.db.manager)
+        .await
+    {
         return Err(left_span!(ErrCode::PermissionDenied(
             "You are not on this stage".into()
         )));
@@ -66,26 +87,36 @@ pub async fn fetch_game_state(
             avatar.raw_id as avatar_id,
             stage.raw_id as stage_id,
             user.raw_id as user_id
-        FROM tx WHERE stage = {stage} ORDER BY time DESC LIMIT {n_per_page} START {n_page};
+        FROM tx WHERE stage = {stage} AND tx_index < {tx_index} ORDER BY time DESC LIMIT {count};
     ",
         stage = stage.db_thing().to_string(),
-        n_per_page = req.n_per_page,
-        n_page = req.n_page
+        count = req.count,
+        tx_index = req.end_tx_index.unwrap_or(u32::MAX),
     );
 
     let logs: Vec<TxEvent> = state.db.query_manager(&query).await?;
 
-    let first_log_time = if let Some(log) = logs.last() {
-        log.time.clone()
+    let first_log = if let Some(log) = logs.last() {
+        log.clone()
     } else {
-        return Ok(Json(GameState {
-            avatars: HashMap::new(),
-            logs,
-        }));
+        return Ok(Json(GameStateFragment::default()));
+    };
+
+    let last_log = if let Some(log) = logs.first() {
+        log.clone()
+    } else {
+        return Ok(Json(GameStateFragment::default()));
     };
 
     let query_avatars = format!(
-        "SELECT * FROM avatar WHERE stage = {stage} VERSION d'{first_log_time}';",
+        "(
+            SELECT VALUE
+                fn::load_version(id, d'{first_log_time}')
+            FROM avatar WHERE stage == {stage}
+            FETCH version
+        ).filter(|$x| $x.version != None);
+        ",
+        first_log_time = first_log.time.to_string(),
         stage = stage.db_thing().to_string()
     );
 
@@ -93,8 +124,14 @@ pub async fn fetch_game_state(
 
     let avatars = avatars
         .into_iter()
-        .map(|avatar| (avatar.raw_id.clone(), avatar.detail))
+        .map(|avatar| (avatar.raw_id.clone(), avatar.version))
         .collect();
 
-    Ok(Json(GameState { avatars, logs }))
+    Ok(Json(GameStateFragment {
+        begin_tx_index: first_log.tx_index as u32,
+        end_tx_index: last_log.tx_index as u32,
+        stage_id: stage_id.clone(),
+        avatars,
+        logs,
+    }))
 }

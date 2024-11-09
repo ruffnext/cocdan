@@ -134,11 +134,19 @@ where
     async fn rel_save(f: &F, t: &T, payload: &P, db: &DbConn) -> Result<Self, Left> {
         let table = Self::rel_table();
         let s = Self::rel_new(f, t, payload);
+        #[cfg(not(feature = "mock"))]
         let _: Option<Vec<SurrealRecord>> = db
             .insert((table, RecordIdKey::from_inner(s.rel_id())))
             .relation(s.clone())
             .await
             .map_err(mls!(ErrCode::DbError))?;
+        #[cfg(feature = "mock")]
+        let _: Option<SurrealRecord> = db
+            .insert((table, RecordIdKey::from_inner(s.rel_id())))
+            .relation(s.clone())
+            .await
+            .map_err(mls!(ErrCode::DbError))?;
+
         Ok(s)
     }
     fn rel_table() -> &'static str;

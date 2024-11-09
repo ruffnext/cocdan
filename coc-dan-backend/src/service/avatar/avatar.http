@@ -41,6 +41,14 @@ Content-Type: application/json
     "stage_id" : {{stage_uuid}}
 }
 
+### get avatar
+POST http://{{host}}/api/avatar/get HTTP/1.1
+Content-Type: application/json
+
+{
+    "avatar_id": "7bcf6048-ab4e-4122-aeda-798cdeec8f0a"
+}
+
 ### rename avatar
 # @name rename_avatar
 POST http://{{host}}/api/avatar/update HTTP/1.1

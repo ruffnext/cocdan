@@ -13,7 +13,7 @@ export default () => {
   const t = getCardI18n(useI18N()())
 
   const setHP = (val: number): number => {
-    const max_hp = maxHP(avatar.detail.characteristics.con, avatar.detail.characteristics.siz)
+    const max_hp = maxHP(avatar.version.characteristics.con, avatar.version.characteristics.siz)
     if (val > max_hp) {
       val = max_hp
     }
@@ -23,7 +23,7 @@ export default () => {
   }
 
   const setSAN = (val: number): number => {
-    const max_san = maxSan(avatar.detail.characteristics.pow)
+    const max_san = maxSan(avatar.version.characteristics.pow)
     if (val > max_san) {
       val = max_san
     }
@@ -38,7 +38,7 @@ export default () => {
   }
 
   const setMP = (val: number): number => {
-    const max_mp = maxMP(avatar.detail.characteristics.pow)
+    const max_mp = maxMP(avatar.version.characteristics.pow)
     if (val > max_mp) {
       val = max_mp
     }
@@ -87,26 +87,26 @@ export default () => {
           <td rowSpan="2" class="is-big" style="width : 10%;">
             {t("status.hp")}<br />
             <InlineInput 
-              value={avatar.detail.status.hp} 
-              upperLimit={maxHP(avatar.detail.characteristics.con, avatar.detail.characteristics.siz)} setValue={setHP} />
-            / {maxHP(avatar.detail.characteristics.con, avatar.detail.characteristics.siz).toFixed(0)}
+              value={avatar.version.status.hp} 
+              upperLimit={maxHP(avatar.version.characteristics.con, avatar.version.characteristics.siz)} setValue={setHP} />
+            / {maxHP(avatar.version.characteristics.con, avatar.version.characteristics.siz).toFixed(0)}
           </td>
           <td class="is-middle">{t("status.statusHp")}</td>
 
           <td rowSpan="2" class="is-big" style="width : 12%">
             {t("status.san")}<br />
             <InlineInput 
-              value={avatar.detail.status.san} 
-              upperLimit={maxSan(avatar.detail.characteristics.pow)} 
+              value={avatar.version.status.san} 
+              upperLimit={maxSan(avatar.version.characteristics.pow)} 
               setValue={setSAN} /> 
-            / {maxSan(avatar.detail.characteristics.pow).toFixed(0)}
+            / {maxSan(avatar.version.characteristics.pow).toFixed(0)}
           </td>
           <td class="is-middle">{t("status.statusSan")}</td>
 
           <td rowSpan="2" class="is-big" style="width : 12%">
             {t("status.luk")}<br />
             <InlineInput 
-              value={avatar.detail.characteristics.luk} 
+              value={avatar.version.characteristics.luk} 
               upperLimit={99} 
               setValue={setLuck} /> 
             / 99</td>
@@ -115,19 +115,19 @@ export default () => {
           <td rowSpan="2" class="is-big" style="width : 12%">
             {t("status.mp")}<br />
             <InlineInput 
-              value={avatar.detail.status.mp} 
-              upperLimit={maxMP(avatar.detail.characteristics.pow)} 
+              value={avatar.version.status.mp} 
+              upperLimit={maxMP(avatar.version.characteristics.pow)} 
               setValue={setMP} />
-            / {maxMP(avatar.detail.characteristics.pow)}</td>
+            / {maxMP(avatar.version.characteristics.pow)}</td>
           <td class="is-middle">{t("status.mpRecovery")}</td>
           <td rowSpan="2" class="is-big" style="width : 12%">{t("status.arm")}<br /> (Place)</td>
         </tr>
         <tr>
           <td class="is-middle">
-            <Dropdown items={hpStatus} initialLabel={getHealthName(avatar.detail.status.health_status)} setValue={setHpStatus}></Dropdown>
+            <Dropdown items={hpStatus} initialLabel={getHealthName(avatar.version.status.health_status)} setValue={setHpStatus}></Dropdown>
           </td>
           <td class="is-middle">
-            <Dropdown items={mentalStatus} initialLabel={getMentalName(avatar.detail.status.mental_status)} setValue={setMentalStatus}></Dropdown>
+            <Dropdown items={mentalStatus} initialLabel={getMentalName(avatar.version.status.mental_status)} setValue={setMentalStatus}></Dropdown>
           </td>
           <td class="is-middle">0</td>
           <td class="is-middle">1</td>

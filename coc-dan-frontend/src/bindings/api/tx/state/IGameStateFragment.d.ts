@@ -2,4 +2,4 @@
 import type { IDetail } from "../../../entity/avatar/IDetail.d";
 import type { ITxEvent } from "../../ws/tx/ITxEvent.d";
 
-export type IGameState = { avatars: { [key in string]?: IDetail }, logs: Array<ITxEvent>, };
+export type IGameStateFragment = { begin_tx_index: number, end_tx_index: number, stage_id: string, avatars: { [key in string]?: IDetail }, logs: Array<ITxEvent>, };
