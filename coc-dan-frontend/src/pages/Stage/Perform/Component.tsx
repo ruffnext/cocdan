@@ -209,19 +209,16 @@ export default () => {
         />
       </Show>
       <Suspense fallback={<div>...</div>}>
-        {
-          selectedAvatar()[1] ?
-            <Playground
-              stage={stage() as any}
-              avatar={selectedAvatar()[1] as any}
-              allControllableAvatar={avatars() ? deepClone(avatars())!.reverse() : []}
-              onAvatarChange={(avatar) => {
-                setSelectedAvatar([avatar.raw_id, avatar])
-              }}
-              stageWs={stageWs() as any}
-              gameLogs={gameLogs}
-            /> : <div></div>
-        }
+        <Playground
+          stage={stage() as any}
+          avatar={selectedAvatar()[1]}
+          allControllableAvatar={avatars() ? deepClone(avatars())!.reverse() : []}
+          onAvatarChange={(avatar) => {
+            setSelectedAvatar([avatar.raw_id, avatar])
+          }}
+          stageWs={stageWs() as any}
+          gameLogs={gameLogs}
+        />
       </Suspense>
     </main>
   );

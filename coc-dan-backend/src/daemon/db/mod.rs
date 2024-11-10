@@ -126,7 +126,7 @@ pub trait DbRelation<F, T, P>
 where
     F: DbEntity,
     T: DbEntity,
-    Self: Serialize + Sized + 'static + Clone,
+    Self: Serialize + DeserializeOwned + Debug + Sized + 'static + Clone,
 {
     fn rel_id(&self) -> Id;
 
@@ -150,6 +150,18 @@ where
         Ok(s)
     }
     fn rel_table() -> &'static str;
+    async fn rel_existing(f: &F, t: &T, payload: &P, db: &DbConn) -> bool {
+        let table = Self::rel_table();
+        let s = Self::rel_new(f, t, payload);
+
+        let r = db
+            .select::<Option<Self>>((table, RecordIdKey::from_inner(s.rel_id())))
+            .await
+            .unwrap_or_default()
+            .is_some();
+
+        r
+    }
 }
 
 #[cfg(not(feature = "mock"))]

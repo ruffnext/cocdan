@@ -4,10 +4,7 @@ use axum::{
 };
 
 use crate::{
-    daemon::{
-        entities::{Session, Stage},
-        DbEntity,
-    },
+    daemon::{entities::Stage, DbEntity},
     left_span,
     typedef::err::{ErrCode, Left},
     AppState,
@@ -16,7 +13,6 @@ use crate::{
 pub async fn get_stage(
     State(state): State<AppState>,
     Path(stage_id): Path<String>,
-    _session: Session,
 ) -> Result<Json<Stage>, Left> {
     let stage =
         if let Some(stage) = Stage::db_load_by_id(stage_id.clone(), &state.db.manager).await? {

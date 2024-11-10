@@ -13,6 +13,7 @@ const Index = lazy(() => import('./pages/Index'))
 const Avatar = lazy(() => import('./pages/Avatar'))
 const Card = lazy(() => import('./pages/Card/Page'))
 const StagePerform = lazy(() => import('./pages/Stage/Perform/Component'))
+const JoinStage = lazy(() => import('./pages/Stage/Join/Component'))
 
 render(() =>
   <I18nProvider i18n={SupportedI18N.zh_CN} >
@@ -23,6 +24,7 @@ render(() =>
         <Route path="/card/:id" component={Card}></Route>
         <Route path="/stage/new" component={NewStage}></Route>
         <Route path="/stage/:id/perform" component={StagePerform}></Route>
+        <Route path="/stage/:id/join" component={JoinStage}></Route>
         <Route path="/login" component={Login}></Route>
         <Route path="/avatar" component={Avatar} />
       </Router>

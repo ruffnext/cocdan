@@ -1,6 +1,6 @@
 use std::hash::{DefaultHasher, Hash, Hasher};
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use surrealdb::sql::{Id, Thing};
 
 use super::{
@@ -8,7 +8,7 @@ use super::{
     DbEntity, DbRelation,
 };
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct RelUserToStage {
     #[serde(rename = "in")]
     inlet: Thing,

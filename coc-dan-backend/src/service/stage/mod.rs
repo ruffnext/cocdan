@@ -5,6 +5,7 @@ use axum::{
 };
 mod create;
 mod get;
+mod join;
 mod list_avatar;
 mod remove;
 
@@ -25,6 +26,8 @@ pub fn route() -> Router<AppState> {
             "/:stage_id/my_avatars",
             get(list_avatar::list_my_stage_avatars),
         )
+        .route("/:stage_id/join", post(join::join_stage))
+        .route("/:stage_id/is_joined", get(join::is_joined_stage))
     // .route("/my_stages", get(crud::list_stages_by_user))
 }
 

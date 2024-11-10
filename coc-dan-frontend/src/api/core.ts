@@ -11,6 +11,8 @@ import { IReqDeleteAvatar } from "../bindings/api/avatar/delete/IReqDeleteAvatar
 import { IReqRolePlay } from "../bindings/api/tx/role_play/IReqRolePlay";
 import { IReqFetchGameStateFragment } from "../bindings/api/tx/state/IReqFetchGameStateFragment";
 import { IGameStateFragment } from "../bindings/api/tx/state/IGameStateFragment";
+import { IRespIsJoinedStage } from "../bindings/api/stage/is_joined/IRespIsJoinedStage";
+import { IRespJoinStage } from "../bindings/api/ws/tx/IRespJoinStage";
 
 type PostApiKeys =
   '/user/login' |
@@ -21,7 +23,8 @@ type PostApiKeys =
   '/avatar/update' |
   '/avatar/delete' |
   '/tx/:stage_id/role_play' |
-  '/tx/:stage_id/state'
+  '/tx/:stage_id/state' |
+  '/stage/:stage_id/join'
 
 type PostReqBodyType<Key extends PostApiKeys> =
   Key extends '/user/login' ? IReqUserLogin :
@@ -32,11 +35,13 @@ type PostReqBodyType<Key extends PostApiKeys> =
   Key extends '/avatar/delete' ? IReqDeleteAvatar :
   Key extends '/tx/:stage_id/role_play' ? IReqRolePlay :
   Key extends '/tx/:stage_id/state' ? IReqFetchGameStateFragment :
+  Key extends '/stage/:stage_id/join' ? undefined :
   undefined;
 
 type PostReqUrlType<Key extends PostApiKeys> =
   Key extends '/tx/:stage_id/role_play' ? { stage_id: string } :
   Key extends '/tx/:stage_id/state' ? { stage_id: string } :
+  Key extends '/stage/:stage_id/join' ? { stage_id: string } :
   undefined
 
 type ISimpleResponse = {
@@ -59,6 +64,7 @@ type PostReqRespType<Key extends PostApiKeys> =
   Key extends '/avatar/delete' ? ISimpleResponse :
   Key extends '/tx/:stage_id/role_play' ? ISimpleResponse :
   Key extends '/tx/:stage_id/state' ? IGameStateFragment :
+  Key extends '/stage/:stage_id/join' ? IRespJoinStage :
   undefined;
 
 type ApiError = {
@@ -134,17 +140,20 @@ export async function post<Key extends PostApiKeys>(
 type GetApiKeys =
   '/user/me' |
   '/stage/:id' |
-  '/stage/:id/my_avatars'
+  '/stage/:id/my_avatars' |
+  '/stage/:id/is_joined'
 
 type GetRespType<Key extends GetApiKeys> =
   Key extends '/user/me' ? ISession :
   Key extends '/stage/:id' ? IStage :
   Key extends '/stage/:id/my_avatars' ? Array<IAvatar> :
+  Key extends '/stage/:id/is_joined' ? IRespIsJoinedStage :
   never;
 
 type GetReqUrlType<Key extends GetApiKeys> =
   Key extends '/stage/:id' ? { id: string } :
   Key extends '/stage/:id/my_avatars' ? { id: string } :
+  Key extends '/stage/:id/is_joined' ? { id: string } :
   undefined;
 
 export async function get<Key extends GetApiKeys>(

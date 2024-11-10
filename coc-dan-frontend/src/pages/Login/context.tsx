@@ -12,6 +12,8 @@ function newContext() {
       }
       setSession("NotLoggedIn")
     })
+  } else {
+    setSession("NotLoggedIn")
   }
   return { session, setSession }
 }
