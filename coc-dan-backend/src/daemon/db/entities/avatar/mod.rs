@@ -173,7 +173,11 @@ pub struct Equipment {
 }
 
 #[derive(serde::Deserialize, serde::Serialize, TS, PartialEq, Debug, Clone)]
-#[ts(export, rename = "IDetail", export_to = "entity/avatar/IDetail.d.ts")]
+#[ts(
+    export,
+    rename = "IAvatarDetail",
+    export_to = "entity/avatar/IAvatarDetail.d.ts"
+)]
 pub struct AvatarDetail {
     pub name: String,
     pub header: String,

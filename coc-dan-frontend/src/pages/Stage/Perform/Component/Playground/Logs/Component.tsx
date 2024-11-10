@@ -1,4 +1,4 @@
-import { Accessor, createEffect, For } from "solid-js"
+import { Accessor, createEffect, For, Match, Switch } from "solid-js"
 import { IGameLog } from "../../../../../../core/state/core"
 import AvatarLog from "./AvatarLog"
 import SystemLog from "./SystemLog"
@@ -20,19 +20,26 @@ export default (props: Props) => {
   return (
     <div ref={container} class="overflow-y-auto pl-8 pr-8 flex flex-col-reverse pt-8 pb-8 flex-grow-0"
       style={`height: calc(100% - ${props.height}px - 1em)`}>
-      <For each={props.logs()}>
-        {log => {
-          if ("AvatarLog" in log) {
-            return <AvatarLog log={log.AvatarLog} isAvatarControllable={
-              controllableAvatars.includes(log.AvatarLog.avatarId)
-            } />
-          } else if ("SystemLog" in log) {
-            return <SystemLog log={log.SystemLog} />
-          } else {
-            return <div>Unknown log</div>
-          }
-        }}
-      </For>
+      <Switch>
+        <Match when={props.logs().length === 0}>
+          <div class="text-center text-gray-600">No logs</div>
+        </Match>
+        <Match when={container}>
+          <For each={props.logs()}>
+            {log => {
+              if ("AvatarLog" in log) {
+                return <AvatarLog log={log.AvatarLog} isAvatarControllable={
+                  controllableAvatars.includes(log.AvatarLog.avatarId)
+                } />
+              } else if ("SystemLog" in log) {
+                return <SystemLog log={log.SystemLog} />
+              } else {
+                return <div>Unknown log</div>
+              }
+            }}
+          </For>
+        </Match>
+      </Switch>
     </div>
   )
 }

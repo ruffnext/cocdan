@@ -3,7 +3,6 @@ mod logout;
 mod me;
 mod register;
 mod session;
-pub use session::get_session_user;
 
 use axum::{
     routing::{get, post},
