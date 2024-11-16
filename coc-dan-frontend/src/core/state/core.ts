@@ -1,5 +1,5 @@
 import { post } from "../../api/core";
-import { IGameStateFragment } from "../../bindings/api/tx/state/IGameStateFragment";
+import { StageWebsocket } from "../../api/ws";
 import { ITxEvent } from "../../bindings/api/ws/tx/ITxEvent";
 import { IAvatarDetail } from "../../bindings/entity/avatar/IAvatarDetail";
 
@@ -20,6 +20,8 @@ export type IGameLog = {
   "SystemLog": ISystemLog
 }
 
+const LOGS_PER_PAGE = 30
+
 export class GameState {
   private tx_end_index: number = 0
   private tx_begin_index: number = 0
@@ -27,14 +29,35 @@ export class GameState {
   // avatar_id -> [tx_index, IDetail]
   private avatars: Map<string, Array<[number, IAvatarDetail | undefined]>> = new Map()
   private stage_id: string
+  private ws: StageWebsocket
+  private onMessage: (logs: Array<IGameLog>) => void;
   public logs: Array<IGameLog> = []
-  constructor(stage_id: string) { this.stage_id = stage_id }
+  constructor(stage_id: string, on_message: (logs: Array<IGameLog>) => void) {
+    this.stage_id = stage_id
+    this.ws = new StageWebsocket(stage_id)
+    this.onMessage = on_message
+  }
 
-  init(fragment: IGameStateFragment) {
+  async init() {
     if (this.tx_end_index != 0) {
       console.error("GameState already initialized")
       return
     }
+
+    const resp = await post('/tx/:stage_id/state', {
+      end_tx_index: null,
+      count: LOGS_PER_PAGE
+    }, {
+      stage_id: this.stage_id
+    }, true)
+
+    if ("Error" in resp) {
+      console.error(resp.Error)
+      return
+    }
+
+    const fragment = resp.Ok
+
     this.tx_begin_index = fragment.begin_tx_index
     this.tx_end_index = fragment.begin_tx_index - 1
     for (const avatar_id in fragment.avatars) {
@@ -45,6 +68,17 @@ export class GameState {
       this.performTx(fragment.logs[i])
     }
     this.tx_end_index = fragment.end_tx_index
+
+    this.ws.addMessageListener("console.log", (data) => { console.log(data) })
+    this.ws.addMessageListener('gameLog', (
+      (data: ITxEvent) => {
+        const res = this.performTx(data)
+        if (res !== undefined) {
+          this.logs.push(res)
+        }
+        this.onMessage(this.logs)
+      }
+    ).bind(this))
   }
 
   getAvatarByTxId(avatar_id: string, tx_id: number): IAvatarDetail | undefined {
@@ -146,7 +180,7 @@ export class GameState {
     }
     const resp = await post('/tx/:stage_id/state', {
       end_tx_index: this.tx_begin_index,
-      count: 50
+      count: LOGS_PER_PAGE
     }, {
       stage_id: this.stage_id
     }, true)

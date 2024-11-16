@@ -7,7 +7,6 @@ import Playground from "./Component/Playground/Component"
 import { Suspense, Show } from "solid-js"
 import AvatarEditor from "./Component/AvatarEditor/Component"
 import { deepClone } from "../../../core/utils"
-import { new_stage_websocket, StageWebsocket } from "../../../api/ws"
 import { useSession } from "../../Login/context"
 import { GameState, IGameLog } from "../../../core/state/core"
 
@@ -18,9 +17,10 @@ export default () => {
   const [isExtend, setIsExtend] = createSignal(true)
   const [editingAvatar, setEditingAvatar] = createSignal<[string, IAvatar] | ["Add", undefined] | [undefined, undefined]>([undefined, undefined])
   const [selectedAvatar, setSelectedAvatar] = createSignal<[string, IAvatar] | [undefined, undefined]>([undefined, undefined])
-  const [stageWs, setStageWs] = createSignal<StageWebsocket | undefined>(undefined)
   const [gameLogs, setGameLogs] = createSignal<Array<IGameLog>>([])
-  const gameState = new GameState(param['id'])
+  const gameState = new GameState(param['id'], (logs) => {
+    setGameLogs(deepClone(logs).reverse())
+  })
 
   createEffect(() => {
     if (session() == "NotLoggedIn") {
@@ -31,21 +31,8 @@ export default () => {
   const [stage] = createResource(async (): Promise<IStage | undefined> => {
     const resp = await get('/stage/:id', { id: param['id'] }, true)
     if ("Ok" in resp) {
-      const gameStateResp = await post('/tx/:stage_id/state', { end_tx_index: null, count: 50 }, { stage_id: resp.Ok.raw_id })
-      if ("Ok" in gameStateResp) {
-        gameState.init(gameStateResp.Ok)
-        setGameLogs(deepClone(gameState.logs).reverse())
-      }
-
-      const stageWs = new_stage_websocket(resp.Ok.raw_id);
-      stageWs.addMessageListener("console.log", (data) => { console.log(data) })
-      stageWs.addMessageListener("gameLog", (data) => {
-        const res = gameState.performTx(data)
-        if (res !== undefined) {
-          setGameLogs([res].concat(gameLogs()))
-        }
-      })
-      setStageWs(stageWs)
+      await gameState.init()
+      setGameLogs(deepClone(gameState.logs).reverse())
       return resp.Ok
     } else {
       return undefined
@@ -222,7 +209,6 @@ export default () => {
           onAvatarChange={(avatar) => {
             setSelectedAvatar([avatar.raw_id, avatar])
           }}
-          stageWs={stageWs() as any}
           gameLogs={gameLogs}
           onRequestMoreLogs={onRequestMoreLogs}
         />

@@ -2,7 +2,6 @@ import { createSignal, Show, For, Accessor } from "solid-js"
 import { IAvatar } from "../../../../../bindings/entity/avatar/IAvatar"
 import { IStage } from "../../../../../bindings/entity/basic/IStage"
 import { post } from "../../../../../api/core"
-import { StageWebsocket } from "../../../../../api/ws"
 import { IGameLog } from "../../../../../core/state/core"
 import Logs from "./Logs/Component"
 
@@ -11,7 +10,6 @@ type Props = {
   avatar: IAvatar | undefined,
   allControllableAvatar: Array<IAvatar>
   onAvatarChange: (avatar: IAvatar) => void,
-  stageWs: StageWebsocket,
   gameLogs: Accessor<Array<IGameLog>>
   onRequestMoreLogs: () => Promise<boolean>
 }
