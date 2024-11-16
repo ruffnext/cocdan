@@ -20,7 +20,7 @@ export default () => {
   const [selectedAvatar, setSelectedAvatar] = createSignal<[string, IAvatar] | [undefined, undefined]>([undefined, undefined])
   const [stageWs, setStageWs] = createSignal<StageWebsocket | undefined>(undefined)
   const [gameLogs, setGameLogs] = createSignal<Array<IGameLog>>([])
-  const gameState = new GameState()
+  const gameState = new GameState(param['id'])
 
   createEffect(() => {
     if (session() == "NotLoggedIn") {
@@ -99,6 +99,12 @@ export default () => {
     }
     setEditingAvatar([undefined, undefined])
     refetch()
+  }
+
+  async function onRequestMoreLogs(): Promise<boolean> {
+    await gameState.fetchMoreLogs()
+    setGameLogs(deepClone(gameState.logs).reverse())
+    return gameState.hasMoreLogs()
   }
 
   async function onAvatarAdd(avatar: IAvatar) {
@@ -218,6 +224,7 @@ export default () => {
           }}
           stageWs={stageWs() as any}
           gameLogs={gameLogs}
+          onRequestMoreLogs={onRequestMoreLogs}
         />
       </Suspense>
     </main>

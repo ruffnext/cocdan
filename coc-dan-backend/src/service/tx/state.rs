@@ -109,9 +109,14 @@ pub async fn fetch_game_state(
     };
 
     let query_avatars = format!(
-        "(
-            SELECT VALUE
-                fn::load_version(id, {first_log_time})
+        "(  SELECT VALUE
+                array::first(SELECT 
+                    version,
+                    tx.avatar.raw_id as raw_id,
+                    tx.stage as stage,
+                    tx.avatar.owner as owner,
+                    tx.avatar.creation_time as creation_time
+                FROM fn::load_version($parent.id, {first_log_time})) AS version
             FROM avatar WHERE stage == {stage}
             FETCH version
         ).filter(|$x| $x.version != None);

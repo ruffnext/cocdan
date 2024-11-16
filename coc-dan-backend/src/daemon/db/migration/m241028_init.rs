@@ -90,7 +90,7 @@ impl MigrationTrait for M241028Init {
             };
             
             FOR $index IN 0..=($len - 1) {
-                IF $item.versions[$index].time > $time {
+                IF $item.versions[$index].time >= $time {
                     IF $index > 0 {
                         return $item.versions[$index - 1];
                     } ELSE {

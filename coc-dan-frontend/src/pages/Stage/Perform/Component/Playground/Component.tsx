@@ -13,6 +13,7 @@ type Props = {
   onAvatarChange: (avatar: IAvatar) => void,
   stageWs: StageWebsocket,
   gameLogs: Accessor<Array<IGameLog>>
+  onRequestMoreLogs: () => Promise<boolean>
 }
 
 export default (props: Props) => {
@@ -62,7 +63,7 @@ export default (props: Props) => {
   }
   return (
     <div class="w-full h-full overflow-y-auto">
-      <Logs logs={props.gameLogs} allControllableAvatar={props.allControllableAvatar} height={height()}></Logs>
+      <Logs logs={props.gameLogs} allControllableAvatar={props.allControllableAvatar} height={height()} onRequestMoreLogs={props.onRequestMoreLogs}></Logs>
       <Show when={props.avatar !== undefined}>
         <div class="flex w-full min-h-12 text-lg mt-2 mb-2">
           <div class="w-4"></div>

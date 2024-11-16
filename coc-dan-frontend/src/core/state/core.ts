@@ -1,6 +1,7 @@
+import { post } from "../../api/core";
 import { IGameStateFragment } from "../../bindings/api/tx/state/IGameStateFragment";
 import { ITxEvent } from "../../bindings/api/ws/tx/ITxEvent";
-import { IDetail } from "../../bindings/entity/avatar/IDetail";
+import { IAvatarDetail } from "../../bindings/entity/avatar/IAvatarDetail";
 
 export type IAvatarLog = {
   message: string,
@@ -24,9 +25,10 @@ export class GameState {
   private tx_begin_index: number = 0
   private txs: Array<ITxEvent> = []
   // avatar_id -> [tx_index, IDetail]
-  private avatars: Map<string, Array<[number, IDetail | undefined]>> = new Map()
+  private avatars: Map<string, Array<[number, IAvatarDetail | undefined]>> = new Map()
+  private stage_id: string
   public logs: Array<IGameLog> = []
-  constructor() { }
+  constructor(stage_id: string) { this.stage_id = stage_id }
 
   init(fragment: IGameStateFragment) {
     if (this.tx_end_index != 0) {
@@ -34,9 +36,10 @@ export class GameState {
       return
     }
     this.tx_begin_index = fragment.begin_tx_index
+    this.tx_end_index = fragment.begin_tx_index - 1
     for (const avatar_id in fragment.avatars) {
       const avatar_detail = fragment.avatars[avatar_id]!;
-      this.avatars.set(avatar_id, [[this.tx_begin_index, avatar_detail]])
+      this.avatars.set(avatar_id, [[fragment.begin_tx_index - 1, avatar_detail]])
     }
     for (let i = fragment.logs.length - 1; i >= 0; i--) {
       this.performTx(fragment.logs[i])
@@ -44,12 +47,12 @@ export class GameState {
     this.tx_end_index = fragment.end_tx_index
   }
 
-  getAvatarByTxId(avatar_id: string, tx_id: number): IDetail | undefined {
+  getAvatarByTxId(avatar_id: string, tx_id: number): IAvatarDetail | undefined {
     const versions = this.avatars.get(avatar_id)
     if (versions === undefined) {
       return undefined
     }
-    let detail: IDetail | undefined = undefined;
+    let detail: IAvatarDetail | undefined = undefined;
     let i = 0;
     for (i = 0; i < versions.length; i++) {
       if (versions[i][0] > tx_id) {
@@ -123,5 +126,59 @@ export class GameState {
     this.txs.push(tx)
     this.tx_end_index = tx.tx_index
     return response
+  }
+
+  getTxBeginIndex() {
+    return this.tx_begin_index
+  }
+
+  getTxEndIndex() {
+    return this.tx_end_index
+  }
+
+  hasMoreLogs(): boolean {
+    return this.tx_begin_index > 1
+  }
+
+  async fetchMoreLogs(): Promise<boolean> {
+    if (!this.hasMoreLogs()) {
+      return false
+    }
+    const resp = await post('/tx/:stage_id/state', {
+      end_tx_index: this.tx_begin_index,
+      count: 50
+    }, {
+      stage_id: this.stage_id
+    }, true)
+    if ("Ok" in resp) {
+      const fragment = resp.Ok
+      if (fragment.end_tx_index != this.tx_begin_index - 1) {
+        console.error(`Invalid tx_index: ${fragment.end_tx_index}, expected: ${this.tx_begin_index - 1}`)
+        return false
+      }
+      const current_tx_end_index = this.tx_end_index
+      this.tx_begin_index = fragment.begin_tx_index
+      this.tx_end_index = fragment.begin_tx_index - 1
+      for (const avatar_id in fragment.avatars) {
+        const avatar_detail = fragment.avatars[avatar_id]!;
+        const versions = this.avatars.get(avatar_id)
+        if (versions === undefined) {
+          this.avatars.set(avatar_id, [[fragment.begin_tx_index - 1, avatar_detail]])
+        } else {
+          versions.push([fragment.begin_tx_index - 1, avatar_detail])
+        }
+      }
+      const currentLogs = this.logs
+      this.logs = []
+      for (let i = fragment.logs.length - 1; i >= 0; i--) {
+        this.performTx(fragment.logs[i])
+      }
+      for (const log of currentLogs) {
+        this.logs.push(log)
+      }
+      this.tx_begin_index = fragment.begin_tx_index
+      this.tx_end_index = current_tx_end_index
+    }
+    return this.hasMoreLogs()
   }
 }
