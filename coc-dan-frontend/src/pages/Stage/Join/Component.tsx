@@ -1,4 +1,4 @@
-import { createAsync, useNavigate, useParams } from "@solidjs/router"
+import { useNavigate, useParams, createAsync } from "@solidjs/router"
 import { useSession } from "../../Login/context"
 import { createEffect, createSignal, Match, Switch } from "solid-js"
 import { IStage } from "../../../bindings/entity/basic/IStage"
@@ -11,7 +11,7 @@ export default () => {
   const [isJoined, setIsJoined] = createSignal(false)
   const { session, setSession } = useSession()
   const stage = createAsync<undefined | IStage | "Failed">(async () => {
-    const resp = await get('/stage/:id', { id: param['id'] }, true)
+    const resp = await get('/stage/:id/get', { id: param['id'] }, true)
     if ("Ok" in resp) {
       return resp.Ok
     } else {

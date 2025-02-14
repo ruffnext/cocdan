@@ -72,12 +72,15 @@ impl WsServer {
                                     } else {
                                         let tx = tx.clone();
                                         tokio::spawn(async move {
+                                            let msg = match serde_json::to_string(&tx) {
+                                                Ok(v) => Message::Text(v.into()),
+                                                Err(e) => {
+                                                    error!("tx val error {:#?}", e);
+                                                    return;
+                                                }
+                                            };
                                             let mut lock = subscriber.lock().await;
-                                            lock.sender
-                                                .send(Message::Text(
-                                                    serde_json::to_string(&tx).unwrap(),
-                                                ))
-                                                .await
+                                            lock.sender.send(msg).await.ok();
                                         });
                                     }
                                     continue;

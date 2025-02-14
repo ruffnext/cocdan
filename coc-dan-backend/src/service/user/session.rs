@@ -1,5 +1,4 @@
 use axum::{
-    async_trait,
     extract::{FromRef, FromRequestParts},
     response::{IntoResponse, Response},
 };
@@ -17,7 +16,6 @@ use crate::{
     AppState,
 };
 
-#[async_trait]
 impl<S> FromRequestParts<S> for Session
 where
     S: Send + Sync,

@@ -72,10 +72,7 @@ export class GameState {
     this.ws.addMessageListener("console.log", (data) => { console.log(data) })
     this.ws.addMessageListener('gameLog', (
       (data: ITxEvent) => {
-        const res = this.performTx(data)
-        if (res !== undefined) {
-          this.logs.push(res)
-        }
+        this.performTx(data)
         this.onMessage(this.logs)
       }
     ).bind(this))

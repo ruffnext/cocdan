@@ -18,7 +18,7 @@ Content-Type: application/json
 @stage_api_create = {{host}}/api/stage/{{stage_uuid}}
 
 ### get stage by id
-GET http://{{stage_api_create}} HTTP/1.1
+GET http://{{stage_api_create}}/get HTTP/1.1
 
 ### list stages by user
 GET http://{{host}}/api/stage/my_stages HTTP/1.1

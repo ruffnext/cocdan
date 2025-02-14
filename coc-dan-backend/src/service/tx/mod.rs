@@ -35,7 +35,7 @@ async fn ws_handler(
 
 pub fn router() -> Router<AppState> {
     return Router::new()
-        .route("/:stage_id/role_play", post(role_play::role_play))
-        .route("/:stage_id/state", post(state::fetch_game_state))
-        .route("/:stage_id/ws", get(ws_handler));
+        .route("/{stage_id}/role_play", post(role_play::role_play))
+        .route("/{stage_id}/state", post(state::fetch_game_state))
+        .route("/{stage_id}/ws", get(ws_handler));
 }

@@ -1,6 +1,5 @@
 use axum::{extract::State, response::IntoResponse, Json};
 use axum_extra::extract::{cookie::Cookie, CookieJar};
-use rand::random;
 use serde_json::json;
 
 use crate::{
@@ -52,7 +51,7 @@ pub async fn login(
         )));
     };
 
-    let session_id: usize = random();
+    let session_id: u64 = rand::random();
 
     let session_raw_id = format!("{:x}", session_id);
     let user_id = user.db_thing();

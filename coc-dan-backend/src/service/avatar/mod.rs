@@ -7,36 +7,6 @@ mod update;
 
 use crate::AppState;
 
-// #[async_trait]
-// impl<S> FromRequestParts<S> for UserControlledAvatar
-// where
-//     S: Send + Sync,
-//     AppState: FromRef<S>,
-// {
-//     type Rejection = Response;
-
-//     async fn from_request_parts(req: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-//         let avatar_id: Path<i32> = Path::from_request_parts(req, state)
-//             .await
-//             .map_err(|x| x.into_response())?;
-//         let u: user::Model = user::Model::from_request_parts(req, state).await?;
-//         let state = AppState::from_ref(state);
-//         let a = avatar::Entity::find_by_id(avatar_id.0)
-//             .one(&state.db)
-//             .await
-//             .map_err(|x| Left::from(x).into_response())?;
-//         match a {
-//             Some(v) if v.owner == u.id => Ok(UserControlledAvatar { user: u, avatar: v }),
-//             _ => Err(Left {
-//                 status: http::StatusCode::BAD_REQUEST,
-//                 message: format!("Avatar {} not found", avatar_id.0),
-//                 uuid: "f33956a4",
-//             }
-//             .into_response()),
-//         }
-//     }
-// }
-
 pub fn route() -> Router<AppState> {
     Router::new()
         .route("/new", post(create::create_avatar))
@@ -52,6 +22,3 @@ pub fn route() -> Router<AppState> {
     // .route("/list_owned", get(crud::list_by_user))
     // .route("/new", post(crud::create))
 }
-
-// #[cfg(test)]
-// mod test;

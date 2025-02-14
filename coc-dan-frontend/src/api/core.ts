@@ -139,19 +139,19 @@ export async function post<Key extends PostApiKeys>(
 
 type GetApiKeys =
   '/user/me' |
-  '/stage/:id' |
+  '/stage/:id/get' |
   '/stage/:id/my_avatars' |
   '/stage/:id/is_joined'
 
 type GetRespType<Key extends GetApiKeys> =
   Key extends '/user/me' ? ISession :
-  Key extends '/stage/:id' ? IStage :
+  Key extends '/stage/:id/get' ? IStage :
   Key extends '/stage/:id/my_avatars' ? Array<IAvatar> :
   Key extends '/stage/:id/is_joined' ? IRespIsJoinedStage :
   never;
 
 type GetReqUrlType<Key extends GetApiKeys> =
-  Key extends '/stage/:id' ? { id: string } :
+  Key extends '/stage/:id/get' ? { id: string } :
   Key extends '/stage/:id/my_avatars' ? { id: string } :
   Key extends '/stage/:id/is_joined' ? { id: string } :
   undefined;

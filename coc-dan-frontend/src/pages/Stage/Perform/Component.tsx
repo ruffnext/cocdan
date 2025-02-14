@@ -29,7 +29,7 @@ export default () => {
   })
 
   const [stage] = createResource(async (): Promise<IStage | undefined> => {
-    const resp = await get('/stage/:id', { id: param['id'] }, true)
+    const resp = await get('/stage/:id/get', { id: param['id'] }, true)
     if ("Ok" in resp) {
       await gameState.init()
       setGameLogs(deepClone(gameState.logs).reverse())

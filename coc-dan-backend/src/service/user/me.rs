@@ -1,5 +1,4 @@
 use axum::{
-    async_trait,
     extract::{FromRef, FromRequestParts},
     response::{IntoResponse, Response},
     Json,
@@ -19,7 +18,6 @@ pub async fn get_me(session: Session) -> Json<Session> {
     Json(session)
 }
 
-#[async_trait]
 impl<S> FromRequestParts<S> for User
 where
     S: Send + Sync,

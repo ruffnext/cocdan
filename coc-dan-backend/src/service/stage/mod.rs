@@ -11,7 +11,7 @@ mod remove;
 
 pub fn route() -> Router<AppState> {
     Router::new()
-        .route("/:id", get(get::get_stage))
+        .route("/{id}/get", get(get::get_stage))
         // .route("/:id/users", get(crud::list_users_by_stage))
         // .route("/:id/join", post(crud::join_stage))
         // .route("/:id/leave", post(crud::leave_stage))
@@ -21,13 +21,13 @@ pub fn route() -> Router<AppState> {
         //     get(super::transaction::crud::query_stage_realtime_state),
         // )
         .route("/new", post(create::create_stage))
-        .route("/:stage_id/remove", post(remove::remove_stage))
+        .route("/{stage_id}/remove", post(remove::remove_stage))
         .route(
-            "/:stage_id/my_avatars",
+            "/{stage_id}/my_avatars",
             get(list_avatar::list_my_stage_avatars),
         )
-        .route("/:stage_id/join", post(join::join_stage))
-        .route("/:stage_id/is_joined", get(join::is_joined_stage))
+        .route("/{stage_id}/join", post(join::join_stage))
+        .route("/{stage_id}/is_joined", get(join::is_joined_stage))
     // .route("/my_stages", get(crud::list_stages_by_user))
 }
 
